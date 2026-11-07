@@ -60,8 +60,9 @@ fun docker_command(image: string, name: string, argv: string[]): Command {
             "--cpus=1",
             // The visitor's program is built and run in /work, so it needs exec.
             "--tmpfs=/work:rw,exec,nosuid,nodev,size=16m,uid=10001,gid=10001,mode=0700",
-            // lughac and cc write their temporary files here; nothing runs from it.
-            "--tmpfs=/tmp:rw,nosuid,nodev,size=64m,uid=10001,gid=10001,mode=0700",
+            // lughac and cc write their temporary files here, and `lughac test`
+            // builds and runs its test programs here, so it needs exec too.
+            "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=64m,uid=10001,gid=10001,mode=0700",
             "--workdir=/work",
             image,
         ] + argv,

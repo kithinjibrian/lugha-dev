@@ -170,3 +170,18 @@ fun failure(why: string): string = written(#{
     "v": json.Value.Integer(1),
     "failure": json.Value.Text(why),
 });
+
+/**
+ * Checks that `lughac` itself finished. It exits 0 or 1 with an answer (1:
+ * the visitor's code has errors) and 2 when it couldn't do the job, which is
+ * the runner's trouble, not the visitor's.
+ *
+ * @returns the captured output; `Err` with `lughac`'s message on exit code 2
+ */
+fun lughac_ran(c: Captured): Result<Captured, string> {
+    if c.code == 2 {
+        let (err, _) = cap(c.stderr);
+        return Err("lughac couldn't finish: {err.trim()}");
+    }
+    Ok(c)
+}

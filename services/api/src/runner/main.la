@@ -17,7 +17,7 @@ import api.checks.files { File };
 import api.checks.job { Job, decode };
 import api.checks.requests { RunRequest };
 import api.runner.steps { Command, build_command, run_command, test_command, format_command };
-import api.runner.outcome { Captured, run_result, test_result, format_result, failure };
+import api.runner.outcome { Captured, run_result, test_result, format_result, failure, lughac_ran };
 
 /** Runs a command with `input` on its stdin and captures what it printed. */
 fun capture(c: Command, input: string): Result<Captured, string> {
@@ -49,7 +49,7 @@ fun write_all(list: File[]): Result<(), string> {
 fun do_run(r: RunRequest): Result<string, string> {
     write_all(r.files)?;
     fs.make_dirs(".build").map_err(fun(e: string) = "couldn't make .build: {e}")?;
-    let build = capture(build_command(r.entry, r.opt), "")?;
+    let build = lughac_ran(capture(build_command(r.entry, r.opt), "")?)?;
     if build.code != 0 {
         return Ok(run_result(build, None));
     }
@@ -60,14 +60,14 @@ fun do_run(r: RunRequest): Result<string, string> {
 /** Runs every test. */
 fun do_test(list: File[]): Result<string, string> {
     write_all(list)?;
-    Ok(test_result(capture(test_command(), "")?))
+    Ok(test_result(lughac_ran(capture(test_command(), "")?)?))
 }
 
 /** Formats the `.la` files and reports the ones that changed. */
 fun do_format(list: File[]): Result<string, string> {
     write_all(list)?;
     let sources = list.filter(fun(f: File) = f.path.ends_with(".la"));
-    let done = capture(format_command(sources.map(fun(f: File) = f.path)), "")?;
+    let done = lughac_ran(capture(format_command(sources.map(fun(f: File) = f.path)), "")?)?;
     let mut after: File[] = [];
     for f of sources {
         let text = read_file(f.path).map_err(fun(e: string) = "couldn't read {f.path} back: {e}")?;

@@ -29,7 +29,7 @@ fun the_container_is_locked_down() {
         "--memory-swap=1024m",
         "--cpus=1",
         "--tmpfs=/work:rw,exec,nosuid,nodev,size=16m,uid=10001,gid=10001,mode=0700",
-        "--tmpfs=/tmp:rw,nosuid,nodev,size=64m,uid=10001,gid=10001,mode=0700",
+        "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=64m,uid=10001,gid=10001,mode=0700",
         "--workdir=/work",
     ] {
         assert(has(c, flag));
