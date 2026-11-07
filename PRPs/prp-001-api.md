@@ -113,14 +113,14 @@ services/api/
       main.la          the runner's entry (imports as api.checks…, api.runner…)
       steps.la         the commands it runs, with their limits
       outcome.la       what they printed, as the JSON result
-  Dockerfile           the API's image
-  sandbox/Dockerfile   the sandbox image
+  Dockerfile           both images: targets `sandbox` and `api`, sharing one lughac build
+  sandbox/warm/        the program that warms lughac's object cache in the sandbox image
   test/                one test file per module; sandbox tests; hostile/ programs
   build/               built binaries (ignored by git)
 deploy/
   Caddyfile            HTTPS, proxy, body cap, static site
-  cleanup              the stale-container clean-up job
-docker-compose.yml     caddy, api, and the build-only sandbox image (API-10)
+  cleanup              the stale-container clean-up job (the cleanup service)
+docker-compose.yml     caddy, api, cleanup, and the build-only sandbox image (API-10)
 ```
 
 **Errors.** Each module has its own error enum (`RequestError`, `ManifestError`, `SandboxError`), each variant mapped to a sentence in `routes.la`. Expected failures are `Result`; panics are bugs. A visitor's compile error, panic or stopped program is a normal result, not an error.

@@ -1,0 +1,37 @@
+# The Lugha site behind Caddy (PRP-001, API-8 and API-10).
+# SITE_ADDRESS is the domain on the server (Caddy gets its HTTPS certificate
+# itself), or :80 locally. The static site is services/ui-web's build, mounted
+# at /srv; /api/* goes to the API.
+
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+	}
+
+	handle /api/* {
+		# Bodies past 512 KB never reach the API.
+		request_body {
+			max_size 512KB
+		}
+		# With no trusted_proxies, Caddy replaces any X-Forwarded-For a visitor
+		# sends with the address it saw: the API's rate limit reads that.
+		reverse_proxy api:8080 {
+			# One request at a time until std.process stops blocking (API-7):
+			# a request may wait behind another's run before its own starts.
+			transport http {
+				response_header_timeout 60s
+			}
+		}
+	}
+
+	handle {
+		root * /srv
+		try_files {path} {path}.html {path}/index.html
+		file_server
+	}
+}
