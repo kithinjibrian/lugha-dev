@@ -48,10 +48,11 @@ fun old_minutes_are_forgotten() {
 }
 
 @test
-fun the_client_is_the_last_forwarded_address() {
+fun the_client_is_cloudflares_connecting_address() {
     assert_eq(client_ip(Some("203.0.113.7")), "203.0.113.7");
-    assert_eq(client_ip(Some("10.0.0.1, 203.0.113.7")), "203.0.113.7");
     assert_eq(client_ip(Some(" 2001:db8::1 ")), "2001:db8::1");
+    // Cloudflare sends one address: anything else isn't from it.
+    assert_eq(client_ip(Some("10.0.0.1, 203.0.113.7")), "unknown");
     assert_eq(client_ip(Some("")), "unknown");
     assert_eq(client_ip(None), "unknown");
 }

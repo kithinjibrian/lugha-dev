@@ -1,6 +1,6 @@
 ## FEATURE: The code-running API — compile, run, test and format Lugha submitted from the site, safely, in a gVisor sandbox
 
-Status: **approved by the owner, 2026-11-07**, CONTENT sentences included. Amended the same day (approved): a root `docker-compose.yml` runs Caddy and the API, and builds the sandbox image.
+Status: **approved by the owner, 2026-11-07**, CONTENT sentences included. Amended the same day (approved): a root `docker-compose.yml` runs Caddy and the API, and builds the sandbox image; visitors arrive through a Cloudflare Tunnel (`cloudflared`), so the droplet has no open ports.
 
 ## OBJECTIVE
 
@@ -59,7 +59,7 @@ A visitor presses Run, Test or Format in Learn, Examples or Playground and gets 
 | Disk | a scratch folder in the container | 16 MB scratch, discarded |
 | Network | none | none |
 
-- Per IP address, enforced by the API from Caddy's `X-Forwarded-For` (trusted only from localhost): at most 20 requests a minute; past that, 429 and "You're running code very fast. Wait a minute and try again."
+- Per IP address, enforced by the API from Cloudflare's `CF-Connecting-IP` (set at Cloudflare's edge; the tunnel is the only way in): at most 20 requests a minute; past that, 429 and "You're running code very fast. Wait a minute and try again."
 - A stopped program is a sentence in the response, never an error status: "Your program was stopped after 5 seconds.", "…because it used more than 256 MB of memory.", "Its output was cut off at 64 KB."
 
 **Sandbox** (API-6):
@@ -71,10 +71,11 @@ A visitor presses Run, Test or Format in Learn, Examples or Playground and gets 
 
 **One request at a time** (API-7): the API is a single Lugha process. While a sandbox runs, other connections wait in the kernel's queue. Caddy's upstream timeout is 60 s, and the site shows "The server is busy. Try again in a moment." when a request times out. When `lughac` gains non-blocking `std.process`, the API serves requests concurrently with no change to its interface.
 
-**Hosting** (API-8): one DigitalOcean droplet (2–4 vCPU, 4–8 GB) with Docker, `runsc` registered as a runtime in its default (systrap) mode, and Docker Compose. The domain is to be decided.
+**Hosting** (API-8): one DigitalOcean droplet (2–4 vCPU, 4–8 GB) with Docker, `runsc` registered as a runtime in its default (systrap) mode, and Docker Compose. Everything runs on the droplet, which has **no open ports**: visitors arrive through a Cloudflare Tunnel, and Cloudflare handles the domain and HTTPS. The domain is to be decided.
 
 **Compose** (API-10): `docker-compose.yml` at the repository root runs the long-lived services; the sandbox containers are never compose services, since the API starts one per request.
-- `caddy`: ports 80 and 443; HTTPS; request bodies capped at 512 KB; the static site (`services/ui-web`'s build folder, later); `/api/*` proxied to `api`. Configuration in `deploy/Caddyfile`.
+- `cloudflared` (profile `tunnel`, on the droplet): connects out to Cloudflare, which handles the domain and HTTPS, and hands requests to `caddy`. The tunnel's public hostname points at `http://caddy:80`; its token is `CLOUDFLARE_TUNNEL_TOKEN` in `.env`.
+- `caddy`: plain HTTP on the compose network, published only on `127.0.0.1:8080` for trying the site locally; request bodies capped at 512 KB; the static site (`services/ui-web`'s build folder, later); `/api/*` proxied to `api`. Configuration in `deploy/Caddyfile`.
 - `api`: the Lugha API, built from `services/api/Dockerfile`, on the compose network only (no published port), running as a non-root user, with `/var/run/docker.sock` mounted so it can start sandbox containers. That socket is root-equivalent on the host: the API stays small and strict, and nothing from a request reaches the `docker run` arguments except through checked fields.
 - `sandbox`: build-only (a compose profile, never started), building `services/api/sandbox/Dockerfile` into the pinned, tagged sandbox image that `api` runs per request.
 
@@ -118,9 +119,9 @@ services/api/
   test/                one test file per module; sandbox tests; hostile/ programs
   build/               built binaries (ignored by git)
 deploy/
-  Caddyfile            HTTPS, proxy, body cap, static site
+  Caddyfile            proxy, body cap, static site (HTTPS is Cloudflare's)
   cleanup              the stale-container clean-up job (the cleanup service)
-docker-compose.yml     caddy, api, cleanup, and the build-only sandbox image (API-10)
+docker-compose.yml     cloudflared, caddy, api, cleanup, and the build-only sandbox image (API-10)
 ```
 
 **Errors.** Each module has its own error enum (`RequestError`, `ManifestError`, `SandboxError`), each variant mapped to a sentence in `routes.la`. Expected failures are `Result`; panics are bugs. A visitor's compile error, panic or stopped program is a normal result, not an error.
@@ -174,6 +175,6 @@ Hostile (each stopped with the right sentence; the next request then succeeds):
 - [ ] `lughac fmt --check services/api` is clean and `lughac test services/api/test` passes (sandbox tests skip only with "no sandbox").
 - [ ] On a machine with Docker and `runsc`, the sandbox and hostile suites pass.
 - [ ] Every sentence in CONTENT is approved by the owner.
-- [ ] The owner has reviewed the sandbox flags, the runner, the Caddy configuration and `docker-compose.yml`.
-- [ ] `docker compose build` (with the sandbox profile) and `docker compose up -d` bring the site up locally; `/api/version` answers through Caddy.
+- [ ] The owner has reviewed the sandbox flags, the runner, the Caddy configuration, the tunnel and `docker-compose.yml`.
+- [ ] `docker compose build` (with the sandbox profile) and `docker compose up -d` bring the site up locally; `/api/version` answers through Caddy at `http://127.0.0.1:8080`.
 - [ ] For the owner, on the droplet before it is public: run the Learn steps and an example through the API, try an infinite loop, and check that a second request during it waits and then works.

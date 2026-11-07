@@ -64,7 +64,7 @@ fun main() {
             req.path,
             // A body that isn't UTF-8 reads as empty, which is refused as not JSON.
             req.text().unwrap_or(""),
-            client_ip(req.headers.get("x-forwarded-for")),
+            client_ip(req.headers.get("cf-connecting-ip")),
             time.now_ms(),
             version,
             fun(job_text: string) = run_logged(image, job_text),

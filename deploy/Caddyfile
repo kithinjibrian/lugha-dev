@@ -1,9 +1,9 @@
-# The Lugha site behind Caddy (PRP-001, API-8 and API-10).
-# SITE_ADDRESS is the domain on the server (Caddy gets its HTTPS certificate
-# itself), or :80 locally. The static site is services/ui-web's build, mounted
-# at /srv; /api/* goes to the API.
+# The Lugha site behind Caddy (PRP-001, API-8 and API-10). Caddy listens on
+# plain HTTP inside the compose network: Cloudflare handles the domain and
+# HTTPS, and cloudflared brings visitors' requests here. The static site is
+# services/ui-web's build, mounted at /srv; /api/* goes to the API.
 
-{$SITE_ADDRESS::80} {
+:80 {
 	encode zstd gzip
 
 	header {
@@ -18,8 +18,8 @@
 		request_body {
 			max_size 512KB
 		}
-		# With no trusted_proxies, Caddy replaces any X-Forwarded-For a visitor
-		# sends with the address it saw: the API's rate limit reads that.
+		# Cloudflare's CF-Connecting-IP passes through untouched: the API's rate
+		# limit reads it.
 		reverse_proxy api:8080 {
 			# One request at a time until std.process stops blocking (API-7):
 			# a request may wait behind another's run before its own starts.

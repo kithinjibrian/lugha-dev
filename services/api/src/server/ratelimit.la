@@ -34,16 +34,14 @@ fun allow(l: Limiter, ip: string, now_ms: i64): (Limiter, bool) {
 }
 
 /**
- * The visitor's address from `X-Forwarded-For`. Only Caddy can reach the
- * API (it has no published port), and Caddy replaces any forwarded header
- * a visitor sends with the address it saw, so the last entry is the one
- * Caddy wrote.
+ * The visitor's address from Cloudflare's `CF-Connecting-IP`. The site is
+ * reached only through a Cloudflare Tunnel (the droplet has no open ports),
+ * and Cloudflare sets this header itself at its edge, so a visitor can't
+ * choose it. It holds one address; anything else isn't Cloudflare's.
  *
  * @returns the address; `"unknown"` without one, which then shares one count
  */
-fun client_ip(forwarded: Option<string>): string {
-    let header = forwarded.unwrap_or("");
-    let parts = header.split(",");
-    let last = parts[parts.len - 1].trim();
-    if last == "" { "unknown" } else { last }
+fun client_ip(connecting: Option<string>): string {
+    let ip = connecting.unwrap_or("").trim();
+    if ip == "" || ip.contains(",") || ip.contains(" ") { "unknown" } else { ip }
 }
