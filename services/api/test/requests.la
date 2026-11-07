@@ -1,0 +1,132 @@
+// Request bodies: JSON in, a checked request out, every field known.
+import api.requests { RunRequest, run_request, files_request, reason };
+
+fun why_run(body: string): string = match run_request(body) {
+    Err(e) => reason(e),
+    Ok(_) => "ok",
+};
+
+fun why_files(body: string): string = match files_request(body) {
+    Err(e) => reason(e),
+    Ok(_) => "ok",
+};
+
+const MAIN: string = "{{\"path\": \"src/main.la\", \"text\": \"fun main() {{}}\"}}";
+
+fun with_files(rest: string): string = "{{\"files\": [{MAIN}]{rest}}}";
+
+@test
+fun a_minimal_run_request_gets_the_defaults() {
+    let r = run_request(with_files("")).unwrap();
+    assert_eq(r.entry, "src/main.la");
+    assert_eq(r.args.len, 0);
+    assert_eq(r.stdin, "");
+    assert_eq(r.opt, 0);
+    assert_eq(r.files.len, 2);
+}
+
+@test
+fun a_full_run_request() {
+    let r = run_request(
+        with_files(
+            ", \"entry\": \"src/main.la\", \"args\": [\"21\", \"--verbose\"], \"stdin\": \"a\\nb\", \"opt\": 2",
+        ),
+    ).unwrap();
+    assert_eq(r.args, ["21", "--verbose"]);
+    assert_eq(r.stdin, "a\nb");
+    assert_eq(r.opt, 2);
+}
+
+@test
+fun bodies_that_arent_requests() {
+    assert_eq(why_run(""), "The request isn't valid JSON.");
+    assert_eq(why_run("[1, 2]"), "The request must be a JSON object.");
+    assert_eq(why_run("{{}}"), "The request is missing files.");
+    assert_eq(why_run("{{\"files\": 3}}"), "In the request, files must be a list of files.");
+    assert_eq(
+        why_run("{{\"files\": [{{\"path\": \"src/main.la\"}}]}}"),
+        "In the request, each file must have a path and a text.",
+    );
+    assert_eq(
+        why_run("{{\"files\": [{{\"path\": \"src/main.la\", \"text\": \"\", \"mode\": 7}}]}}"),
+        "In the request, each file must have a path and a text.",
+    );
+}
+
+@test
+fun unknown_fields_are_refused() {
+    assert_eq(
+        why_run(with_files(", \"env\": {{\"HOME\": \"/\"}}")),
+        "The request has a field the API doesn't know: env.",
+    );
+    assert_eq(
+        why_files(with_files(", \"opt\": 2")),
+        "The request has a field the API doesn't know: opt.",
+    );
+}
+
+@test
+fun the_files_are_checked() {
+    assert_eq(
+        why_run("{{\"files\": [{{\"path\": \"/etc/passwd\", \"text\": \"\"}}]}}"),
+        "/etc/passwd isn't a file the playground can use: files go in src/ or test/, end in .la, and use letters, digits, _ and -.",
+    );
+}
+
+@test
+fun the_entry_must_be_a_source_file_sent() {
+    assert_eq(
+        why_run(with_files(", \"entry\": \"src/other.la\"")),
+        "src/other.la isn't one of your files.",
+    );
+    assert_eq(
+        why_run(with_files(", \"entry\": \"lugha.toml\"")),
+        "The program must start in a .la file under src/.",
+    );
+    assert_eq(why_run(with_files(", \"entry\": 3")), "In the request, entry must be text.");
+}
+
+@test
+fun arguments_are_capped() {
+    let mut many = "";
+    for i in 0..33 {
+        many += if i == 0 { "\"a\"" } else { ", \"a\"" };
+    }
+    assert_eq(why_run(with_files(", \"args\": [{many}]")), "Too many arguments: the limit is 32.");
+    let mut long = "";
+    for _ in 0..1025 {
+        long += "a";
+    }
+    assert_eq(
+        why_run(with_files(", \"args\": [\"{long}\"]")),
+        "An argument is too long: the limit is 1 KB each.",
+    );
+    assert_eq(
+        why_run(with_files(", \"args\": [3]")),
+        "In the request, args must be a list of text.",
+    );
+}
+
+@test
+fun stdin_is_capped() {
+    let mut big = "";
+    for _ in 0..65537 {
+        big += "a";
+    }
+    assert_eq(
+        why_run(with_files(", \"stdin\": \"{big}\"")),
+        "Standard input is too big: the limit is 64 KB.",
+    );
+}
+
+@test
+fun the_optimisation_level_is_0_or_2() {
+    assert_eq(why_run(with_files(", \"opt\": 1")), "The optimisation level must be 0 or 2.");
+    assert_eq(why_run(with_files(", \"opt\": \"2\"")), "The optimisation level must be 0 or 2.");
+}
+
+@test
+fun a_files_request() {
+    let checked = files_request(with_files("")).unwrap();
+    assert_eq(checked.files.len, 2);
+}

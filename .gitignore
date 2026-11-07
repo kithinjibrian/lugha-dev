@@ -3,9 +3,9 @@
 .env.*
 
 # Built outputs
-/api/api
-/api/runner/runner
-/ui-web/dist/
+/services/api/api
+/services/api/runner/runner
+/services/ui-web/dist/
 node_modules/
 
 # Editors and systems
