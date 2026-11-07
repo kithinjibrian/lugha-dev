@@ -1,0 +1,78 @@
+// The routes, with a stand-in for the sandbox: no Docker needed.
+import api.server.routes { Answer, route, SERVICE_SENTENCE };
+import api.server.ratelimit { Limiter, empty };
+import api.server.sandbox { SandboxError };
+import api.checks.limits { REQUESTS_PER_MINUTE };
+import std.json;
+
+const BODY: string = "{{\"files\": [{{\"path\": \"src/main.la\", \"text\": \"fun main() {{}}\"}}]}}";
+
+const RESULT: string = "{{\"v\":1,\"kind\":\"run\",\"compile\":{{\"ok\":true,\"stopped\":null,\"diagnostics\":[]}},\"program\":null}}";
+
+/** A sandbox that always answers `RESULT`, and one that always fails. */
+fun works(text: string): Result<json.Value, SandboxError> = Ok(json.parse(RESULT).unwrap());
+
+fun broken(text: string): Result<json.Value, SandboxError> = Err(SandboxError.TimedOut);
+
+fun call(
+    method: string,
+    path: string,
+    body: string,
+    in_sandbox: fun(string): Result<json.Value, SandboxError>,
+): Answer {
+    let (_, a) = route(empty(), method, path, body, "1.2.3.4", 60000, "lughac 0.1.0", in_sandbox);
+    a
+}
+
+fun error_of(a: Answer): string = json.get(a.body, "error").and_then(json.as_text).unwrap_or("");
+
+@test
+fun run_test_and_format_answer_with_the_sandbox_result() {
+    for path of ["/api/run", "/api/test", "/api/format"] {
+        let a = call("POST", path, BODY, works);
+        assert_eq(a.status, 200);
+        assert_eq(a.body, json.parse(RESULT).unwrap());
+    }
+}
+
+@test
+fun a_bad_request_is_400_with_its_sentence() {
+    let a = call("POST", "/api/run", "{{\"files\": []}}", works);
+    assert_eq(a.status, 400);
+    assert_eq(error_of(a), "There's no code to run: add src/main.la.");
+}
+
+@test
+fun a_sandbox_failure_is_503_with_no_details() {
+    let a = call("POST", "/api/run", BODY, broken);
+    assert_eq(a.status, 503);
+    assert_eq(error_of(a), SERVICE_SENTENCE);
+    assert_eq(SERVICE_SENTENCE, "Couldn't run your code right now. Try again in a moment.");
+}
+
+@test
+fun too_many_requests_is_429() {
+    let mut lim = empty();
+    for _ in 0..REQUESTS_PER_MINUTE {
+        let (next, a) = route(lim, "POST", "/api/run", BODY, "1.2.3.4", 60000, "v", works);
+        lim = next;
+        assert_eq(a.status, 200);
+    }
+    let (_, a) = route(lim, "POST", "/api/run", BODY, "1.2.3.4", 60000, "v", works);
+    assert_eq(a.status, 429);
+    assert_eq(error_of(a), "You're running code very fast. Wait a minute and try again.");
+}
+
+@test
+fun the_version_needs_no_sandbox() {
+    let a = call("GET", "/api/version", "", broken);
+    assert_eq(a.status, 200);
+    assert_eq(json.get(a.body, "lughac").and_then(json.as_text), Some("lughac 0.1.0"));
+}
+
+@test
+fun unknown_paths_and_methods() {
+    assert_eq(call("GET", "/api/nothing", "", works).status, 404);
+    assert_eq(call("GET", "/api/run", "", works).status, 405);
+    assert_eq(call("POST", "/api/version", "", works).status, 405);
+}

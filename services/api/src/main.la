@@ -1,0 +1,84 @@
+/**
+ * The API (PRP-001): an HTTP server for Run, Test, Format and the version,
+ * behind Caddy. Every job runs in a fresh sandbox container from
+ * `$SANDBOX_IMAGE`.
+ *
+ * Until `std.process` stops blocking every green thread (DECISIONS.md,
+ * API-7), one sandbox run holds up the whole server: requests are served
+ * one at a time.
+ *
+ * Environment: `SANDBOX_IMAGE` (required, a pinned tag such as
+ * `lugha-sandbox:m154`) and `PORT` (default 8080).
+ *
+ * Wiring only: what's worth testing lives in `server` and `checks`.
+ */
+import std.env;
+import std.http;
+import std.json;
+import std.time;
+import server.routes { route };
+import server.ratelimit { Limiter, empty, client_ip };
+import server.sandbox { SandboxError, run_in_sandbox };
+
+/** The runner's path inside the sandbox image. */
+const RUNNER: string = "/usr/local/bin/runner";
+
+/** Request bodies past this are refused before any route sees them: 512 KB. */
+const MAX_BODY_BYTES: i64 = 524288;
+
+/** Runs a job in a sandbox, logging why when there's no result (never the job itself). */
+fun run_logged(image: string, job_text: string): Result<json.Value, SandboxError> {
+    let result = run_in_sandbox(image, [RUNNER, "/work"], job_text);
+    if let Err(e) = result {
+        eprintln("sandbox: {e}");
+    }
+    result
+}
+
+/** The sandbox's `lughac --version`, asked once at start. */
+fun version_of(image: string): string = match run_in_sandbox(image, [RUNNER, "--version"], "") {
+    Ok(v) => json.get(v, "lughac").and_then(json.as_text).unwrap_or("unknown"),
+    Err(e) => {
+        eprintln("couldn't ask the sandbox for its version: {e}");
+        "unknown"
+    }
+};
+
+fun main() {
+    let image = env.get("SANDBOX_IMAGE").unwrap_or("");
+    if image == "" {
+        eprintln("SANDBOX_IMAGE must name the sandbox image, such as lugha-sandbox:m154");
+        exit(2);
+    }
+    let port = env.get("PORT").unwrap_or("8080");
+    let version = version_of(image);
+    eprintln("serving on :{port} with {image} ({version})");
+    // Each connection is its own green thread; they share the counts.
+    let limiter = Ref.new(empty());
+    let limits = http.Limits { body: MAX_BODY_BYTES, ..http.limits() };
+    let handler = fun(req: http.Request): http.Response {
+        let started = time.monotonic_ms();
+        let (counted, answer) = route(
+            limiter.get(),
+            req.method,
+            req.path,
+            // A body that isn't UTF-8 reads as empty, which is refused as not JSON.
+            req.text().unwrap_or(""),
+            client_ip(req.headers.get("x-forwarded-for")),
+            time.now_ms(),
+            version,
+            fun(job_text: string) = run_logged(image, job_text),
+        );
+        limiter.set(counted);
+        // The log has no address and no code: the method, path, status and time.
+        eprintln("{req.method} {req.path} {answer.status} {time.monotonic_ms() - started} ms");
+        http.json(answer.status, answer.body)
+    };
+    match http.serve_with("0.0.0.0:{port}", limits, handler) {
+        Ok(_) => exit(0),
+        Err(e) => {
+            eprintln("couldn't listen on :{port}: {e}");
+            exit(1);
+        }
+    }
+}

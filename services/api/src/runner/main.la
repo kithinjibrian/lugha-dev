@@ -12,6 +12,7 @@
 import std.fs;
 import std.env;
 import std.process;
+import std.json;
 import api.checks.files { File };
 import api.checks.job { Job, decode };
 import api.checks.requests { RunRequest };
@@ -88,12 +89,32 @@ fun serve(work: string): Result<string, string> {
     }
 }
 
+/** The `lughac` this container has, as `lughac --version` prints it. */
+fun lughac_version(): Result<string, string> {
+    let out = process.run("lughac", ["--version"]).map_err(
+        fun(e: string) = "couldn't run lughac: {e}",
+    )?;
+    Ok(
+        written(#{
+            "v": json.Value.Integer(1),
+            "kind": json.Value.Text("version"),
+            "lughac": json.Value.Text(out.stdout.trim()),
+        }),
+    )
+}
+
 fun main() {
     let argv = args();
-    let work = if argv.len > 1 { argv[1] } else { "/work" };
+    let arg = if argv.len > 1 { argv[1] } else { "/work" };
     // Always exactly one JSON object on stdout, so the API can always decode it.
-    match serve(work) {
+    let done = if arg == "--version" { lughac_version() } else { serve(arg) };
+    match done {
         Ok(result) => println(result),
         Err(why) => println(failure(why)),
     }
 }
+
+/** Writes a JSON object; every value here is finite, so writing can't fail. */
+fun written(fields: Map<string, json.Value>): string = json.stringify(
+    json.Value.Object(fields),
+).unwrap();
