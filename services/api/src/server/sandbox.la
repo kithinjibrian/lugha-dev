@@ -54,7 +54,10 @@ fun docker_command(image: string, name: string, argv: string[]): Command {
             "--user={SANDBOX_USER}",
             "--cap-drop=ALL",
             "--security-opt=no-new-privileges",
-            "--pids-limit=64",
+            // A backstop only: gVisor's own threads count against it, and when it
+            // is hit gVisor ends the whole sandbox with no result. The program's
+            // limit is prlimit --nproc (16), which fails its forks instead.
+            "--pids-limit=256",
             "--memory={COMPILE_MEMORY_MB}m",
             "--memory-swap={COMPILE_MEMORY_MB}m",
             "--cpus=1",

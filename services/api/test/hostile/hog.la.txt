@@ -1,0 +1,7 @@
+// Allocates without end: the memory limit must end it.
+fun main() {
+    let mut xs: i64[] = [];
+    loop {
+        xs.push(1);
+    }
+}

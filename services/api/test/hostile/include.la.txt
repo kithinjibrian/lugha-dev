@@ -1,0 +1,7 @@
+// Reads a host file while being compiled: lughac refuses files outside the
+// package, and the compiler runs in the sandbox anyway.
+const PASSWD: string = include_str("../../../../../../etc/passwd");
+
+fun main() {
+    println(PASSWD);
+}
