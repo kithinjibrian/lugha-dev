@@ -1,0 +1,120 @@
+// The files a request sends: which paths are allowed, and the caps.
+import api.files { File, FilesError, check_path, check_files, reason };
+import api.limits { MAX_FILES, MAX_TOTAL_BYTES };
+
+fun path_ok(p: string): bool = check_path(p).is_ok();
+
+fun why(list: File[]): string = match check_files(list) {
+    Err(e) => reason(e),
+    Ok(_) => "ok",
+};
+
+fun f(path: string, text: string): File = File { path: path, text: text };
+
+@test
+fun allowed_paths() {
+    assert(path_ok("lugha.toml"));
+    assert(path_ok("src/main.la"));
+    assert(path_ok("src/shapes/circle.la"));
+    assert(path_ok("test/main_test.la"));
+    assert(path_ok("src/_private.la"));
+    assert(path_ok("src/v2-old.la"));
+}
+
+@test
+fun refused_paths() {
+    assert(!path_ok(""));
+    assert(!path_ok("/etc/passwd"));
+    assert(!path_ok("src/../lugha.toml"));
+    assert(!path_ok("src/./main.la"));
+    assert(!path_ok("src/.hidden.la"));
+    assert(!path_ok("src//main.la"));
+    assert(!path_ok("src\\main.la"));
+    assert(!path_ok("main.la"));
+    assert(!path_ok("src"));
+    assert(!path_ok("src/"));
+    assert(!path_ok("src/main.txt"));
+    assert(!path_ok("src/notes.la.txt"));
+    assert(!path_ok("lib/main.la"));
+    assert(!path_ok("test/lugha.toml"));
+    assert(!path_ok("src/mäin.la"));
+    assert(!path_ok("src/a b.la"));
+    assert(!path_ok("src/.la"));
+}
+
+@test
+fun a_path_too_deep_or_long_is_refused() {
+    assert(path_ok("src/a/b/c/d/e/f/main.la"));
+    assert(!path_ok("src/a/b/c/d/e/f/g/main.la"));
+    let mut long = "src/";
+    for _ in 0..200 {
+        long += "a";
+    }
+    assert(!path_ok(long + ".la"));
+}
+
+@test
+fun a_bad_path_is_named() {
+    assert_eq(
+        why([f("src/main.la", ""), f("../secret.la", "")]),
+        "../secret.la isn't a file the playground can use: files go in src/ or test/, end in .la, and use letters, digits, _ and -.",
+    );
+}
+
+@test
+fun files_are_needed() {
+    assert_eq(why([]), "There's no code to run: add src/main.la.");
+}
+
+@test
+fun duplicates_are_refused() {
+    assert_eq(why([f("src/main.la", "a"), f("src/main.la", "b")]), "src/main.la appears twice.");
+}
+
+@test
+fun too_many_files() {
+    let mut list: File[] = [];
+    for i in 0..MAX_FILES {
+        list.push(f("src/m{i}.la", ""));
+    }
+    assert_eq(why(list), "ok");
+    list.push(f("src/extra.la", ""));
+    assert_eq(why(list), "Too many files: the limit is 20.");
+}
+
+@test
+fun too_much_code() {
+    let mut big = "";
+    for _ in 0..1024 {
+        big += "x";
+    }
+    let mut list: File[] = [];
+    for i in 0..16 {
+        let mut text = "";
+        for _ in 0..16 {
+            text += big;
+        }
+        list.push(f("src/m{i}.la", text));
+    }
+    // 16 files of 16 KB: exactly 256 KB of text.
+    assert_eq(why(list), "ok");
+    list.push(f("src/one_more.la", "x"));
+    assert_eq(why(list), "Your code is too big: the limit is 256 KB in total.");
+    assert_eq(MAX_TOTAL_BYTES, 262144);
+}
+
+@test
+fun the_manifest_is_checked_too() {
+    assert_eq(
+        why([f("src/main.la", ""), f("lugha.toml", "[link]\nlibs = [\"z\"]\n")]),
+        "lugha.toml can only have a [package] section here; [link] isn't allowed in the browser.",
+    );
+}
+
+@test
+fun a_missing_manifest_gets_the_default() {
+    let checked = check_files([f("src/main.la", "fun main() {{}}\n")]).unwrap();
+    assert_eq(checked.files.len, 2);
+    assert_eq(checked.files[1].path, "lugha.toml");
+    assert_eq(checked.manifest.name, "playground");
+}
