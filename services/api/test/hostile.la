@@ -5,9 +5,10 @@
 // or the sandbox image is missing.
 //
 // The programs are test/hostile/*.la.txt: never compiled or run on the host.
-// They take about two minutes and several hit the 5 s limit, so they run only
-// when asked, with a longer per-test time:
-//   SANDBOX_TESTS=1 lughac test --timeout 90 test/hostile.la
+// They start real sandboxes, several built to eat memory or CPU, so they run
+// only when asked, and one at a time (in parallel on a small machine they slow
+// each other past any limit):
+//   scripts/hostile
 import std.env;
 import std.json;
 import std.process;
