@@ -1,0 +1,5 @@
+title = "Fibonacci"
+group = "Basics"
+order = 2
+intro = "The classic recursive Fibonacci: the same function Lugha's own benchmarks time."
+tags = ["if expressions", "recursion", "i64"]

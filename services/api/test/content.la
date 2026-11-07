@@ -1,0 +1,202 @@
+// The content checks (PRP-002, WEB-11): every lesson step and every example
+// in content/ runs through the real sandbox, exactly as a visitor's code
+// would, and must print what its expected.txt says. A step with a solution
+// is checked both ways: the start code gives its start_error (or prints its
+// start_output), and the solution prints expected.txt.
+//
+// Runs only when asked, like the hostile suite:
+//   scripts/content
+// CONTENT_DIR names the content folder (default ../../content, from services/api).
+import std.env;
+import std.fs;
+import std.json;
+import std.process;
+import std.toml;
+import api.checks.files { File };
+import api.checks.manifest { DEFAULT };
+import api.checks.requests { RunRequest };
+import api.checks.job { run_job };
+import api.server.sandbox { run_in_sandbox };
+
+fun image(): string = env.get("SANDBOX_IMAGE").unwrap_or("lugha-sandbox:m154");
+
+fun root(): string = env.get("CONTENT_DIR").unwrap_or("../../content");
+
+/** Whether the checks were asked for, Docker has runsc and the sandbox image is built. */
+fun ready(): bool {
+    if env.get("SANDBOX_TESTS") != Some("1") {
+        return false;
+    }
+    let has_runsc = match process.run("docker", ["info", "--format", "{{{{json .Runtimes}}}}"]) {
+        Ok(out) => out.stdout.contains("\"runsc\""),
+        Err(_) => false,
+    };
+    has_runsc && match process.run("docker", ["image", "inspect", image()]) {
+        Ok(out) => out.code == 0,
+        Err(_) => false,
+    }
+}
+
+/** What one run gave: its compile error code (or ""), and its stdout. */
+struct Ran {
+    error: string,
+    stdout: string,
+}
+
+/** Runs `source` as src/main.la with `stdin`, as the API would. */
+fun run(source: string, stdin: string): Result<Ran, string> {
+    let r = RunRequest {
+        files: [
+            File { path: "src/main.la", text: source },
+            File { path: "lugha.toml", text: DEFAULT },
+        ],
+        entry: "src/main.la",
+        args: [],
+        stdin: stdin,
+        opt: 0,
+    };
+    let v = run_in_sandbox(image(), ["/usr/local/bin/runner", "/work"], run_job(r)).map_err(
+        fun(e) = "{e}",
+    )?;
+    let error = json.get(v, "compile").and_then(fun(c) = json.get(c, "diagnostics")).and_then(
+        fun(d) = json.at(d, 0),
+    ).and_then(fun(d) = json.get(d, "code")).and_then(json.as_text).unwrap_or("");
+    let stdout = json.get(v, "program").and_then(fun(p) = json.get(p, "stdout")).and_then(
+        json.as_text,
+    ).unwrap_or("");
+    Ok(Ran { error: error, stdout: stdout })
+}
+
+/** The folders in `path`, sorted (list_dir sorts). */
+fun folders(path: string): string[] = fs.list_dir(path).unwrap_or([]).filter(
+    fun(n) = fs.is_dir("{path}/{n}"),
+);
+
+/**
+ * A key's value in a step.md's front matter (between the --- lines), with
+ * one pair of quotes removed and `\n` turned into a newline; "" if absent.
+ */
+fun front(md: string, key: string): string {
+    let lines = md.lines();
+    if lines.len == 0 || lines[0] != "---" {
+        return "";
+    }
+    for i in 1..lines.len {
+        let line = lines[i];
+        if line == "---" {
+            return "";
+        }
+        if line.starts_with("{key}:") {
+            let mut v = line.slice(key.len + 1, line.len).trim();
+            if v.len >= 2 && v.starts_with("\"") && v.ends_with("\"") {
+                v = v.slice(1, v.len - 1);
+            }
+            return v.split("\\n").join("\n");
+        }
+    }
+    ""
+}
+
+/** Compares what ran with what was expected, adding a line to `problems` when they differ. */
+fun check(
+    problems: string[],
+    what: string,
+    got: Result<Ran, string>,
+    error: string,
+    stdout: string,
+): string[] {
+    let mut out = problems;
+    match got {
+        Err(e) => out.push("{what}: no result ({e})"),
+        Ok(r) => {
+            if error != "" && r.error != error {
+                out.push(
+                    "{what}: expected {error}, got {if r.error == "" { "no error" } else { r.error }}",
+                );
+            }
+            if error == "" && r.error != "" {
+                out.push("{what}: didn't compile ({r.error})");
+            }
+            if error == "" && r.stdout != stdout {
+                out.push("{what}: printed\n{r.stdout}--- expected\n{stdout}---");
+            }
+        }
+    }
+    out
+}
+
+@test
+fun every_lesson_step_prints_what_it_says() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    let mut problems: string[] = [];
+    let mut steps = 0;
+    let learn = "{root()}/learn";
+    for chapter of folders(learn) {
+        for lesson of folders("{learn}/{chapter}") {
+            for step of folders("{learn}/{chapter}/{lesson}") {
+                let dir = "{learn}/{chapter}/{lesson}/{step}";
+                let md = read_file("{dir}/step.md").expect("every step has step.md");
+                let expected = read_file("{dir}/expected.txt").expect(
+                    "every step has expected.txt",
+                );
+                let start = read_file("{dir}/start/src/main.la").expect(
+                    "every step has start code",
+                );
+                steps += 1;
+                match read_file("{dir}/solution/src/main.la") {
+                    Ok(solution) => {
+                        problems = check(
+                            problems,
+                            "{step} (solution)",
+                            run(solution, ""),
+                            "",
+                            expected,
+                        );
+                        problems = check(
+                            problems,
+                            "{step} (start)",
+                            run(start, ""),
+                            front(md, "start_error"),
+                            front(md, "start_output"),
+                        );
+                    }
+                    Err(_) => {
+                        problems = check(problems, step, run(start, ""), "", expected);
+                    }
+                }
+            }
+        }
+    }
+    assert(steps > 0);
+    for p of problems {
+        eprintln(p);
+    }
+    assert_eq(problems, []);
+}
+
+@test
+fun every_example_prints_what_it_says() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    let mut problems: string[] = [];
+    let examples = "{root()}/examples";
+    let names = folders(examples);
+    assert(names.len > 0);
+    for name of names {
+        let dir = "{examples}/{name}";
+        let meta = toml.parse(
+            read_file("{dir}/example.toml").expect("every example has example.toml"),
+        ).expect("example.toml is TOML");
+        let stdin = toml.get(meta, "stdin").and_then(toml.as_text).unwrap_or("");
+        let source = read_file("{dir}/src/main.la").expect("every example has src/main.la");
+        let expected = read_file("{dir}/expected.txt").expect("every example has expected.txt");
+        problems = check(problems, name, run(source, stdin), "", expected);
+    }
+    for p of problems {
+        eprintln(p);
+    }
+    assert_eq(problems, []);
+}

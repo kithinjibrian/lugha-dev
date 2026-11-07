@@ -1,0 +1,6 @@
+8 different words
+the        5
+sat        3
+cat        2
+mat        2
+on         2

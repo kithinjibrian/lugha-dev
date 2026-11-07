@@ -1,0 +1,15 @@
+//: An `actor` declares state that one green thread owns. Its fields are private to it.
+actor Counter {
+    count: i64,
+//: Its methods are messages, handled one at a time, so the state needs no locks.
+    fun add(mut self, n: i64) { self.count += n; }
+    fun get(self): i64 = self.count;
+}
+
+//: `spawn` starts the actor. `c.add(5)` is queued; `c.get()` waits for the answer.
+fun main() {
+    let c = spawn Counter { count: 0 };
+    c.add(5);
+    c.add(2);
+    println(c.get());
+}

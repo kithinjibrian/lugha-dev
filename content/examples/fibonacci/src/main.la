@@ -1,0 +1,8 @@
+//: A function whose body is one expression can use `=`. `if` is an expression too, so its branches give the result directly.
+fun fib(n: i64): i64 = if n < 2 { n } else { fib(n - 1) + fib(n - 2) };
+
+//: `main` can return an `i32`: the program's exit code. Its last expression, `0`, is the value it returns.
+fun main(): i32 {
+    println(fib(30));
+    0
+}

@@ -1,0 +1,11 @@
+#!/bin/sh
+# Runs the content checks (test/content.la, PRP-002): every lesson step and
+# example in content/ through the real sandbox, compared with expected.txt.
+# Each check runs its items one after another, so this is two tests.
+#
+# Needs Docker with runsc and the sandbox image (SANDBOX_IMAGE, default
+# lugha-sandbox:m154). CONTENT_DIR names the content (default ../../content).
+
+set -eu
+cd "$(dirname "$0")/.."
+SANDBOX_TESTS=1 exec lughac test --timeout 600 test/content.la
