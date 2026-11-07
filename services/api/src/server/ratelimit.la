@@ -1,0 +1,47 @@
+/**
+ * Counting requests per IP address in fixed one-minute windows (PRP-001,
+ * API-5). Only the current minute's counts are kept, so memory stays
+ * bounded by the addresses seen in one minute, and nothing is remembered
+ * after it.
+ */
+import checks.limits { REQUESTS_PER_MINUTE };
+
+/** The counts for one minute. */
+struct Limiter {
+    /** Which minute the counts are for: milliseconds since the epoch / 60000. */
+    minute: i64,
+    /** Requests so far this minute, by address. */
+    counts: Map<string, i64>,
+}
+
+/** A limiter with no requests counted. */
+fun empty(): Limiter = Limiter { minute: -1, counts: #{} };
+
+/**
+ * Counts a request from `ip` at `now_ms`.
+ *
+ * @returns the updated limiter, and whether the request is allowed
+ */
+fun allow(l: Limiter, ip: string, now_ms: i64): (Limiter, bool) {
+    let minute = now_ms / 60000;
+    let mut counts: Map<string, i64> = if minute == l.minute { l.counts } else { #{} };
+    let n = counts.get(ip).unwrap_or(0);
+    if n >= REQUESTS_PER_MINUTE {
+        return (Limiter { minute: minute, counts: counts }, false);
+    }
+    counts[ip] = n + 1;
+    (Limiter { minute: minute, counts: counts }, true)
+}
+
+/**
+ * The visitor's address from Cloudflare's `CF-Connecting-IP`. The site is
+ * reached only through a Cloudflare Tunnel (the droplet has no open ports),
+ * and Cloudflare sets this header itself at its edge, so a visitor can't
+ * choose it. It holds one address; anything else isn't Cloudflare's.
+ *
+ * @returns the address; `"unknown"` without one, which then shares one count
+ */
+fun client_ip(connecting: Option<string>): string {
+    let ip = connecting.unwrap_or("").trim();
+    if ip == "" || ip.contains(",") || ip.contains(" ") { "unknown" } else { ip }
+}

@@ -1,0 +1,107 @@
+/**
+ * The API's four routes (PRP-001): `POST /api/run`, `/api/test` and
+ * `/api/format`, and `GET /api/version`. Each request is rate-limited,
+ * checked, handed to the sandbox as a job, and answered with the runner's
+ * result. Every refusal is a sentence; a sandbox failure is only ever the
+ * service sentence, never its details.
+ *
+ * The sandbox is passed in as a function, so the routes are tested without
+ * Docker; `main` passes the real one.
+ */
+import std.json;
+import checks.requests { run_request, files_request, reason };
+import checks.job { run_job, files_job };
+import server.ratelimit { Limiter, allow };
+import server.sandbox { SandboxError };
+
+/** What a visitor sees when the sandbox can't give a result. */
+const SERVICE_SENTENCE: string = "Couldn't run your code right now. Try again in a moment.";
+
+/** What a visitor sees past the rate limit. */
+const RATE_SENTENCE: string = "You're running code very fast. Wait a minute and try again.";
+
+/** An HTTP status and a JSON body. */
+struct Answer {
+    status: i64,
+    body: json.Value,
+}
+
+/** `{ "error": sentence }` with `status`. */
+fun refusal(status: i64, sentence: string): Answer = Answer {
+    status: status,
+    body: json.Value.Object(#{"error": json.Value.Text(sentence)}),
+};
+
+/** Runs a job in the sandbox: its result, or the service sentence. */
+fun ran(
+    job_text: string,
+    run_job_in: fun(string): Result<json.Value, SandboxError>,
+): Answer = match run_job_in(job_text) {
+    Ok(result) => Answer { status: 200, body: result },
+    Err(_) => refusal(503, SERVICE_SENTENCE),
+};
+
+/** Checks a request for `kind` and runs it. */
+fun handled(
+    kind: string,
+    body: string,
+    run_job_in: fun(string): Result<json.Value, SandboxError>,
+): Answer {
+    if kind == "run" {
+        return match run_request(body) {
+            Ok(r) => ran(run_job(r), run_job_in),
+            Err(e) => refusal(400, reason(e)),
+        };
+    }
+    match files_request(body) {
+        Ok(c) => ran(files_job(kind, c), run_job_in),
+        Err(e) => refusal(400, reason(e)),
+    }
+}
+
+/**
+ * Answers one request. `ip` is the visitor's address (for the rate limit
+ * only: it is never stored beyond this minute's count), `now_ms` the time,
+ * and `version` what `/api/version` reports.
+ *
+ * @returns the limiter after counting this request, and the answer
+ */
+fun route(
+    limiter: Limiter,
+    method: string,
+    path: string,
+    body: string,
+    ip: string,
+    now_ms: i64,
+    version: string,
+    run_job_in: fun(string): Result<json.Value, SandboxError>,
+): (Limiter, Answer) {
+    let kind = match path {
+        "/api/run" => "run",
+        "/api/test" => "test",
+        "/api/format" => "format",
+        "/api/version" => {
+            if method != "GET" {
+                return (limiter, refusal(405, "Use GET for /api/version."));
+            }
+            return (
+                limiter,
+                Answer {
+                    status: 200,
+                    body: json.Value.Object(#{"lughac": json.Value.Text(version)}),
+                },
+            );
+        }
+        _ => {
+            return (limiter, refusal(404, "Not found."));
+        }
+    };
+    if method != "POST" {
+        return (limiter, refusal(405, "Use POST for {path}."));
+    }
+    let (counted, allowed) = allow(limiter, ip, now_ms);
+    if !allowed {
+        return (counted, refusal(429, RATE_SENTENCE));
+    }
+    (counted, handled(kind, body, run_job_in))
+}

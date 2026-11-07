@@ -1,0 +1,199 @@
+// The hostile suite (PRP-001): programs that attack the sandbox, each run
+// through the real sandbox (Docker with gVisor's runsc) exactly as the API
+// runs a visitor's code. Each must be contained, and the sandbox must answer
+// the next request normally. Skipped with "no sandbox" where Docker, runsc
+// or the sandbox image is missing.
+//
+// The programs are test/hostile/*.la.txt: never compiled or run on the host.
+// They start real sandboxes, several built to eat memory or CPU, so they run
+// only when asked, and one at a time (in parallel on a small machine they slow
+// each other past any limit):
+//   scripts/hostile
+import std.env;
+import std.json;
+import std.process;
+import api.checks.files { File };
+import api.checks.manifest { DEFAULT };
+import api.checks.requests { RunRequest, run_request, reason };
+import api.checks.job { run_job };
+import api.server.sandbox { SandboxError, run_in_sandbox };
+
+fun image(): string = env.get("SANDBOX_IMAGE").unwrap_or("lugha-sandbox:m154");
+
+/** Whether the suite was asked for, Docker has runsc and the sandbox image is built. */
+fun ready(): bool {
+    if env.get("SANDBOX_TESTS") != Some("1") {
+        return false;
+    }
+    let runtimes = process.run("docker", ["info", "--format", "{{{{json .Runtimes}}}}"]);
+    let has_runsc = match runtimes {
+        Ok(out) => out.stdout.contains("\"runsc\""),
+        Err(_) => false,
+    };
+    has_runsc && match process.run("docker", ["image", "inspect", image()]) {
+        Ok(out) => out.code == 0,
+        Err(_) => false,
+    }
+}
+
+/** Runs `source` as src/main.la with `args`, as the API would. */
+fun run(source: string, args: string[]): Result<json.Value, SandboxError> {
+    let r = RunRequest {
+        files: [
+            File { path: "src/main.la", text: source },
+            File { path: "lugha.toml", text: DEFAULT },
+        ],
+        entry: "src/main.la",
+        args: args,
+        stdin: "",
+        opt: 0,
+    };
+    run_in_sandbox(image(), ["/usr/local/bin/runner", "/work"], run_job(r))
+}
+
+/** A field of a field of the result, as text, or "" when it isn't there. */
+fun text_at(v: json.Value, outer: string, inner: string): string = json.get(v, outer).and_then(
+    fun(o) = json.get(o, inner),
+).and_then(json.as_text).unwrap_or("");
+
+fun stdout_of(v: json.Value): string = text_at(v, "program", "stdout");
+
+fun stopped_of(v: json.Value): string = text_at(v, "program", "stopped");
+
+/** After an attack, the sandbox still answers an ordinary program. */
+fun still_works() {
+    let v = run("fun main() {{\n    println(\"still here\");\n}}\n", []).expect(
+        "the next run failed",
+    );
+    assert_eq(stdout_of(v), "still here\n");
+}
+
+@test
+fun an_endless_loop_is_stopped_after_5_seconds() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    let v = run(include_str("hostile/spin.la.txt"), []).expect("no result");
+    assert_eq(stopped_of(v), "time");
+    still_works();
+}
+
+@test
+fun allocating_forever_is_stopped_for_memory() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    let v = run(include_str("hostile/hog.la.txt"), []).expect("no result");
+    assert_eq(stopped_of(v), "memory");
+    still_works();
+}
+
+@test
+fun a_fork_bomb_is_held_by_the_process_limit() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    // prlimit --nproc fails its forks; timeout ends it. (With the container's
+    // own pids limit too low, gVisor ended the whole sandbox instead.)
+    let v = run(include_str("hostile/fork_bomb.la.txt"), []).expect("no result");
+    assert_eq(stopped_of(v), "time");
+    still_works();
+}
+
+@test
+fun a_flood_of_output_never_reaches_the_api_whole() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    // Until std.process can cap what it collects (DECISIONS.md, deferred), the
+    // runner is killed by the container's 1 GB while collecting: no result.
+    // Once the cap lands, this becomes a result with stdout truncated.
+    match run(include_str("hostile/flood.la.txt"), []) {
+        Ok(v) => assert_eq(
+            json.get(v, "program").and_then(fun(p) = json.get(p, "truncated")).and_then(
+                fun(t) = json.get(t, "stdout"),
+            ),
+            Some(json.Value.Bool(true)),
+        ),
+        Err(e) => assert_eq(e, SandboxError.NoResult(137)),
+    }
+    still_works();
+}
+
+@test
+fun there_is_no_network() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    // http.get by name, net.connect by address, net.resolve: all fail.
+    let v = run(include_str("hostile/network.la.txt"), []).expect("no result");
+    assert_eq(stdout_of(v), "false\nfalse\nfalse\n");
+}
+
+@test
+fun only_work_and_tmp_are_writable() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    // /etc, the runner, lughac's cache: refused; /work: allowed; no Docker socket.
+    let v = run(include_str("hostile/files.la.txt"), []).expect("no result");
+    assert_eq(stdout_of(v), "false\nfalse\nfalse\ntrue\nfalse\n");
+}
+
+@test
+fun a_shell_through_system_stays_inside() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    let out = stdout_of(run(include_str("hostile/system.la.txt"), []).expect("no result"));
+    let lines = out.lines();
+    assert_eq(lines[0], "10001");
+    assert(out.contains("no-docker-socket"));
+    assert(out.contains("no-ping"));
+}
+
+@test
+fun privileges_are_refused() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    // setuid(0) and chroot fail, the user stays 10001, and even after
+    // unshare(CLONE_NEWUSER) nothing outside /work can be written.
+    let v = run(include_str("hostile/privileges.la.txt"), []).expect("no result");
+    assert_eq(stdout_of(v), "-1\n10001\n-1\nfalse\nfalse\n");
+}
+
+@test
+fun a_host_file_cant_be_included_at_compile_time() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    let v = run(include_str("hostile/include.la.txt"), []).expect("no result");
+    let first = json.get(v, "compile").and_then(fun(c) = json.get(c, "diagnostics")).and_then(
+        fun(d) = json.at(d, 0),
+    );
+    assert_eq(first.and_then(fun(d) = json.get(d, "code")).and_then(json.as_text), Some("E0447"));
+}
+
+@test
+fun arguments_arrive_as_sent_never_through_a_shell() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    let args = ["; rm -rf /", "$(id)", "`id`", "a b", "*"];
+    let v = run(include_str("hostile/args.la.txt"), args).expect("no result");
+    assert_eq(stdout_of(v), args.join("\n") + "\n");
+}
+
+@test
+fun link_and_packages_never_reach_a_sandbox() {
+    // Refused while checking the request: no sandbox needed to show it.
+    let body = "{{\"files\": [{{\"path\": \"src/main.la\", \"text\": \"\"}}, {{\"path\": \"lugha.toml\", \"text\": \"[package]\\nname = \\\"a\\\"\\nversion = \\\"0.1.0\\\"\\nsource = \\\"src\\\"\\n[link]\\nc = [\\\"evil.c\\\"]\\n\"}}]}}";
+    match run_request(body) {
+        Err(e) => assert_eq(
+            reason(e),
+            "lugha.toml can only have a [package] section here; [link] isn't allowed in the browser.",
+        ),
+        Ok(_) => panic("a [link] request was accepted"),
+    }
+}

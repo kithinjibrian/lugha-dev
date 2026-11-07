@@ -1,0 +1,10 @@
+// Runs a shell through C's system(): it works, but only inside the sandbox,
+// as the sandbox's user, with nothing of the host's to reach.
+extern fun system(command: string): i32;
+
+fun main() {
+    system("id -u");
+    system("ls /var/run/docker.sock 2>/dev/null || echo no-docker-socket");
+    system("cat /proc/1/cgroup 2>/dev/null | head -1 || echo no-cgroup");
+    system("ping -c 1 1.1.1.1 >/dev/null 2>&1 && echo pinged || echo no-ping");
+}

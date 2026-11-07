@@ -1,0 +1,4 @@
+// Never stops: the time limit must end it.
+fun main() {
+    loop {}
+}

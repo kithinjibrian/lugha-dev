@@ -1,0 +1,9 @@
+// Writes and reads outside its folder: only /work and /tmp are writable,
+// and nothing of the host's is there.
+fun main() {
+    println(write_file("/etc/lugha", "x").is_ok());
+    println(write_file("/usr/local/bin/runner", "x").is_ok());
+    println(write_file("/opt/lugha-cache/objects/x", "x").is_ok());
+    println(write_file("/work/inside", "x").is_ok());
+    println(read_file("/var/run/docker.sock").is_ok());
+}

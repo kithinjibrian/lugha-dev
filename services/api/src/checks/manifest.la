@@ -1,0 +1,82 @@
+/**
+ * Checking the `lugha.toml` a request sends. Only `[package]` with `name`,
+ * `version` and `source = "src"` is allowed: `[link]` would compile and link
+ * C, and `[packages]` would load other code, git included (PRP-001, API-3).
+ *
+ * Doesn't read files: it checks the text it's given.
+ */
+import std.toml;
+
+/** The manifest used when a request sends no `lugha.toml`. */
+const DEFAULT: string = "[package]\nname = \"playground\"\nversion = \"0.1.0\"\nsource = \"src\"\n";
+
+/** What a checked `lugha.toml` says. */
+struct Manifest {
+    name: string,
+    version: string,
+}
+
+/** Why a `lugha.toml` was refused. */
+enum ManifestError {
+    /** Not valid TOML: the parser's message, with line and column. */
+    Invalid(string),
+    /** A section or top-level key other than `[package]`, such as `link`. */
+    NotAllowed(string),
+    /** A key in `[package]` other than `name`, `version` and `source`. */
+    NotAllowedInPackage(string),
+    /** No `[package]` table. */
+    NoPackage,
+    /** `name` missing, empty or not text. */
+    BadName,
+    /** `version` missing or not text. */
+    BadVersion,
+    /** `source` missing or not `"src"`. */
+    BadSource,
+}
+
+/**
+ * Checks a request's `lugha.toml`.
+ *
+ * @returns the package's name and version; the first problem found otherwise
+ */
+fun check(text: string): Result<Manifest, ManifestError> {
+    let doc = toml.parse(text).map_err(
+        fun(e: toml.TomlError) = ManifestError.Invalid(e.message()),
+    )?;
+    // Every top-level key is checked before [package] itself, so [link]
+    // is named even when [package] is also wrong.
+    for (key, _) of doc {
+        if key != "package" {
+            return Err(ManifestError.NotAllowed(key));
+        }
+    }
+    let package = doc.get("package").and_then(toml.as_table).ok_or(ManifestError.NoPackage)?;
+    for (key, _) of package {
+        if key != "name" && key != "version" && key != "source" {
+            return Err(ManifestError.NotAllowedInPackage(key));
+        }
+    }
+    let name = package.get("name").and_then(toml.as_text).unwrap_or("");
+    if name == "" {
+        return Err(ManifestError.BadName);
+    }
+    let version = package.get("version").and_then(toml.as_text).ok_or(ManifestError.BadVersion)?;
+    if package.get("source").and_then(toml.as_text) != Some("src") {
+        return Err(ManifestError.BadSource);
+    }
+    Ok(Manifest { name: name, version: version })
+}
+
+/** The sentence a visitor sees for a refused `lugha.toml`. */
+fun reason(e: ManifestError): string = match e {
+    Invalid(message) => "lugha.toml isn't valid TOML: {message}",
+    NotAllowed(key) => {
+        let shown = if key == "link" || key == "packages" { "[{key}]" } else { key };
+        "lugha.toml can only have a [package] section here; {shown} isn't allowed in the browser."
+    }
+    NotAllowedInPackage(key) => "[package] can only have name, version and source here; {key} isn't allowed.",
+    NoPackage => "lugha.toml needs a [package] section with name, version and source.",
+    BadName => "In lugha.toml, name must be the package's name, as text.",
+    BadVersion => "In lugha.toml, version must be text such as \"0.1.0\".",
+    BadSource => "In lugha.toml, source must be \"src\".",
+};

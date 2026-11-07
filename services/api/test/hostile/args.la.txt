@@ -1,0 +1,6 @@
+// Prints its arguments: they arrive exactly as sent, never through a shell.
+fun main() {
+    for a of args().iter().skip(1) {
+        println(a);
+    }
+}

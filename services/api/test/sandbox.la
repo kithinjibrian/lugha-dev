@@ -1,0 +1,103 @@
+// Starting a sandbox container and reading what it gives back.
+import api.server.sandbox { SandboxError, docker_command, read_result, IMAGE_LABEL };
+import api.runner.steps { Command };
+import api.runner.outcome { Captured };
+import std.json;
+
+fun has(c: Command, arg: string): bool = c.args.any(fun(a) = a == arg);
+
+@test
+fun the_container_is_locked_down() {
+    let c = docker_command("lugha-sandbox:0.1.0", "lugha-sandbox-1", [
+        "/usr/local/bin/runner",
+        "/work",
+    ]);
+    assert_eq(c.cmd, "timeout");
+    assert_eq(c.args.iter().take(5).collect(), ["--kill-after=5", "45", "docker", "run", "--rm"]);
+    for flag of [
+        "-i",
+        "--name=lugha-sandbox-1",
+        "--label={IMAGE_LABEL}",
+        "--runtime=runsc",
+        "--network=none",
+        "--read-only",
+        "--user=10001:10001",
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
+        "--pids-limit=256",
+        "--memory=1024m",
+        "--memory-swap=1024m",
+        "--cpus=1",
+        "--tmpfs=/work:rw,exec,nosuid,nodev,size=16m,uid=10001,gid=10001,mode=0700",
+        "--tmpfs=/tmp:rw,exec,nosuid,nodev,size=64m,uid=10001,gid=10001,mode=0700",
+        "--workdir=/work",
+    ] {
+        assert(has(c, flag));
+    }
+}
+
+@test
+fun the_image_and_command_come_last() {
+    let c = docker_command("lugha-sandbox:0.1.0", "n", ["/usr/local/bin/runner", "/work"]);
+    let n = c.args.len;
+    assert_eq([c.args[n - 3], c.args[n - 2], c.args[n - 1]], [
+        "lugha-sandbox:0.1.0",
+        "/usr/local/bin/runner",
+        "/work",
+    ]);
+}
+
+@test
+fun nothing_is_mounted_from_the_host() {
+    let c = docker_command("img", "n", ["x"]);
+    assert(
+        !c.args.any(
+            fun(a) = a.starts_with("-v") || a.starts_with("--volume") || a.starts_with("--mount"),
+        ),
+    );
+    assert(!c.args.any(fun(a) = a.starts_with("--privileged") || a.starts_with("--cap-add")));
+}
+
+const OK: string = "{{\"v\":1,\"kind\":\"run\",\"compile\":{{\"ok\":true,\"stopped\":null,\"diagnostics\":[]}},\"program\":null}}";
+
+@test
+fun a_result_is_read() {
+    let r = read_result(Captured { code: 0, stdout: OK + "\n", stderr: "" }).unwrap();
+    assert_eq(json.get(r, "kind").and_then(json.as_text), Some("run"));
+}
+
+@test
+fun the_ways_a_container_fails() {
+    assert_eq(
+        read_result(Captured { code: 124, stdout: "", stderr: "" }),
+        Err(SandboxError.TimedOut),
+    );
+    assert_eq(
+        read_result(Captured {
+            code: 125,
+            stdout: "",
+            stderr: "docker: unknown runtime specified runsc.\n",
+        }),
+        Err(SandboxError.Docker("docker: unknown runtime specified runsc.\n")),
+    );
+    assert_eq(
+        read_result(Captured { code: 137, stdout: "", stderr: "" }),
+        Err(SandboxError.NoResult(137)),
+    );
+    assert_eq(
+        read_result(Captured { code: 0, stdout: "not json\n", stderr: "" }),
+        Err(SandboxError.NoResult(0)),
+    );
+    assert_eq(
+        read_result(Captured {
+            code: 0,
+            stdout: "{{\"v\":1,\"failure\":\"couldn't write src/main.la\"}}\n",
+            stderr: "",
+        }),
+        Err(SandboxError.RunnerFailed("couldn't write src/main.la")),
+    );
+    assert_eq(
+        read_result(Captured { code: 0, stdout: "{{\"v\":2,\"kind\":\"run\"}}\n", stderr: "" }),
+        Err(SandboxError.NoResult(0)),
+    );
+}

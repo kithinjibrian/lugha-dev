@@ -1,0 +1,32 @@
+#!/bin/sh
+# Runs the hostile suite (test/hostile.la) one test at a time.
+#
+# lughac test runs a file's tests in parallel. These tests each start real
+# sandboxes, several of them built to eat memory or CPU, and in parallel on a
+# small machine they slow each other past any time limit. The API itself runs
+# one sandbox at a time, so the suite does too.
+#
+# Needs Docker with runsc and the sandbox image (SANDBOX_IMAGE, default
+# lugha-sandbox:m154). Exits 1 if any test fails.
+
+set -eu
+cd "$(dirname "$0")/.."
+
+export SANDBOX_TESTS=1
+failed=0
+passed=0
+
+for name in $(lughac test --list test/hostile.la | awk '{print $2}'); do
+	if out=$(lughac test --timeout 120 --exact --filter "$name" test/hostile.la 2>&1); then
+		echo "ok      $name"
+		passed=$((passed + 1))
+	else
+		echo "FAILED  $name"
+		echo "$out" | sed 's/^/        /'
+		failed=$((failed + 1))
+	fi
+done
+
+echo
+echo "$passed passed, $failed failed"
+[ "$failed" -eq 0 ]

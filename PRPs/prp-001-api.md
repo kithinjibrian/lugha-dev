@@ -1,6 +1,6 @@
 ## FEATURE: The code-running API — compile, run, test and format Lugha submitted from the site, safely, in a gVisor sandbox
 
-Status: **approved by the owner, 2026-11-07**, CONTENT sentences included. Amended the same day (approved): a root `docker-compose.yml` runs Caddy and the API, and builds the sandbox image.
+Status: **approved by the owner, 2026-11-07**, CONTENT sentences included. Amended the same day (approved): a root `docker-compose.yml` runs Caddy and the API, and builds the sandbox image; visitors arrive through a Cloudflare Tunnel (`cloudflared`), so the droplet has no open ports.
 
 ## OBJECTIVE
 
@@ -9,7 +9,7 @@ A visitor presses Run, Test or Format in Learn, Examples or Playground and gets 
 ## CONTEXT
 
 - Read first: `CLAUDE.md` (SECURITY, ARCHITECTURE), `DECISIONS.md`, `docs/ui/target/` (Learn, Examples and Playground show how results appear).
-- Creates `api/`: the API service (Lugha), the sandbox runner (Lugha, inside the container), the sandbox image, the Caddy configuration and the tests.
+- Creates `services/api/`: the API service (Lugha), the sandbox runner (Lugha, inside the container), the sandbox image, the Caddy configuration and the tests.
 - Relied on in `lughac` 0.1.0 (Lugha v17), each checked 2026-11-07:
   - `lughac build [-O 0|2] FILE -o OUT` and `--diagnostics json` (one JSON object per diagnostic on stderr: `severity`, `code`, `message`, `file`, `span`, `labels`, `help`).
   - `lughac test --json` (one object per test: `test`, `file`, `line`, `status`, `output`, `ms`; then `summary`) and `--timeout SECS`.
@@ -59,24 +59,25 @@ A visitor presses Run, Test or Format in Learn, Examples or Playground and gets 
 | Disk | a scratch folder in the container | 16 MB scratch, discarded |
 | Network | none | none |
 
-- Per IP address, enforced by the API from Caddy's `X-Forwarded-For` (trusted only from localhost): at most 20 requests a minute; past that, 429 and "You're running code very fast. Wait a minute and try again."
+- Per IP address, enforced by the API from Cloudflare's `CF-Connecting-IP` (set at Cloudflare's edge; the tunnel is the only way in): at most 20 requests a minute; past that, 429 and "You're running code very fast. Wait a minute and try again."
 - A stopped program is a sentence in the response, never an error status: "Your program was stopped after 5 seconds.", "…because it used more than 256 MB of memory.", "Its output was cut off at 64 KB."
 
 **Sandbox** (API-6):
 - Every request gets a fresh container: `docker run --rm --runtime=runsc --network=none --read-only --user` a non-root user, `--cap-drop=ALL`, `--security-opt=no-new-privileges`, `--pids-limit`, `--memory=1g`, a `--tmpfs` scratch folder of 16 MB, and the pinned sandbox image. Arguments are a list passed to `std.process`; never a shell.
-- The image holds the pinned `lughac`, `cc`, the coreutils/util-linux tools the runner needs (`timeout`, `prlimit`), and the runner. Built from `api/sandbox/Dockerfile`. If `lughac` has a runtime cache, it is warmed when the image is built.
+- The image holds the pinned `lughac`, `cc`, the coreutils/util-linux tools the runner needs (`timeout`, `prlimit`), and the runner. Built from `services/api/sandbox/Dockerfile`. If `lughac` has a runtime cache, it is warmed when the image is built.
 - **The runner** is a small Lugha program inside the container. It reads one job as JSON on stdin, writes the files into the scratch folder, runs `lughac` and the program under the running limits (via `timeout` and `prlimit`, never a shell), and prints one JSON result on stdout. All untrusted work happens in the container, compiling included.
 - **The API reads only the container's stdout, stderr and exit status.** It never opens a file the container wrote, and mounts nothing from the host into the container except the image.
 - The API bounds the whole container with an outer wall-time limit (45 s), and kills and removes it after that. A clean-up job removes any sandbox container older than 2 minutes.
 
 **One request at a time** (API-7): the API is a single Lugha process. While a sandbox runs, other connections wait in the kernel's queue. Caddy's upstream timeout is 60 s, and the site shows "The server is busy. Try again in a moment." when a request times out. When `lughac` gains non-blocking `std.process`, the API serves requests concurrently with no change to its interface.
 
-**Hosting** (API-8): one DigitalOcean droplet (2–4 vCPU, 4–8 GB) with Docker, `runsc` registered as a runtime in its default (systrap) mode, and Docker Compose. The domain is to be decided.
+**Hosting** (API-8): one DigitalOcean droplet (2–4 vCPU, 4–8 GB) with Docker, `runsc` registered as a runtime in its default (systrap) mode, and Docker Compose. Everything runs on the droplet, which has **no open ports**: visitors arrive through a Cloudflare Tunnel, and Cloudflare handles the domain and HTTPS. The domain is to be decided.
 
 **Compose** (API-10): `docker-compose.yml` at the repository root runs the long-lived services; the sandbox containers are never compose services, since the API starts one per request.
-- `caddy`: ports 80 and 443; HTTPS; request bodies capped at 512 KB; the static site (`ui-web`'s build folder, later); `/api/*` proxied to `api`. Configuration in `deploy/Caddyfile`.
-- `api`: the Lugha API, built from `api/Dockerfile`, on the compose network only (no published port), running as a non-root user, with `/var/run/docker.sock` mounted so it can start sandbox containers. That socket is root-equivalent on the host: the API stays small and strict, and nothing from a request reaches the `docker run` arguments except through checked fields.
-- `sandbox`: build-only (a compose profile, never started), building `api/sandbox/Dockerfile` into the pinned, tagged sandbox image that `api` runs per request.
+- `cloudflared` (profile `tunnel`, on the droplet): connects out to Cloudflare, which handles the domain and HTTPS, and hands requests to `caddy`. The tunnel's public hostname points at `http://caddy:80`; its token is `CLOUDFLARE_TUNNEL_TOKEN` in `.env`.
+- `caddy`: plain HTTP on the compose network, published only on `127.0.0.1:8080` for trying the site locally; request bodies capped at 512 KB; the static site (`services/ui-web`'s build folder, later); `/api/*` proxied to `api`. Configuration in `deploy/Caddyfile`.
+- `api`: the Lugha API, built from `services/api/Dockerfile`, on the compose network only (no published port), running as a non-root user, with `/var/run/docker.sock` mounted so it can start sandbox containers. That socket is root-equivalent on the host: the API stays small and strict, and nothing from a request reaches the `docker run` arguments except through checked fields.
+- `sandbox`: build-only (a compose profile, never started), building `services/api/sandbox/Dockerfile` into the pinned, tagged sandbox image that `api` runs per request.
 
 Deploying, locally or on the droplet, is `docker compose build` (with the sandbox profile) and `docker compose up -d`.
 
@@ -95,24 +96,32 @@ Deploying, locally or on the droplet, is `docker compose build` (with the sandbo
 **Layout** (every file ≤ 500 lines):
 
 ```
-api/
+services/api/
   lugha.toml
-  src/main.la          wiring: read the port, start the server
-  src/routes.la        the four routes; turns each outcome into a status and JSON
-  src/requests.la      decoding and checking requests (paths, caps, fields)
-  src/manifest.la      checking lugha.toml with std.toml
-  src/limits.la        every limit as a constant, and the stop sentences
-  src/ratelimit.la     per-IP counts per minute
-  src/sandbox.la       the docker argument list; running it; reading the runner's result
-  src/results.la       turning the runner's result into a response
-  Dockerfile           the API's image (lughac builds the API; a small image runs it)
-  runner/src/main.la   the in-container runner (its own package)
-  sandbox/Dockerfile   the sandbox image
-  test/                unit tests, sandbox tests, hostile/ programs
+  src/
+    main.la            the API's entry: read the port, start the server
+    checks/            used by both programs
+      limits.la        every limit as a constant
+      manifest.la      checking lugha.toml with std.toml
+      files.la         checking files: paths, counts, total size, lugha.toml
+      requests.la      decoding requests: JSON, known fields, entry, args, stdin, -O
+      job.la           the job the API hands the runner
+    server/            the API only
+      ratelimit.la     per-IP counts per minute
+      sandbox.la       the docker run for one job; reading its result
+      routes.la        the four routes; each outcome as a status and JSON
+    runner/            the runner only (inside the container)
+      main.la          the runner's entry (imports as api.checks…, api.runner…)
+      steps.la         the commands it runs, with their limits
+      outcome.la       what they printed, as the JSON result
+  Dockerfile           both images: targets `sandbox` and `api`, sharing one lughac build
+  sandbox/warm/        the program that warms lughac's object cache in the sandbox image
+  test/                one test file per module; sandbox tests; hostile/ programs
+  build/               built binaries (ignored by git)
 deploy/
-  Caddyfile            HTTPS, proxy, body cap, static site
-  cleanup              the stale-container clean-up job
-docker-compose.yml     caddy, api, and the build-only sandbox image (API-10)
+  Caddyfile            proxy, body cap, static site (HTTPS is Cloudflare's)
+  cleanup              the stale-container clean-up job (the cleanup service)
+docker-compose.yml     cloudflared, caddy, api, cleanup, and the build-only sandbox image (API-10)
 ```
 
 **Errors.** Each module has its own error enum (`RequestError`, `ManifestError`, `SandboxError`), each variant mapped to a sentence in `routes.la`. Expected failures are `Result`; panics are bugs. A visitor's compile error, panic or stopped program is a normal result, not an error.
@@ -136,7 +145,7 @@ Every sentence a visitor can see from the API, for the owner to approve:
 
 ## TESTS
 
-Unit (`lughac test api/test`):
+Unit (`lughac test services/api/test`):
 - [ ] Each path rule: accepted paths; refused absolute paths, `..`, hidden parts, other extensions, duplicates, too many files, too large.
 - [ ] `lugha.toml`: the default; `[package]` accepted; `[link]`, `[packages]`, unknown sections, invalid TOML refused with their sentences.
 - [ ] Run fields: entry missing from files, too many or too long args, stdin too large, `opt` other than 0 or 2, unknown fields.
@@ -163,9 +172,9 @@ Hostile (each stopped with the right sentence; the next request then succeeds):
 - [ ] A request during another's run waits and then succeeds.
 
 ## ACCEPTANCE
-- [ ] `lughac fmt --check api` is clean and `lughac test api/test` passes (sandbox tests skip only with "no sandbox").
+- [ ] `lughac fmt --check services/api` is clean and `lughac test services/api/test` passes (sandbox tests skip only with "no sandbox").
 - [ ] On a machine with Docker and `runsc`, the sandbox and hostile suites pass.
 - [ ] Every sentence in CONTENT is approved by the owner.
-- [ ] The owner has reviewed the sandbox flags, the runner, the Caddy configuration and `docker-compose.yml`.
-- [ ] `docker compose build` (with the sandbox profile) and `docker compose up -d` bring the site up locally; `/api/version` answers through Caddy.
+- [ ] The owner has reviewed the sandbox flags, the runner, the Caddy configuration, the tunnel and `docker-compose.yml`.
+- [ ] `docker compose build` (with the sandbox profile) and `docker compose up -d` bring the site up locally; `/api/version` answers through Caddy at `http://127.0.0.1:8080`.
 - [ ] For the owner, on the droplet before it is public: run the Learn steps and an example through the API, try an infinite loop, and check that a second request during it waits and then works.

@@ -1,0 +1,184 @@
+/**
+ * Turning a request's JSON body into a checked request (PRP-001, API-3).
+ * Every field is known: an unknown one is refused, so nothing a visitor
+ * adds (an environment, a working directory, a compiler flag) can reach
+ * the sandbox. Run takes `files`, `entry`, `args`, `stdin` and `opt`; Test
+ * and Format take only `files`.
+ */
+import std.json;
+import checks.files { File, Checked, FilesError, check_files };
+import checks.limits { MAX_ARGS, MAX_ARG_BYTES, MAX_STDIN_BYTES };
+
+/** A checked Run request. */
+struct RunRequest {
+    /** The project's files, `lugha.toml` included. */
+    files: File[],
+    /** The file `main` is in: under `src/`, and one of `files`. */
+    entry: string,
+    args: string[],
+    stdin: string,
+    /** `0` or `2`, for `lughac build -O`. */
+    opt: i64,
+}
+
+/** Why a request was refused. */
+enum RequestError {
+    /** The body isn't JSON (or breaks the parser's limits). */
+    NotJson,
+    /** The body is JSON but not an object. */
+    NotObject,
+    /** A field this request doesn't take. */
+    Unknown(string),
+    /** A required field that's missing. */
+    Missing(string),
+    /** A field of the wrong kind: its name, and what it must be. */
+    WrongType(string, string),
+    /** A file that isn't exactly `{ path, text }` with text in both. */
+    BadFile,
+    /** The files were refused. */
+    Files(FilesError),
+    /** An entry that isn't one of the files sent. */
+    NoSuchEntry(string),
+    /** An entry that isn't a `.la` file under `src/`. */
+    EntryNotSource,
+    TooManyArgs,
+    ArgTooLong,
+    /** An argument holding a NUL byte, which no program can be given. */
+    ArgHasNul,
+    StdinTooBig,
+    /** An `opt` other than the integers 0 and 2. */
+    BadOpt,
+}
+
+/** The JSON parser's limits for a request body: the defaults, shallower. */
+fun body_limits(): json.Limits = json.Limits { depth: 8, ..json.limits() };
+
+/** Parses a body into an object whose keys are all in `allowed`. */
+fun object_of(body: string, allowed: string[]): Result<Map<string, json.Value>, RequestError> {
+    let v = json.parse_with(body, body_limits()).map_err(
+        fun(e: json.JsonError) = RequestError.NotJson,
+    )?;
+    let fields = json.as_object(v).ok_or(RequestError.NotObject)?;
+    for (key, _) of fields {
+        if !allowed.any(fun(a) = a == key) {
+            return Err(RequestError.Unknown(key));
+        }
+    }
+    Ok(fields)
+}
+
+/** Reads and checks `files`. */
+fun files_of(fields: Map<string, json.Value>): Result<Checked, RequestError> {
+    let list = fields.get("files").ok_or(RequestError.Missing("files"))?;
+    let items = json.as_array(list).ok_or(RequestError.WrongType("files", "a list of files"))?;
+    let mut sent: File[] = [];
+    for item of items {
+        let file = json.as_object(item).ok_or(RequestError.BadFile)?;
+        if file.len != 2 {
+            return Err(RequestError.BadFile);
+        }
+        let path = file.get("path").and_then(json.as_text).ok_or(RequestError.BadFile)?;
+        let text = file.get("text").and_then(json.as_text).ok_or(RequestError.BadFile)?;
+        sent.push(File { path: path, text: text });
+    }
+    check_files(sent).map_err(RequestError.Files)
+}
+
+/** Reads an optional text field, or gives `fallback` when it's absent. */
+fun text_or(
+    fields: Map<string, json.Value>,
+    name: string,
+    fallback: string,
+): Result<string, RequestError> = match fields.get(name) {
+    None => Ok(fallback),
+    Some(v) => json.as_text(v).ok_or(RequestError.WrongType(name, "text")),
+};
+
+/** Reads and checks `args`. */
+fun args_of(fields: Map<string, json.Value>): Result<string[], RequestError> {
+    let items = match fields.get("args") {
+        None => [],
+        Some(v) => json.as_array(v).ok_or(RequestError.WrongType("args", "a list of text"))?,
+    };
+    if items.len > MAX_ARGS {
+        return Err(RequestError.TooManyArgs);
+    }
+    let mut args: string[] = [];
+    for item of items {
+        let arg = json.as_text(item).ok_or(RequestError.WrongType("args", "a list of text"))?;
+        if arg.len > MAX_ARG_BYTES {
+            return Err(RequestError.ArgTooLong);
+        }
+        // A program's arguments are C strings: a NUL would end one early,
+        // and std.process refuses them before starting anything.
+        for b of arg {
+            if b == 0 {
+                return Err(RequestError.ArgHasNul);
+            }
+        }
+        args.push(arg);
+    }
+    Ok(args)
+}
+
+/** Reads and checks `opt`: absent is 0. */
+fun opt_of(fields: Map<string, json.Value>): Result<i64, RequestError> = match fields.get("opt") {
+    None => Ok(0),
+    Some(v) => match json.as_i64(v) {
+        Some(0) => Ok(0),
+        Some(2) => Ok(2),
+        _ => Err(RequestError.BadOpt),
+    },
+};
+
+/**
+ * Parses and checks a Run request.
+ *
+ * @returns the request; the first problem found otherwise
+ */
+fun run_request(body: string): Result<RunRequest, RequestError> {
+    let fields = object_of(body, ["files", "entry", "args", "stdin", "opt"])?;
+    let checked = files_of(fields)?;
+    let entry = text_or(fields, "entry", "src/main.la")?;
+    if !entry.starts_with("src/") || !entry.ends_with(".la") {
+        return Err(RequestError.EntryNotSource);
+    }
+    if !checked.files.any(fun(f: File) = f.path == entry) {
+        return Err(RequestError.NoSuchEntry(entry));
+    }
+    let args = args_of(fields)?;
+    let stdin = text_or(fields, "stdin", "")?;
+    if stdin.len > MAX_STDIN_BYTES {
+        return Err(RequestError.StdinTooBig);
+    }
+    let opt = opt_of(fields)?;
+    Ok(RunRequest { files: checked.files, entry: entry, args: args, stdin: stdin, opt: opt })
+}
+
+/**
+ * Parses and checks a Test or Format request: `files` only.
+ *
+ * @returns the checked files; the first problem found otherwise
+ */
+fun files_request(body: string): Result<Checked, RequestError> {
+    let fields = object_of(body, ["files"])?;
+    files_of(fields)
+}
+
+/** The sentence a visitor sees for a refused request. */
+fun reason(e: RequestError): string = match e {
+    NotJson => "The request isn't valid JSON.",
+    NotObject => "The request must be a JSON object.",
+    Unknown(name) => "The request has a field the API doesn't know: {name}.",
+    Missing(name) => "The request is missing {name}.",
+    WrongType(name, want) => "In the request, {name} must be {want}.",
+    BadFile => "In the request, each file must have a path and a text.",
+    Files(f) => files.reason(f),
+    NoSuchEntry(entry) => "{entry} isn't one of your files.",
+    EntryNotSource => "The program must start in a .la file under src/.",
+    TooManyArgs => "Too many arguments: the limit is {MAX_ARGS}.",
+    ArgTooLong => "An argument is too long: the limit is {MAX_ARG_BYTES / 1024} KB each.",
+    ArgHasNul => "An argument can't contain a NUL character.",
+    StdinTooBig => "Standard input is too big: the limit is {MAX_STDIN_BYTES / 1024} KB.",
+    BadOpt => "The optimisation level must be 0 or 2.",
+};

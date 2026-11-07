@@ -1,0 +1,45 @@
+/**
+ * Every limit the API enforces, in one place (PRP-001, API-3 and API-5).
+ * The sandbox, the request checks and the stop sentences all read these.
+ */
+
+/** Files in one request. */
+const MAX_FILES: i64 = 20;
+/** Bytes of file text in one request: 256 KB. */
+const MAX_TOTAL_BYTES: i64 = 262144;
+/** Bytes in one file path. */
+const MAX_PATH_BYTES: i64 = 128;
+/** Parts in one file path, `src` included: `src/a/b/c/d/e/f/main.la` is 8. */
+const MAX_PATH_PARTS: i64 = 8;
+
+/** Arguments passed to a program. */
+const MAX_ARGS: i64 = 32;
+/** Bytes in one argument. */
+const MAX_ARG_BYTES: i64 = 1024;
+/** Bytes of standard input: 64 KB. */
+const MAX_STDIN_BYTES: i64 = 65536;
+/** Bytes kept of a program's stdout, and of its stderr: 64 KB each. */
+const MAX_OUTPUT_BYTES: i64 = 65536;
+
+/** Seconds for compiling: `lughac build`, `fmt`, and the build in `test`. */
+const COMPILE_SECONDS: i64 = 30;
+/** Seconds a program may run. */
+const RUN_SECONDS: i64 = 5;
+/** Seconds one test may run. */
+const TEST_SECONDS: i64 = 5;
+/** Seconds a whole test run may take, all tests together. */
+const TEST_RUN_SECONDS: i64 = 20;
+/** Seconds before the API kills a sandbox container, whatever it's doing. */
+const OUTER_SECONDS: i64 = 45;
+
+/** Megabytes for the whole container, compiling included. */
+const COMPILE_MEMORY_MB: i64 = 1024;
+/** Megabytes a program may use. */
+const RUN_MEMORY_MB: i64 = 256;
+/** Processes and threads a program may have. */
+const RUN_PROCESSES: i64 = 16;
+/** Megabytes of scratch disk in the container. */
+const SCRATCH_MB: i64 = 16;
+
+/** Requests one IP address may make in a minute. */
+const REQUESTS_PER_MINUTE: i64 = 20;

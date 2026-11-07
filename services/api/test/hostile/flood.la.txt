@@ -1,0 +1,6 @@
+// Prints as fast as it can: the output must be cut, never the service.
+fun main() {
+    loop {
+        println("spam spam spam spam spam spam spam spam spam spam spam spam spam spam");
+    }
+}

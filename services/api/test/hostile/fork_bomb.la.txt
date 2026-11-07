@@ -1,0 +1,8 @@
+// Every copy forks forever: the process limits must hold it.
+extern fun fork(): i32;
+
+fun main() {
+    loop {
+        fork();
+    }
+}

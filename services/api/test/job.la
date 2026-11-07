@@ -1,0 +1,42 @@
+// The job the API hands the runner: the request plus "v" and "kind",
+// checked again inside the container with the API's own checks.
+import api.checks.job { Job, run_job, files_job, decode };
+import api.checks.requests { run_request, files_request };
+
+const BODY: string = "{{\"files\": [{{\"path\": \"src/main.la\", \"text\": \"fun main() {{}}\"}}], \"args\": [\"7\"], \"stdin\": \"hi\", \"opt\": 2}}";
+
+const FILES_BODY: string = "{{\"files\": [{{\"path\": \"src/main.la\", \"text\": \"fun main() {{}}\"}}]}}";
+
+@test
+fun a_run_job_round_trips() {
+    let r = run_request(BODY).unwrap();
+    match decode(run_job(r)) {
+        Ok(Run(back)) => assert_eq(back, r),
+        _ => panic("not a run job"),
+    }
+}
+
+@test
+fun test_and_format_jobs_round_trip() {
+    let c = files_request(FILES_BODY).unwrap();
+    match decode(files_job("test", c)) {
+        Ok(Test(back)) => assert_eq(back.files, c.files),
+        _ => panic("not a test job"),
+    }
+    match decode(files_job("format", c)) {
+        Ok(Format(back)) => assert_eq(back.files, c.files),
+        _ => panic("not a format job"),
+    }
+}
+
+@test
+fun bad_jobs_are_refused() {
+    assert(decode("").is_err());
+    assert(decode("{{\"v\": 2, \"kind\": \"run\"}}").is_err());
+    assert(decode("{{\"v\": 1, \"kind\": \"build\", \"files\": []}}").is_err());
+    assert(
+        decode(
+            "{{\"v\": 1, \"kind\": \"run\", \"files\": [{{\"path\": \"../x.la\", \"text\": \"\"}}]}}",
+        ).is_err(),
+    );
+}

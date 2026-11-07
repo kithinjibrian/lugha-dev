@@ -1,0 +1,58 @@
+// Requests per IP address per minute.
+import api.server.ratelimit { Limiter, empty, allow, client_ip };
+import api.checks.limits { REQUESTS_PER_MINUTE };
+
+const MINUTE: i64 = 60000;
+
+/** Makes `n` requests from `ip` at `now`, giving the limiter and how many were allowed. */
+fun make(l: Limiter, ip: string, now: i64, n: i64): (Limiter, i64) {
+    let mut lim = l;
+    let mut allowed = 0;
+    for _ in 0..n {
+        let (next, ok) = allow(lim, ip, now);
+        lim = next;
+        if ok {
+            allowed += 1;
+        }
+    }
+    (lim, allowed)
+}
+
+@test
+fun twenty_a_minute_then_no_more() {
+    let (_, allowed) = make(empty(), "1.2.3.4", 5 * MINUTE, REQUESTS_PER_MINUTE + 5);
+    assert_eq(allowed, REQUESTS_PER_MINUTE);
+}
+
+@test
+fun the_next_minute_starts_again() {
+    let (lim, _) = make(empty(), "1.2.3.4", 5 * MINUTE, REQUESTS_PER_MINUTE);
+    let (_, still) = allow(lim, "1.2.3.4", 5 * MINUTE + 59999);
+    assert(!still);
+    let (_, again) = allow(lim, "1.2.3.4", 6 * MINUTE);
+    assert(again);
+}
+
+@test
+fun addresses_are_counted_apart() {
+    let (lim, _) = make(empty(), "1.2.3.4", MINUTE, REQUESTS_PER_MINUTE);
+    let (_, other) = allow(lim, "5.6.7.8", MINUTE);
+    assert(other);
+}
+
+@test
+fun old_minutes_are_forgotten() {
+    let (lim, _) = make(empty(), "1.2.3.4", MINUTE, 3);
+    let (later, _) = allow(lim, "5.6.7.8", 9 * MINUTE);
+    assert_eq(later.counts.len, 1);
+}
+
+@test
+fun the_client_is_cloudflares_connecting_address() {
+    assert_eq(client_ip(Some("203.0.113.7")), "203.0.113.7");
+    assert_eq(client_ip(Some(" 2001:db8::1 ")), "2001:db8::1");
+    // Cloudflare sends one address: anything else isn't from it.
+    assert_eq(client_ip(Some("10.0.0.1, 203.0.113.7")), "unknown");
+    assert_eq(client_ip(Some("")), "unknown");
+    assert_eq(client_ip(None), "unknown");
+}

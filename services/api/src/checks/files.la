@@ -1,0 +1,127 @@
+/**
+ * Checking the files a request sends, before any sandbox starts: which paths
+ * are allowed, how many files and how much text, and `lugha.toml` (PRP-001,
+ * API-3). A path is `lugha.toml`, or a `.la` file under `src/` or `test/`
+ * whose parts use only letters, digits, `_` and `-`, so nothing a visitor
+ * names can climb out of the scratch folder or hide.
+ */
+import checks.limits { MAX_FILES, MAX_TOTAL_BYTES, MAX_PATH_BYTES, MAX_PATH_PARTS };
+import checks.manifest { Manifest, ManifestError, DEFAULT, check };
+
+/** One file of a project: its path and its text. */
+struct File {
+    path: string,
+    text: string,
+}
+
+/** A request's files once checked, with `lugha.toml` added when it was missing. */
+struct Checked {
+    files: File[],
+    manifest: Manifest,
+}
+
+/** Why a request's files were refused. */
+enum FilesError {
+    /** No files at all. */
+    NoFiles,
+    /** More than `MAX_FILES`. */
+    TooMany,
+    /** More than `MAX_TOTAL_BYTES` of text. */
+    TooBig,
+    /** A path that breaks the rules: the path as sent. */
+    BadPath(string),
+    /** The same path twice. */
+    Duplicate(string),
+    /** `lugha.toml` refused. */
+    Manifest(ManifestError),
+}
+
+/** Says whether a byte may appear in a path part: a letter, digit, `_` or `-`. */
+fun is_name_byte(
+    b: u8,
+): bool = b >= 97 && b <= 122 || b >= 65 && b <= 90 || b >= 48 && b <= 57 || b == 95 || b == 45;
+
+/** Says whether a path part is a plain name: not empty, only name bytes, not starting with `-`. */
+fun is_name(part: string): bool {
+    if part.len == 0 || part[0] == 45 {
+        return false;
+    }
+    for b of part {
+        if !is_name_byte(b) {
+            return false;
+        }
+    }
+    true
+}
+
+/**
+ * Checks one path.
+ *
+ * @returns `Ok` for `lugha.toml` and for `src/…/name.la` or `test/…/name.la`
+ *     within the length and depth limits; `Err(BadPath)` otherwise
+ */
+fun check_path(path: string): Result<(), FilesError> {
+    if path == "lugha.toml" {
+        return Ok(());
+    }
+    let bad: Result<(), FilesError> = Err(FilesError.BadPath(path));
+    if path.len > MAX_PATH_BYTES || !path.ends_with(".la") {
+        return bad;
+    }
+    // Without the extension, every part must be a plain name, so `..`,
+    // `.hidden`, empty parts and `a.b.la` are all refused here.
+    let parts = path.slice(0, path.len - 3).split("/");
+    if parts.len < 2 || parts.len > MAX_PATH_PARTS || parts[0] != "src" && parts[0] != "test" {
+        return bad;
+    }
+    if !parts.all(is_name) {
+        return bad;
+    }
+    Ok(())
+}
+
+/**
+ * Checks a request's files: there are some, not too many or too big, every
+ * path allowed and none twice, and `lugha.toml` (the default when missing).
+ *
+ * @returns the files, with `lugha.toml` added if it was missing, and the
+ *     manifest; the first problem found otherwise
+ */
+fun check_files(files: File[]): Result<Checked, FilesError> {
+    if files.len == 0 {
+        return Err(FilesError.NoFiles);
+    }
+    if files.len > MAX_FILES {
+        return Err(FilesError.TooMany);
+    }
+    if files.fold(0, fun(n, file) = n + file.text.len) > MAX_TOTAL_BYTES {
+        return Err(FilesError.TooBig);
+    }
+    let mut seen: Set<string> = #{};
+    for file of files {
+        check_path(file.path)?;
+        if !seen.insert(file.path) {
+            return Err(FilesError.Duplicate(file.path));
+        }
+    }
+    let mut all = files;
+    let toml_text = match files.iter().position(fun(file: File) = file.path == "lugha.toml") {
+        Some(i) => files[i].text,
+        None => {
+            all.push(File { path: "lugha.toml", text: DEFAULT });
+            DEFAULT
+        }
+    };
+    let package = check(toml_text).map_err(FilesError.Manifest)?;
+    Ok(Checked { files: all, manifest: package })
+}
+
+/** The sentence a visitor sees for refused files. */
+fun reason(e: FilesError): string = match e {
+    NoFiles => "There's no code to run: add src/main.la.",
+    TooMany => "Too many files: the limit is {MAX_FILES}.",
+    TooBig => "Your code is too big: the limit is {MAX_TOTAL_BYTES / 1024} KB in total.",
+    BadPath(path) => "{path} isn't a file the playground can use: files go in src/ or test/, end in .la, and use letters, digits, _ and -.",
+    Duplicate(path) => "{path} appears twice.",
+    Manifest(m) => manifest.reason(m),
+};

@@ -1,0 +1,94 @@
+// lugha.toml in a request: only [package] with name, version and source = "src".
+import api.checks.manifest { Manifest, check, reason, DEFAULT };
+import std.toml;
+
+fun why(text: string): string = match check(text) {
+    Err(e) => reason(e),
+    Ok(_) => "ok",
+};
+
+@test
+fun the_default_is_accepted() {
+    assert_eq(check(DEFAULT).unwrap(), Manifest { name: "playground", version: "0.1.0" });
+}
+
+@test
+fun what_lughac_init_writes_is_accepted() {
+    let text = "# The package manifest (Lugha spec §6).\n[package]\nname = \"values\"\nversion = \"0.1.0\"\nsource = \"src\"\n";
+    assert_eq(check(text).unwrap(), Manifest { name: "values", version: "0.1.0" });
+}
+
+@test
+fun link_is_refused() {
+    let text = "[package]\nname = \"a\"\nversion = \"0.1.0\"\nsource = \"src\"\n\n[link]\nlibs = [\"z\"]\n";
+    assert_eq(
+        why(text),
+        "lugha.toml can only have a [package] section here; [link] isn't allowed in the browser.",
+    );
+}
+
+@test
+fun packages_are_refused() {
+    let text = "[package]\nname = \"a\"\nversion = \"0.1.0\"\nsource = \"src\"\n\n[packages]\ngeo = \"libs/geo\"\n";
+    assert_eq(
+        why(text),
+        "lugha.toml can only have a [package] section here; [packages] isn't allowed in the browser.",
+    );
+}
+
+@test
+fun a_top_level_key_is_refused() {
+    assert_eq(
+        why("name = \"a\"\n[package]\nname = \"a\"\nversion = \"0.1.0\"\nsource = \"src\"\n"),
+        "lugha.toml can only have a [package] section here; name isn't allowed in the browser.",
+    );
+}
+
+@test
+fun an_unknown_package_key_is_refused() {
+    assert_eq(
+        why("[package]\nname = \"a\"\nversion = \"0.1.0\"\nsource = \"src\"\nedition = \"2026\"\n"),
+        "[package] can only have name, version and source here; edition isn't allowed.",
+    );
+}
+
+@test
+fun a_missing_package_is_refused() {
+    assert_eq(why(""), "lugha.toml needs a [package] section with name, version and source.");
+    assert_eq(
+        why("package = 3\n"),
+        "lugha.toml needs a [package] section with name, version and source.",
+    );
+}
+
+@test
+fun each_field_is_required_and_typed() {
+    assert_eq(
+        why("[package]\nversion = \"0.1.0\"\nsource = \"src\"\n"),
+        "In lugha.toml, name must be the package's name, as text.",
+    );
+    assert_eq(
+        why("[package]\nname = \"\"\nversion = \"0.1.0\"\nsource = \"src\"\n"),
+        "In lugha.toml, name must be the package's name, as text.",
+    );
+    assert_eq(
+        why("[package]\nname = \"a\"\nversion = 1\nsource = \"src\"\n"),
+        "In lugha.toml, version must be text such as \"0.1.0\".",
+    );
+    assert_eq(
+        why("[package]\nname = \"a\"\nversion = \"0.1.0\"\nsource = \"lib\"\n"),
+        "In lugha.toml, source must be \"src\".",
+    );
+    assert_eq(
+        why("[package]\nname = \"a\"\nversion = \"0.1.0\"\n"),
+        "In lugha.toml, source must be \"src\".",
+    );
+}
+
+@test
+fun invalid_toml_says_where() {
+    assert_eq(why("[package\n"), "lugha.toml isn't valid TOML: " + match toml.parse("[package\n") {
+        Err(e) => e.message(),
+        Ok(_) => "",
+    });
+}

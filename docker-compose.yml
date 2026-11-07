@@ -1,0 +1,109 @@
+# The Lugha site (PRP-001, API-8 and API-10). Visitors reach it only through a
+# Cloudflare Tunnel: cloudflared connects out to Cloudflare, which handles the
+# domain and HTTPS, so the droplet has no open ports. cloudflared hands every
+# request to Caddy, which serves the static site and sends /api/* to the API.
+# The API starts one sandbox container per job from the sandbox image; those
+# containers are never services here.
+#
+#   docker compose --profile sandbox build    # both images (lughac is built once)
+#   docker compose up -d                      # caddy, api, cleanup (local: http://127.0.0.1:8080)
+#   docker compose --profile tunnel up -d     # on the droplet: with cloudflared too
+#
+# Needs on the host: Docker with gVisor's runsc registered as a runtime, and in
+# .env (or the environment):
+#   DOCKER_GID               the group of /var/run/docker.sock (stat -c %g /var/run/docker.sock)
+#   CLOUDFLARE_TUNNEL_TOKEN  the tunnel's token (the tunnel profile only); in
+#                            Cloudflare, the tunnel's public hostname points at http://caddy:80
+#   LUGHAC_REF               the lughac tag to build (default m154)
+
+name: lugha
+
+services:
+  # Connects out to Cloudflare and brings visitors' requests to Caddy.
+  cloudflared:
+    image: cloudflare/cloudflared:2025.11.1
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - caddy
+    profiles:
+      - tunnel
+
+  caddy:
+    image: caddy:2.8.4
+    restart: unless-stopped
+    # Only on this machine's loopback, for trying the site locally: nothing
+    # outside the droplet can reach it. Visitors come through cloudflared.
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./services/ui-web/dist:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ./services/api
+      target: api
+      args:
+        LUGHAC_REF: ${LUGHAC_REF:-m154}
+    restart: unless-stopped
+    # Reachable only by Caddy on the compose network: no published port.
+    expose:
+      - "8080"
+    environment:
+      SANDBOX_IMAGE: lugha-sandbox:${LUGHAC_REF:-m154}
+      PORT: "8080"
+    # The socket lets the API start sandbox containers. It is root-equivalent
+    # on the host, so the API stays small and strict (PRP-001, security notes).
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:?set DOCKER_GID to the group of /var/run/docker.sock}"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  # Removes any sandbox container that has outlived its limits, in case the
+  # API couldn't (deploy/cleanup).
+  cleanup:
+    image: docker:27.5.1-cli
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/cleanup"]
+    volumes:
+      - ./deploy/cleanup:/cleanup:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  # Build-only: the image the API runs per job. Never started.
+  sandbox:
+    build:
+      context: ./services/api
+      target: sandbox
+      args:
+        LUGHAC_REF: ${LUGHAC_REF:-m154}
+    image: lugha-sandbox:${LUGHAC_REF:-m154}
+    profiles:
+      - sandbox
+
+volumes:
+  caddy_data:
+  caddy_config:

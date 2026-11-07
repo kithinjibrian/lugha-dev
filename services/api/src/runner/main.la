@@ -1,0 +1,120 @@
+/**
+ * The runner: the one program that runs inside each sandbox container
+ * (PRP-001). It reads one job as JSON on stdin, checks it again, writes the
+ * files into its work folder, runs `lughac` and the visitor's program under
+ * the limits (`api.steps`), and prints one JSON result on stdout
+ * (`api.outcome`). Everything untrusted happens here, inside gVisor.
+ *
+ * Usage: `runner [WORK_FOLDER]` (default `/work`, the container's scratch).
+ *
+ * Wiring only: what's worth testing lives in the package's modules.
+ */
+import std.fs;
+import std.env;
+import std.process;
+import std.json;
+import api.checks.files { File };
+import api.checks.job { Job, decode };
+import api.checks.requests { RunRequest };
+import api.runner.steps { Command, build_command, run_command, test_command, format_command };
+import api.runner.outcome { Captured, run_result, test_result, format_result, failure, lughac_ran };
+
+/** Runs a command with `input` on its stdin and captures what it printed. */
+fun capture(c: Command, input: string): Result<Captured, string> {
+    let out = process.run_with(c.cmd, c.args, input).map_err(
+        fun(e: string) = "couldn't run {c.cmd}: {e}",
+    )?;
+    Ok(Captured { code: out.code as i64, stdout: out.stdout, stderr: out.stderr })
+}
+
+/** The folder part of a path: `src/a/b.la` → `src/a`; `""` for a top-level file. */
+fun folder_of(path: string): string {
+    let parts = path.split("/");
+    if parts.len < 2 { "" } else { parts.iter().take(parts.len - 1).collect().join("/") }
+}
+
+/** Writes the job's files into the current folder, making folders as needed. */
+fun write_all(list: File[]): Result<(), string> {
+    for f of list {
+        let folder = folder_of(f.path);
+        if folder != "" {
+            fs.make_dirs(folder).map_err(fun(e: string) = "couldn't make {folder}: {e}")?;
+        }
+        write_file(f.path, f.text).map_err(fun(e: string) = "couldn't write {f.path}: {e}")?;
+    }
+    Ok(())
+}
+
+/** Builds the entry and, when it compiled, runs it with the visitor's arguments and stdin. */
+fun do_run(r: RunRequest): Result<string, string> {
+    write_all(r.files)?;
+    fs.make_dirs(".build").map_err(fun(e: string) = "couldn't make .build: {e}")?;
+    let build = lughac_ran(capture(build_command(r.entry, r.opt), "")?)?;
+    if build.code != 0 {
+        return Ok(run_result(build, None));
+    }
+    let program = capture(run_command(r.args), r.stdin)?;
+    Ok(run_result(build, Some(program)))
+}
+
+/** Runs every test. */
+fun do_test(list: File[]): Result<string, string> {
+    write_all(list)?;
+    Ok(test_result(lughac_ran(capture(test_command(), "")?)?))
+}
+
+/** Formats the `.la` files and reports the ones that changed. */
+fun do_format(list: File[]): Result<string, string> {
+    write_all(list)?;
+    let sources = list.filter(fun(f: File) = f.path.ends_with(".la"));
+    let done = lughac_ran(capture(format_command(sources.map(fun(f: File) = f.path)), "")?)?;
+    let mut after: File[] = [];
+    for f of sources {
+        let text = read_file(f.path).map_err(fun(e: string) = "couldn't read {f.path} back: {e}")?;
+        after.push(File { path: f.path, text: text });
+    }
+    Ok(format_result(done, sources, after))
+}
+
+/** Does the job on stdin, in `work`. */
+fun serve(work: string): Result<string, string> {
+    env.set_current_dir(work).map_err(fun(e: string) = "couldn't enter {work}: {e}")?;
+    let text = string_from_utf8(read_stdin_bytes()).map_err(
+        fun(e: string) = "the job isn't UTF-8: {e}",
+    )?;
+    match decode(text)? {
+        Run(r) => do_run(r),
+        Test(c) => do_test(c.files),
+        Format(c) => do_format(c.files),
+    }
+}
+
+/** The `lughac` this container has, as `lughac --version` prints it. */
+fun lughac_version(): Result<string, string> {
+    let out = process.run("lughac", ["--version"]).map_err(
+        fun(e: string) = "couldn't run lughac: {e}",
+    )?;
+    Ok(
+        written(#{
+            "v": json.Value.Integer(1),
+            "kind": json.Value.Text("version"),
+            "lughac": json.Value.Text(out.stdout.trim()),
+        }),
+    )
+}
+
+fun main() {
+    let argv = args();
+    let arg = if argv.len > 1 { argv[1] } else { "/work" };
+    // Always exactly one JSON object on stdout, so the API can always decode it.
+    let done = if arg == "--version" { lughac_version() } else { serve(arg) };
+    match done {
+        Ok(result) => println(result),
+        Err(why) => println(failure(why)),
+    }
+}
+
+/** Writes a JSON object; every value here is finite, so writing can't fail. */
+fun written(fields: Map<string, json.Value>): string = json.stringify(
+    json.Value.Object(fields),
+).unwrap();

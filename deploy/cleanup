@@ -1,0 +1,29 @@
+#!/bin/sh
+# Removes sandbox containers that have run longer than MAX_AGE seconds, in
+# case the API couldn't remove one itself (PRP-001). Runs in the cleanup
+# service of docker-compose.yml, with the host's Docker socket.
+#
+# Sandbox containers are labelled lugha-sandbox=1 and named
+# lugha-sandbox-<start in ms since the epoch>-<random>, so a container's age
+# is read from its name: no date parsing.
+
+set -eu
+
+MAX_AGE=120
+EVERY=30
+
+while true; do
+	now=$(date +%s)
+	docker ps --filter label=lugha-sandbox=1 --format '{{.Names}}' | while read -r name; do
+		started=${name#lugha-sandbox-}
+		started=${started%%-*}
+		case "$started" in
+			'' | *[!0-9]*) continue ;;
+		esac
+		if [ $((now - started / 1000)) -gt "$MAX_AGE" ]; then
+			echo "removing $name, older than ${MAX_AGE}s"
+			docker rm --force "$name" >/dev/null 2>&1 || echo "couldn't remove $name"
+		fi
+	done
+	sleep "$EVERY"
+done

@@ -1,0 +1,18 @@
+// Asks the kernel for more than it has. setuid and chroot are refused.
+// unshare(CLONE_NEWUSER) succeeds, but inside gVisor's own kernel: the new
+// namespace's "root" still can't write anywhere but /work and /tmp.
+extern fun setuid(uid: u32): i32;
+extern fun getuid(): u32;
+extern fun chroot(path: string): i32;
+extern fun unshare(flags: i32): i32;
+
+fun main() {
+    println(setuid(0));
+    println(getuid());
+    println(chroot("/"));
+    // CLONE_NEWUSER
+    let unshared = unshare(268435456);
+    println(write_file("/etc/lugha", "x").is_ok());
+    println(write_file("/usr/local/bin/runner", "x").is_ok());
+    eprintln("unshare gave {unshared}");
+}

@@ -1,6 +1,6 @@
 # Design — lugha-dev
 
-The site's look is **Machweo** (core decision 4). Every colour, font and size in `ui-web/` comes from this file. The clickable prototype is https://claude.ai/artifact/M6vsrSiDskXzH4sFSQkD3n.
+The site's look is **Machweo** (core decision 4). Every colour, font and size in `services/ui-web/` comes from this file. The clickable prototype is https://claude.ai/artifact/M6vsrSiDskXzH4sFSQkD3n.
 
 ## Ideas
 

@@ -1,0 +1,79 @@
+// The commands the runner runs inside the container: argument lists, never a shell.
+import api.runner.steps {
+    Command,
+    build_command,
+    run_command,
+    test_command,
+    format_command,
+    PROGRAM,
+};
+
+@test
+fun building_is_timed_and_gives_json_diagnostics() {
+    assert_eq(build_command("src/main.la", 2), Command {
+        cmd: "timeout",
+        args: [
+            "--kill-after=2",
+            "30",
+            "lughac",
+            "build",
+            "--diagnostics",
+            "json",
+            "-O",
+            "2",
+            "src/main.la",
+            "-o",
+            PROGRAM,
+        ],
+    });
+}
+
+@test
+fun running_is_timed_and_limited() {
+    assert_eq(run_command(["21", "--verbose"]), Command {
+        cmd: "timeout",
+        args: [
+            "--kill-after=1",
+            "5",
+            "prlimit",
+            "--as=268435456",
+            "--nproc=16",
+            "--fsize=16777216",
+            "--",
+            PROGRAM,
+            "21",
+            "--verbose",
+        ],
+    });
+}
+
+@test
+fun the_program_lives_where_no_sent_file_can() {
+    // Sent files are lugha.toml or under src/ and test/, with plain names:
+    // a path starting with "." can't be one of them.
+    assert(PROGRAM.starts_with("./.build/"));
+}
+
+@test
+fun an_argument_like_a_flag_reaches_the_program() {
+    // After "--", prlimit passes everything on unread.
+    let c = run_command(["--as=0"]);
+    assert_eq(c.args[c.args.len - 1], "--as=0");
+    assert_eq(c.args[c.args.len - 3], "--");
+}
+
+@test
+fun testing_runs_every_test_with_json_output() {
+    assert_eq(test_command(), Command {
+        cmd: "timeout",
+        args: ["--kill-after=2", "40", "lughac", "test", "--json", "--timeout", "5", "."],
+    });
+}
+
+@test
+fun formatting_names_each_file() {
+    assert_eq(format_command(["src/main.la", "test/main_test.la"]), Command {
+        cmd: "timeout",
+        args: ["--kill-after=2", "30", "lughac", "fmt", "src/main.la", "test/main_test.la"],
+    });
+}
