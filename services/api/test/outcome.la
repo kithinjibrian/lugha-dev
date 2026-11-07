@@ -1,8 +1,16 @@
 // Turning what lughac and the program printed into the runner's result.
 // The captured texts are what lughac 0.1.0 printed, recorded 2026-11-07.
-import api.outcome { Captured, cap, stopped, run_result, test_result, format_result, failure };
-import api.files { File };
-import api.limits { MAX_OUTPUT_BYTES };
+import api.runner.outcome {
+    Captured,
+    cap,
+    stopped,
+    run_result,
+    test_result,
+    format_result,
+    failure,
+};
+import api.checks.files { File };
+import api.checks.limits { MAX_OUTPUT_BYTES };
 import std.json;
 
 fun parsed(text: string): json.Value = json.parse(text).unwrap();

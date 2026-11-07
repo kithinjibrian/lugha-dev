@@ -5,8 +5,8 @@
  * whose parts use only letters, digits, `_` and `-`, so nothing a visitor
  * names can climb out of the scratch folder or hide.
  */
-import limits { MAX_FILES, MAX_TOTAL_BYTES, MAX_PATH_BYTES, MAX_PATH_PARTS };
-import manifest { Manifest, ManifestError, DEFAULT, check };
+import checks.limits { MAX_FILES, MAX_TOTAL_BYTES, MAX_PATH_BYTES, MAX_PATH_PARTS };
+import checks.manifest { Manifest, ManifestError, DEFAULT, check };
 
 /** One file of a project: its path and its text. */
 struct File {

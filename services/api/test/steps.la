@@ -1,5 +1,12 @@
 // The commands the runner runs inside the container: argument lists, never a shell.
-import api.steps { Command, build_command, run_command, test_command, format_command, PROGRAM };
+import api.runner.steps {
+    Command,
+    build_command,
+    run_command,
+    test_command,
+    format_command,
+    PROGRAM,
+};
 
 @test
 fun building_is_timed_and_gives_json_diagnostics() {

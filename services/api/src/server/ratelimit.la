@@ -4,7 +4,7 @@
  * bounded by the addresses seen in one minute, and nothing is remembered
  * after it.
  */
-import limits { REQUESTS_PER_MINUTE };
+import checks.limits { REQUESTS_PER_MINUTE };
 
 /** The counts for one minute. */
 struct Limiter {

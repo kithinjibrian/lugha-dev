@@ -3,8 +3,7 @@
 .env.*
 
 # Built outputs
-/services/api/api
-/services/api/runner/runner
+/services/api/build/
 /services/ui-web/dist/
 node_modules/
 

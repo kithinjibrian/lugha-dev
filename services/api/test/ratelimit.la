@@ -1,6 +1,6 @@
 // Requests per IP address per minute.
-import api.ratelimit { Limiter, empty, allow, client_ip };
-import api.limits { REQUESTS_PER_MINUTE };
+import api.server.ratelimit { Limiter, empty, allow, client_ip };
+import api.checks.limits { REQUESTS_PER_MINUTE };
 
 const MINUTE: i64 = 60000;
 

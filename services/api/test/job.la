@@ -1,7 +1,7 @@
 // The job the API hands the runner: the request plus "v" and "kind",
 // checked again inside the container with the API's own checks.
-import api.job { Job, run_job, files_job, decode };
-import api.requests { run_request, files_request };
+import api.checks.job { Job, run_job, files_job, decode };
+import api.checks.requests { run_request, files_request };
 
 const BODY: string = "{{\"files\": [{{\"path\": \"src/main.la\", \"text\": \"fun main() {{}}\"}}], \"args\": [\"7\"], \"stdin\": \"hi\", \"opt\": 2}}";
 

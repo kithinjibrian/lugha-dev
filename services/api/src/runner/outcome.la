@@ -9,8 +9,8 @@
  * service sentence.
  */
 import std.json;
-import files { File };
-import limits { MAX_OUTPUT_BYTES };
+import checks.files { File };
+import checks.limits { MAX_OUTPUT_BYTES };
 
 /** What one command printed, and how it ended. */
 struct Captured {

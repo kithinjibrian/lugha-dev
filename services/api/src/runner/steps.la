@@ -5,7 +5,7 @@
  * and file size (PRP-001, API-5). Commands run in the job's folder, so
  * every path here is relative to it.
  */
-import limits {
+import checks.limits {
     COMPILE_SECONDS,
     RUN_SECONDS,
     TEST_SECONDS,

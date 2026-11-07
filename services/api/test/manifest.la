@@ -1,5 +1,5 @@
 // lugha.toml in a request: only [package] with name, version and source = "src".
-import api.manifest { Manifest, check, reason, DEFAULT };
+import api.checks.manifest { Manifest, check, reason, DEFAULT };
 import std.toml;
 
 fun why(text: string): string = match check(text) {

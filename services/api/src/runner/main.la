@@ -12,11 +12,11 @@
 import std.fs;
 import std.env;
 import std.process;
-import api.files { File };
-import api.job { Job, decode };
-import api.requests { RunRequest };
-import api.steps { Command, build_command, run_command, test_command, format_command };
-import api.outcome { Captured, run_result, test_result, format_result, failure };
+import api.checks.files { File };
+import api.checks.job { Job, decode };
+import api.checks.requests { RunRequest };
+import api.runner.steps { Command, build_command, run_command, test_command, format_command };
+import api.runner.outcome { Captured, run_result, test_result, format_result, failure };
 
 /** Runs a command with `input` on its stdin and captures what it printed. */
 fun capture(c: Command, input: string): Result<Captured, string> {

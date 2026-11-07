@@ -6,8 +6,8 @@
  * sandbox's wall.
  */
 import std.json;
-import files { File, Checked };
-import requests { RunRequest, run_request, files_request, reason };
+import checks.files { File, Checked };
+import checks.requests { RunRequest, run_request, files_request, reason };
 
 /** What the runner is asked to do. */
 enum Job {

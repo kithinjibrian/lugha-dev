@@ -6,8 +6,8 @@
  * and Format take only `files`.
  */
 import std.json;
-import files { File, Checked, FilesError, check_files };
-import limits { MAX_ARGS, MAX_ARG_BYTES, MAX_STDIN_BYTES };
+import checks.files { File, Checked, FilesError, check_files };
+import checks.limits { MAX_ARGS, MAX_ARG_BYTES, MAX_STDIN_BYTES };
 
 /** A checked Run request. */
 struct RunRequest {

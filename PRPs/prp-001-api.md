@@ -97,19 +97,26 @@ Deploying, locally or on the droplet, is `docker compose build` (with the sandbo
 ```
 services/api/
   lugha.toml
-  src/main.la          wiring: read the port, start the server
-  src/routes.la        the four routes; turns each outcome into a status and JSON
-  src/requests.la      decoding requests: JSON, known fields, entry, args, stdin, -O
-  src/files.la         checking files: paths, counts, total size, lugha.toml
-  src/manifest.la      checking lugha.toml with std.toml
-  src/limits.la        every limit as a constant, and the stop sentences
-  src/ratelimit.la     per-IP counts per minute
-  src/sandbox.la       the docker argument list; running it; reading the runner's result
-  src/results.la       turning the runner's result into a response
-  Dockerfile           the API's image (lughac builds the API; a small image runs it)
-  runner/src/main.la   the in-container runner (its own package)
+  src/
+    main.la            the API's entry: read the port, start the server
+    checks/            used by both programs
+      limits.la        every limit as a constant
+      manifest.la      checking lugha.toml with std.toml
+      files.la         checking files: paths, counts, total size, lugha.toml
+      requests.la      decoding requests: JSON, known fields, entry, args, stdin, -O
+      job.la           the job the API hands the runner
+    server/            the API only
+      ratelimit.la     per-IP counts per minute
+      sandbox.la       the docker run for one job; reading its result
+      routes.la        the four routes; each outcome as a status and JSON
+    runner/            the runner only (inside the container)
+      main.la          the runner's entry (imports as api.checks…, api.runner…)
+      steps.la         the commands it runs, with their limits
+      outcome.la       what they printed, as the JSON result
+  Dockerfile           the API's image
   sandbox/Dockerfile   the sandbox image
-  test/                unit tests, sandbox tests, hostile/ programs
+  test/                one test file per module; sandbox tests; hostile/ programs
+  build/               built binaries (ignored by git)
 deploy/
   Caddyfile            HTTPS, proxy, body cap, static site
   cleanup              the stale-container clean-up job

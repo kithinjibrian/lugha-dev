@@ -1,7 +1,7 @@
 // Starting a sandbox container and reading what it gives back.
-import api.sandbox { SandboxError, docker_command, read_result, IMAGE_LABEL };
-import api.steps { Command };
-import api.outcome { Captured };
+import api.server.sandbox { SandboxError, docker_command, read_result, IMAGE_LABEL };
+import api.runner.steps { Command };
+import api.runner.outcome { Captured };
 import std.json;
 
 fun has(c: Command, arg: string): bool = c.args.any(fun(a) = a == arg);

@@ -1,5 +1,5 @@
 // Request bodies: JSON in, a checked request out, every field known.
-import api.requests { RunRequest, run_request, files_request, reason };
+import api.checks.requests { RunRequest, run_request, files_request, reason };
 
 fun why_run(body: string): string = match run_request(body) {
     Err(e) => reason(e),

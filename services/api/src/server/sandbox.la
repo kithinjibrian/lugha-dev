@@ -13,9 +13,9 @@ import std.json;
 import std.process;
 import std.random;
 import std.time;
-import limits { OUTER_SECONDS, COMPILE_MEMORY_MB };
-import steps { Command };
-import outcome { Captured };
+import checks.limits { OUTER_SECONDS, COMPILE_MEMORY_MB };
+import runner.steps { Command };
+import runner.outcome { Captured };
 
 /** The label on every sandbox container, for the clean-up job. */
 const IMAGE_LABEL: string = "lugha-sandbox=1";
