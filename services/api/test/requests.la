@@ -108,6 +108,14 @@ fun arguments_are_capped() {
 }
 
 @test
+fun an_argument_cant_hold_a_nul() {
+    assert_eq(
+        why_run(with_files(", \"args\": [\"a\\u0000b\"]")),
+        "An argument can't contain a NUL character.",
+    );
+}
+
+@test
 fun stdin_is_capped() {
     let mut big = "";
     for _ in 0..65537 {

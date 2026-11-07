@@ -43,6 +43,8 @@ enum RequestError {
     EntryNotSource,
     TooManyArgs,
     ArgTooLong,
+    /** An argument holding a NUL byte, which no program can be given. */
+    ArgHasNul,
     StdinTooBig,
     /** An `opt` other than the integers 0 and 2. */
     BadOpt,
@@ -107,6 +109,13 @@ fun args_of(fields: Map<string, json.Value>): Result<string[], RequestError> {
         if arg.len > MAX_ARG_BYTES {
             return Err(RequestError.ArgTooLong);
         }
+        // A program's arguments are C strings: a NUL would end one early,
+        // and std.process refuses them before starting anything.
+        for b of arg {
+            if b == 0 {
+                return Err(RequestError.ArgHasNul);
+            }
+        }
         args.push(arg);
     }
     Ok(args)
@@ -169,6 +178,7 @@ fun reason(e: RequestError): string = match e {
     EntryNotSource => "The program must start in a .la file under src/.",
     TooManyArgs => "Too many arguments: the limit is {MAX_ARGS}.",
     ArgTooLong => "An argument is too long: the limit is {MAX_ARG_BYTES / 1024} KB each.",
+    ArgHasNul => "An argument can't contain a NUL character.",
     StdinTooBig => "Standard input is too big: the limit is {MAX_STDIN_BYTES / 1024} KB.",
     BadOpt => "The optimisation level must be 0 or 2.",
 };
