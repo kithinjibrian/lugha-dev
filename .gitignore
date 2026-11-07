@@ -1,0 +1,13 @@
+# Secrets
+.env
+.env.*
+
+# Built outputs
+/api/api
+/api/runner/runner
+/ui-web/dist/
+node_modules/
+
+# Editors and systems
+.DS_Store
+*.swp

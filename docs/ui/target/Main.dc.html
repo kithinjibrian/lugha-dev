@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lugha</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#14110F}
+a{color:#FFB066}a:hover{color:#FFD08F}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-direction: column; background: #14110F; color: #F3E9DA; font-family: 'Bricolage Grotesque', sans-serif; overflow: hidden">
+
+  <header style="flex-shrink: 0; height: 64px; padding: 0 24px; display: flex; align-items: center; gap: 28px; border-bottom: 1px solid #2A241F; background: #1A1613">
+    <a href="Main.dc.html" aria-label="Lugha home" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #F3E9DA">
+      <svg width="28" height="28" viewBox="0 0 128 128" aria-hidden="true"><defs><linearGradient id="hmS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF7400"/><stop offset="1" stop-color="#E8C400"/></linearGradient><clipPath id="hmC"><circle cx="64" cy="64" r="64"/></clipPath></defs><circle cx="64" cy="64" r="64" fill="url(#hmS)"/><g clip-path="url(#hmC)"><g transform="translate(12 24) scale(1.625)"><g stroke="#121212" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M31 27 L24 17 L18 15"/><path d="M32 26 L33 11"/><path d="M33 11 L30 6"/><path d="M33 11 L37 7"/><path d="M33 27 L44 18 L50 17"/><path d="M30 31 L18 27 L12 28"/></g><path d="M21 64 C19.5 47 24 34 30 25.5 H34 C40 34 44.5 47 43 64 Z" fill="#121212"/></g></g></svg>
+      <span style="font-size: 21px; font-weight: 800">lugha</span>
+    </a>
+    <nav aria-label="Main" style="display: flex; gap: 22px; align-self: stretch">
+      <a href="Learn.dc.html" style="display: flex; align-items: center; font-size: 16px; text-decoration: none; color: #A99C8A">Learn</a>
+      <a href="Examples.dc.html" style="display: flex; align-items: center; font-size: 16px; text-decoration: none; color: #A99C8A">Examples</a>
+      <a href="Playground.dc.html" style="display: flex; align-items: center; font-size: 16px; text-decoration: none; color: #A99C8A">Playground</a>
+    </nav>
+    <div style="flex: 1"></div>
+    <a href="https://github.com/kithinjibrian/lugha" style="display: flex; align-items: center; gap: 8px; font-size: 15px; text-decoration: none; color: #D6C9B6; height: 40px; padding: 0 14px; border: 1px solid #3A3129; border-radius: 999px"><svg width="16" height="16" viewBox="0 0 24 24" fill="#D6C9B6" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"/></svg>GitHub</a>
+  </header>
+
+  <section aria-labelledby="hero" style="flex: 1; display: flex; flex-direction: column">
+    <div style="flex: 1; max-width: 1328px; width: 100%; box-sizing: border-box; margin: 0 auto; padding: 80px 24px 72px; display: flex; flex-wrap: wrap; align-items: center; gap: 56px">
+    <div style="flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 40px">
+      <h1 id="hero" style="margin: 0; font-size: clamp(44px, 4.8vw, 74px); font-weight: 800; line-height: 1.02; letter-spacing: -2.5px">A language that doesn't get in your way, but still has your back.</h1>
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+        <a href="Learn.dc.html" style="font: 800 17px 'Bricolage Grotesque', sans-serif; background: #FF7400; color: #14110F; text-decoration: none; border-radius: 999px; padding: 0 28px; height: 54px; display: flex; align-items: center">Start learning</a>
+        <a href="Examples.dc.html" style="font: 600 17px 'Bricolage Grotesque', sans-serif; color: #F3E9DA; text-decoration: none; border: 1.5px solid #4A3F35; border-radius: 999px; padding: 0 26px; height: 54px; display: flex; align-items: center">Examples</a>
+        <a href="Playground.dc.html" style="font: 600 17px 'Bricolage Grotesque', sans-serif; color: #F3E9DA; text-decoration: none; border: 1.5px solid #4A3F35; border-radius: 999px; padding: 0 26px; height: 54px; display: flex; align-items: center">Playground</a>
+      </div>
+    </div>
+
+    <div style="flex: 1 1 520px; min-width: 0; background: #0C0A09; border-radius: 28px; overflow: hidden; border: 1px solid #2A241F">
+      <div style="display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px 26px">
+        <span style="font: 14px 'JetBrains Mono', monospace; color: #A99C8A">fib.la</span>
+        <div style="flex: 1"></div>
+        <button type="button" onClick="{{run}}" style="font: 800 15px 'Bricolage Grotesque', sans-serif; background: #FF7400; color: #14110F; border: 0; border-radius: 999px; padding: 0 20px; height: 44px; display: flex; align-items: center; gap: 8px"><svg width="11" height="11" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5 L12 7 L3 12.5 Z" fill="#14110F"/></svg>Run</button>
+      </div>
+      <div style="padding: 10px 26px 20px; font: 17px/1.85 'JetBrains Mono', monospace; overflow-x: auto">
+        <div style="white-space: pre"><span style="color: #FF8A2A">fun</span> fib(n: <span style="color: #8CC8F2">i64</span>): <span style="color: #8CC8F2">i64</span> =</div>
+        <div style="white-space: pre">    <span style="color: #FF8A2A">if</span> n &lt; <span style="color: #F0D040">2</span> { n } <span style="color: #FF8A2A">else</span> { fib(n - <span style="color: #F0D040">1</span>) + fib(n - <span style="color: #F0D040">2</span>) };</div>
+        <div style="white-space: pre"> </div>
+        <div style="white-space: pre"><span style="color: #FF8A2A">fun</span> main(): <span style="color: #8CC8F2">i32</span> {</div>
+        <div style="white-space: pre">    println(fib(<span style="color: #F0D040">30</span>));</div>
+        <div style="white-space: pre">    <span style="color: #F0D040">0</span></div>
+        <div style="white-space: pre">}</div>
+      </div>
+      <div style="border-top: 1px dashed #3A3129; margin: 0 26px; padding: 14px 0 22px; font: 16px/1.7 'JetBrains Mono', monospace">
+        <div style="color: #8A7E70">$ lughac run fib.la</div>
+        <sc-if value="{{ran}}" hint-placeholder-val="{{false}}"><div style="color: #E8C400">832040</div></sc-if>
+        <sc-if value="{{idle}}" hint-placeholder-val="{{true}}"><div style="color: #5E544A">Press Run.</div></sc-if>
+      </div>
+    </div>
+    </div>
+
+    <div style="height: 72px; border-top: 1px solid #2A241F; background: #0C0A09">
+      <div style="max-width: 1328px; height: 100%; box-sizing: border-box; margin: 0 auto; padding: 0 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; font-size: 15px; color: #A99C8A">
+        <span style="font-family: 'JetBrains Mono', monospace; color: #D6C9B6">lughac 0.1.0</span>
+        <span>Lugha v17</span>
+        <span>Free software, GPL-3.0</span>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { ran: false };
+  }
+  renderVals() {
+    return {
+      ran: this.state.ran, idle: !this.state.ran,
+      run: () => this.setState({ ran: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

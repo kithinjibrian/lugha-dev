@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Learn Lugha: Everything is a value</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#14110F}
+a{color:#FFB066}a:hover{color:#FFD08F}
+</style>
+</helmet>
+<div style="height: 100vh; min-height: 640px; display: flex; flex-direction: column; background: #14110F; color: #F3E9DA; font-family: 'Bricolage Grotesque', sans-serif; overflow: hidden">
+
+  <header style="flex-shrink: 0; height: 64px; padding: 0 24px; display: flex; align-items: center; gap: 28px; border-bottom: 1px solid #2A241F; background: #1A1613">
+    <a href="Main.dc.html" aria-label="Lugha home" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #F3E9DA">
+      <svg width="28" height="28" viewBox="0 0 128 128" aria-hidden="true"><defs><linearGradient id="lnS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF7400"/><stop offset="1" stop-color="#E8C400"/></linearGradient><clipPath id="lnC"><circle cx="64" cy="64" r="64"/></clipPath></defs><circle cx="64" cy="64" r="64" fill="url(#lnS)"/><g clip-path="url(#lnC)"><g transform="translate(12 24) scale(1.625)"><g stroke="#121212" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M31 27 L24 17 L18 15"/><path d="M32 26 L33 11"/><path d="M33 11 L30 6"/><path d="M33 11 L37 7"/><path d="M33 27 L44 18 L50 17"/><path d="M30 31 L18 27 L12 28"/></g><path d="M21 64 C19.5 47 24 34 30 25.5 H34 C40 34 44.5 47 43 64 Z" fill="#121212"/></g></g></svg>
+      <span style="font-size: 21px; font-weight: 800">lugha</span>
+    </a>
+    <nav aria-label="Main" style="display: flex; gap: 22px; align-self: stretch">
+      <a href="Learn.dc.html" aria-current="page" style="display: flex; align-items: center; font-size: 16px; font-weight: 600; text-decoration: none; color: #FFB066; border-bottom: 2px solid #FF7400; margin-bottom: -1px">Learn</a>
+      <a href="Examples.dc.html" style="display: flex; align-items: center; font-size: 16px; text-decoration: none; color: #A99C8A">Examples</a>
+      <a href="Playground.dc.html" style="display: flex; align-items: center; font-size: 16px; text-decoration: none; color: #A99C8A">Playground</a>
+    </nav>
+    <div style="flex: 1"></div>
+    <a href="https://github.com/kithinjibrian/lugha" style="display: flex; align-items: center; gap: 8px; font-size: 15px; text-decoration: none; color: #D6C9B6; height: 40px; padding: 0 14px; border: 1px solid #3A3129; border-radius: 999px"><svg width="16" height="16" viewBox="0 0 24 24" fill="#D6C9B6" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"/></svg>GitHub</a>
+  </header>
+
+  <div style="flex-shrink: 0; position: relative; height: 56px; padding: 0 16px; display: flex; align-items: center; gap: 6px; background: #1A1613">
+    <button type="button" aria-label="Course outline" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid #2E2823; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D6C9B6" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <button type="button" onClick="{{prev}}" aria-label="Previous step" style="width: 40px; height: 40px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D6C9B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+    <button type="button" onClick="{{next}}" aria-label="Next step" style="width: 40px; height: 40px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D6C9B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    <div style="font-size: 17px; display: flex; gap: 8px; align-items: center; min-width: 0; white-space: nowrap; overflow: hidden"><span style="color: #A99C8A">Values</span><span style="color: #5E544A">/</span><span style="color: #A99C8A">Everything is a value</span><span style="color: #5E544A">/</span><span>{{s.title}}</span></div>
+    <div style="flex: 1"></div>
+    <div style="display: flex; align-items: center; gap: 6px; padding-right: 12px" aria-label="Steps in this lesson">
+      <sc-for list="{{dots}}" as="d" hint-placeholder-count="5">
+        <button type="button" onClick="{{d.go}}" aria-label="{{d.label}}" style="width: 28px; height: 40px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: {{d.size}}; height: {{d.size}}; border-radius: 999px; background: {{d.fill}}; border: 1.5px solid {{d.ring}}; box-sizing: border-box"></span></button>
+      </sc-for>
+    </div>
+    <sc-if value="{{s.canSolve}}" hint-placeholder-val="{{true}}">
+      <button type="button" onClick="{{solve}}" style="font: 600 15px 'Bricolage Grotesque', sans-serif; background: #241F1B; color: #F3E9DA; border: 1px solid #3A3129; border-radius: 8px; padding: 0 16px; height: 40px">{{solveLabel}}</button>
+    </sc-if>
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #2E2823"></div>
+    <div style="position: absolute; left: 0; right: 24px; bottom: -8px; height: 18px; z-index: 2; pointer-events: none">
+      <div style="position: absolute; left: 0; width: {{coursePct}}; top: 8px; height: 2px; background: #FF7400"></div>
+      <svg style="position: absolute; left: calc(100% - 9px); top: 0; z-index: 1" width="18" height="18" viewBox="0 0 128 128" aria-hidden="true"><defs><clipPath id="hzC"><circle cx="64" cy="64" r="64"/></clipPath></defs><g clip-path="url(#hzC)"><g transform="translate(12 24) scale(1.625)"><g stroke="{{treeColor}}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M31 27 L24 17 L18 15"/><path d="M32 26 L33 11"/><path d="M33 11 L30 6"/><path d="M33 11 L37 7"/><path d="M33 27 L44 18 L50 17"/><path d="M30 31 L18 27 L12 28"/></g><path d="M21 64 C19.5 47 24 34 30 25.5 H34 C40 34 44.5 47 43 64 Z" fill="{{treeColor}}"/></g></g></svg>
+      <div style="position: absolute; left: {{sunLeft}}; top: 0; width: 18px; height: 18px; border-radius: 999px; background: linear-gradient(180deg, #FF7400, #E8C400); z-index: {{sunZ}}"></div>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-height: 0; display: flex; flex-wrap: wrap">
+
+    <article style="flex: 1 1 380px; max-width: 560px; height: 100%; overflow-y: auto; box-sizing: border-box; padding: 36px 40px 40px; border-right: 1px solid #2A241F; font-family: 'Source Serif 4', serif; font-size: 19px; line-height: 1.65; color: #E4D8C6; display: flex; flex-direction: column; gap: 20px">
+      <div style="font: 14px 'Bricolage Grotesque', sans-serif; color: #A99C8A">Step {{stepNo}} of {{stepCount}}</div>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 40px; font-weight: 800; line-height: 1.05; letter-spacing: -1.5px; color: #F3E9DA">{{s.title}}</h1>
+
+      <sc-for list="{{s.blocks}}" as="b" hint-placeholder-count="3">
+        <sc-if value="{{b.isP}}" hint-placeholder-val="{{true}}">
+          <p style="margin: 0"><sc-for list="{{b.parts}}" as="pt" hint-placeholder-count="3"><sc-if value="{{pt.code}}" hint-placeholder-val="{{false}}"><code style="font: 15px 'JetBrains Mono', monospace; background: #2A241F; color: #F3E9DA; padding: 2px 6px; border-radius: 5px">{{pt.s}}</code></sc-if><sc-if value="{{pt.text}}" hint-placeholder-val="{{true}}"><span>{{pt.s}}</span></sc-if></sc-for></p>
+        </sc-if>
+        <sc-if value="{{b.isSnippet}}" hint-placeholder-val="{{false}}">
+          <figure style="margin: 0; background: #0C0A09; border: 1px solid #2A241F; border-radius: 10px; overflow: hidden">
+            <figcaption style="font: 13px 'Bricolage Grotesque', sans-serif; color: #A99C8A; padding: 8px 14px; border-bottom: 1px solid #2A241F">main.la</figcaption>
+            <div style="padding: 10px 0; font: 15px/1.75 'JetBrains Mono', monospace; color: #F3E9DA; overflow-x: auto">
+              <sc-for list="{{b.lines}}" as="ln" hint-placeholder-count="3">
+                <div style="white-space: pre; padding: 0 14px; background: {{ln.bg}}; box-shadow: inset {{ln.bar}} 0 0 #FF7400"><sc-for list="{{ln.toks}}" as="tk" hint-placeholder-count="3"><span style="color: {{tk.c}}">{{tk.s}}</span></sc-for></div>
+              </sc-for>
+            </div>
+          </figure>
+        </sc-if>
+        <sc-if value="{{b.isNotes}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #2A241F; padding-top: 16px">
+            <div style="font: 800 14px 'Bricolage Grotesque', sans-serif; letter-spacing: 1px; text-transform: uppercase; color: #A99C8A">If you know another language</div>
+            <p style="margin: 0; font-size: 17px"><strong style="font-family: 'Bricolage Grotesque', sans-serif; color: #FFB066">JavaScript, Python:</strong> there, <code style="font: 14px 'JetBrains Mono', monospace">b = a</code> gives one object a second name. In Lugha it makes a second value.</p>
+            <p style="margin: 0; font-size: 17px"><strong style="font-family: 'Bricolage Grotesque', sans-serif; color: #FFB066">Rust:</strong> nothing moves. <code style="font: 14px 'JetBrains Mono', monospace">a</code> is still yours after <code style="font: 14px 'JetBrains Mono', monospace">let b = a;</code>, and there are no borrows.</p>
+          </div>
+        </sc-if>
+        <sc-if value="{{b.isQuiz}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <sc-for list="{{options}}" as="op" hint-placeholder-count="3">
+                <button type="button" onClick="{{op.pick}}" style="font: 600 15px {{op.font}}; color: #F3E9DA; background: {{op.bg}}; border: 1.5px solid {{op.edge}}; border-radius: 999px; padding: 0 16px; height: 44px">{{op.label}}</button>
+              </sc-for>
+            </div>
+            <sc-if value="{{answered}}" hint-placeholder-val="{{false}}">
+              <p style="margin: 0; font-size: 17px; color: {{fb.color}}">{{fb.text}}</p>
+            </sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{b.isSeeAlso}}" hint-placeholder-val="{{false}}">
+          <a href="Examples.dc.html" style="font: 600 16px 'Bricolage Grotesque', sans-serif; display: flex; align-items: center; gap: 8px; text-decoration: none; border: 1px solid #3A3129; border-radius: 12px; padding: 12px 16px">See it in a real program: Word frequency<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFB066" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        </sc-if>
+      </sc-for>
+
+      <div style="flex: 1"></div>
+      <sc-if value="{{isLast}}" hint-placeholder-val="{{false}}">
+        <a href="https://github.com/kithinjibrian/lugha" style="font: 15px 'Bricolage Grotesque', sans-serif; display: flex; align-items: center; gap: 8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFB066" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit this lesson on GitHub</a>
+      </sc-if>
+      <div style="border-top: 1px solid #2A241F; padding-top: 14px; display: flex; justify-content: space-between; gap: 16px; font-family: 'Bricolage Grotesque', sans-serif">
+        <button type="button" onClick="{{prev}}" style="background: transparent; border: 0; padding: 4px 0; text-align: left; display: flex; flex-direction: column; gap: 2px; font-family: 'Bricolage Grotesque', sans-serif; min-height: 44px"><span style="font-size: 13px; letter-spacing: 1px; color: #A99C8A">PREVIOUS</span><span style="font-size: 17px; color: #D6C9B6">{{prevTitle}}</span></button>
+        <button type="button" onClick="{{next}}" style="background: transparent; border: 0; padding: 4px 0; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-family: 'Bricolage Grotesque', sans-serif; min-height: 44px"><span style="font-size: 13px; letter-spacing: 1px; color: #A99C8A">NEXT</span><span style="font-size: 17px; font-weight: 800; color: #FFB066">{{nextTitle}}</span></button>
+      </div>
+    </article>
+
+    <section aria-label="Workspace" style="flex: 999 1 560px; min-width: 0; height: 100%; display: flex; flex-direction: column">
+      <div style="flex: 3 1 0; min-height: 0; display: flex">
+        <div style="width: 180px; flex-shrink: 0; border-right: 1px solid #2A241F; padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; font-size: 15px">
+          <div style="display: flex; align-items: center; gap: 8px; color: #A99C8A"><svg width="14" height="14" viewBox="0 0 24 24" fill="#5E544A" aria-hidden="true"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>src</div>
+          <button type="button" onClick="{{openMain}}" style="font: 15px 'Bricolage Grotesque', sans-serif; text-align: left; background: {{mainBg}}; color: {{mainColor}}; border: 0; border-radius: 6px; padding: 6px 8px 6px 22px; min-height: 32px">main.la</button>
+          <button type="button" onClick="{{openToml}}" style="font: 15px 'Bricolage Grotesque', sans-serif; text-align: left; background: {{tomlBg}}; color: {{tomlColor}}; border: 0; border-radius: 6px; padding: 6px 8px; min-height: 32px; display: flex; align-items: center; gap: 8px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5E544A" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l5 5v13H6Z"/><path d="M14 3v5h5"/></svg>lugha.toml</button>
+        </div>
+        <div style="flex: 1; min-width: 0; background: #17130F; padding: 14px 0; font: 16px/1.85 'JetBrains Mono', monospace; overflow: auto">
+          <sc-for list="{{code}}" as="ln" hint-placeholder-count="10">
+            <div style="display: flex; min-height: 1.85em; background: {{ln.bg}}">
+              <span style="width: 56px; flex-shrink: 0; text-align: right; padding-right: 22px; color: #5E544A">{{ln.n}}</span>
+              <span style="white-space: pre"><sc-for list="{{ln.toks}}" as="tk" hint-placeholder-count="3"><span style="color: {{tk.c}}">{{tk.s}}</span></sc-for></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex: 2 1 0; min-height: 0; display: flex; flex-direction: column; border-top: 1px solid #2A241F; background: #0C0A09">
+        <div style="height: 52px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-bottom: 1px solid #1F1A16">
+          <button type="button" onClick="{{run}}" style="font: 800 15px 'Bricolage Grotesque', sans-serif; background: #FF7400; color: #14110F; border: 0; border-radius: 999px; padding: 0 18px; height: 36px; display: flex; align-items: center; gap: 8px"><svg width="11" height="11" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5 L12 7 L3 12.5 Z" fill="#14110F"/></svg>Run</button>
+          <div style="flex: 1; height: 36px; border-radius: 8px; background: #17130F; display: flex; align-items: center; padding: 0 12px; font: 14px 'JetBrains Mono', monospace; color: #A99C8A">$ lughac run src/main.la</div>
+          <a href="Playground.dc.html" style="font: 600 14px 'Bricolage Grotesque', sans-serif; text-decoration: none; color: #D6C9B6; border: 1px solid #3A3129; border-radius: 8px; padding: 0 12px; height: 36px; display: flex; align-items: center; white-space: nowrap">Open in Playground</a>
+        </div>
+        <div style="flex: 1; overflow: auto; padding: 16px 20px; font: 15px/1.65 'JetBrains Mono', monospace">
+          <sc-if value="{{idle}}" hint-placeholder-val="{{true}}">
+            <div style="color: #5E544A">Press Run to compile and run main.la.</div>
+          </sc-if>
+          <sc-if value="{{showErr}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; flex-wrap: wrap; gap: 28px">
+              <div style="flex: 1 1 380px; color: #F3E9DA">
+                <div style="white-space: pre"><span style="color: #FF8A80; font-weight: 700">error[E0501]</span><span style="font-weight: 700">: cannot assign to `b`: it is not mutable</span></div>
+                <div style="white-space: pre; color: #8CC8F2">  --&gt; src/main.la:6:5</div>
+                <div style="white-space: pre"><span style="color: #8CC8F2">5 |</span>     let b = a;</div>
+                <div style="white-space: pre"><span style="color: #8CC8F2">  |</span>         <span style="color: #8CC8F2">- declared here</span></div>
+                <div style="white-space: pre"><span style="color: #8CC8F2">6 |</span>     b.x = 9;</div>
+                <div style="white-space: pre"><span style="color: #8CC8F2">  |</span>     <span style="color: #FF8A80">^^^</span></div>
+                <div style="white-space: pre"><span style="color: #8CC8F2">  =</span> help: make it mutable: `let mut b`</div>
+              </div>
+              <div style="flex: 1 1 260px; font-family: 'Bricolage Grotesque', sans-serif; display: flex; flex-direction: column; gap: 6px; border-left: 2px solid #FF7400; padding-left: 16px">
+                <div style="font-size: 15px; font-weight: 800; color: #FFB066">E0501 in plain words</div>
+                <div style="font-size: 15px; line-height: 1.55; color: #D6C9B6">Only a <code style="font-family: 'JetBrains Mono', monospace">let mut</code> can change, even one field of it. Line 5 made <code style="font-family: 'JetBrains Mono', monospace">b</code> without <code style="font-family: 'JetBrains Mono', monospace">mut</code>, and line 6 changes it.</div>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{showOk}}" hint-placeholder-val="{{false}}">
+            <div style="color: #E8C400">
+              <sc-for list="{{outLines}}" as="o" hint-placeholder-count="2"><div style="white-space: pre">{{o.s}}</div></sc-for>
+            </div>
+            <sc-if value="{{hasNote}}" hint-placeholder-val="{{true}}">
+              <div style="margin-top: 14px; font: 15px 'Bricolage Grotesque', sans-serif; color: #FFB066">{{outNote}}</div>
+            </sc-if>
+          </sc-if>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"progress":{"editor":"range","min":0,"max":100,"step":1,"unit":"%","default":22},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 0, solved: false, ran: false, picked: null, file: 'main' };
+  }
+  renderVals() {
+    const KW = { fun: 1, let: 1, mut: 1, struct: 1, if: 1, else: 1, return: 1 };
+    const hl = (line) => {
+      const toks = [];
+      const re = /(\/\/.*$)|("[^"]*")|(\b\d+\b)|([A-Za-z_][A-Za-z0-9_]*)|(\s+)|(.)/g;
+      let m;
+      while ((m = re.exec(line)) !== null) {
+        let c = '#F3E9DA';
+        if (m[1]) c = '#8A7E70';
+        else if (m[2] || m[3]) c = '#F0D040';
+        else if (m[4]) {
+          if (KW[m[4]]) c = '#FF8A2A';
+          else if (/^[A-Z]/.test(m[4]) || /^[iuf][0-9]+$/.test(m[4])) c = '#8CC8F2';
+        }
+        toks.push({ s: m[0], c: c });
+      }
+      return toks;
+    };
+    const hlToml = (line) => {
+      if (/^\s*\[/.test(line)) return [{ s: line, c: '#FF8A2A' }];
+      const m = line.match(/^(\s*[A-Za-z0-9_-]+)(\s*=\s*)(.*)$/);
+      if (!m) return [{ s: line, c: '#F3E9DA' }];
+      return [{ s: m[1], c: '#8CC8F2' }, { s: m[2], c: '#F3E9DA' }, { s: m[3], c: '#F0D040' }];
+    };
+    const P = (s) => ({ isP: true, parts: s.split('`').map((x, i) => ({ s: x, code: i % 2 === 1, text: i % 2 === 0 })) });
+    const SN = (lines, mark) => ({ isSnippet: true, lines: lines.map((l, i) => ({ toks: hl(l), bg: i === mark ? '#3A2410' : 'transparent', bar: i === mark ? '3px' : '0px' })) });
+
+    const pointCode = (mut) => [
+      'struct Point { x: i64, y: i64 }',
+      '',
+      'fun main(): i32 {',
+      '    let a = Point { x: 1, y: 2 };',
+      mut ? '    let mut b = a;' : '    let b = a;',
+      '    b.x = 9;',
+      '    println(a);',
+      '    println(b);',
+      '    0',
+      '}'
+    ];
+    const addOne = (fixed) => [
+      'fun add_one(xs: i64[]): i64[] {',
+      '    let mut ys = xs;',
+      '    ys.push(1);',
+      '    ys',
+      '}',
+      '',
+      'fun main(): i32 {',
+      '    let mut xs = [5, 6];',
+      fixed ? '    xs = add_one(xs);' : '    add_one(xs);',
+      '    println(xs);',
+      '    0',
+      '}'
+    ];
+    const steps = [
+      {
+        title: 'Copies',
+        blocks: [
+          P('In Lugha, assigning a struct, an array or an enum gives you your own copy.'),
+          P('On the right, `b` starts as a copy of `a`, and line 6 changes `b.x`. Press Run and look at what `a` prints.'),
+          P('`a` still has `x: 1`. Changing `b` never touched it: they are two separate values.')
+        ],
+        start: pointCode(true), solution: null, startOut: ['Point { x: 1, y: 2 }', 'Point { x: 9, y: 2 }'],
+        note: 'a kept x: 1; only b changed.'
+      },
+      {
+        title: 'Your copy needs mut',
+        blocks: [
+          P('This time `b` is declared without `mut`. Press Run.'),
+          P('It doesn’t compile. A `let` can’t change unless it’s declared `let mut`, and that includes changing one of its fields. Your copy is its own value, so it needs its own `mut`:'),
+          SN(['    let a = Point { x: 1, y: 2 };', '    let mut b = a;', '    b.x = 9;'], 1),
+          P('Add `mut` on line 5 and run again, or press Solve.')
+        ],
+        start: pointCode(false), solution: pointCode(true), startErr: true, fixLine: 4,
+        solvedOut: ['Point { x: 1, y: 2 }', 'Point { x: 9, y: 2 }'], solvedNote: 'It works. b has its own mut; a is untouched.'
+      },
+      {
+        title: 'Arrays are copied too',
+        blocks: [
+          P('Arrays follow the same rule. `ys` starts as a copy of `xs`, and line 4 pushes onto `ys`.'),
+          P('Before you run it, decide: what will line 5, `println(xs)`, print? Then press Run.'),
+          P('If you said `[5, 6]`, you’ve got it. If you expected `[5, 6, 1]`, that’s the habit from JavaScript or Python, where `ys = xs` gives one array a second name.'),
+          P('Isn’t copying slow? No: a copy shares the original’s memory until one side writes to it, and only then is it really copied.')
+        ],
+        start: ['fun main(): i32 {', '    let xs = [5, 6];', '    let mut ys = xs;', '    ys.push(1);', '    println(xs);', '    println(ys);', '    0', '}'],
+        solution: null, startOut: ['[5, 6]', '[5, 6, 1]'], note: 'xs is still [5, 6]. Only the copy grew.'
+      },
+      {
+        title: 'Functions get copies',
+        blocks: [
+          P('A function gets its own copy of every argument, too. `add_one` pushes onto its copy and returns it.'),
+          P('Run it. `xs` is still `[5, 6]`: line 9 calls `add_one` but throws away what it returns.'),
+          P('Make line 10 print `[5, 6, 1]` by keeping the result:'),
+          SN(['    let mut xs = [5, 6];', '    xs = add_one(xs);', '    println(xs);'], 1),
+          P('A function can’t reach back and change its caller’s values. It returns its results, and the caller decides what to keep.')
+        ],
+        start: addOne(false), solution: addOne(true), fixLine: 8,
+        startOut: ['[5, 6]'], note: 'Unchanged: the result of add_one was thrown away.',
+        solvedOut: ['[5, 6, 1]'], solvedNote: 'Now main keeps what add_one returned.'
+      },
+      {
+        title: 'Check yourself',
+        blocks: [
+          P('One more, without running it first. On the right, `add_one` gets a copy of `xs`. What does line 10, `println(xs)`, print?'),
+          { isQuiz: true },
+          P('Then press Run to check.'),
+          { isNotes: true },
+          { isSeeAlso: true }
+        ],
+        start: ['fun add_one(xs: i64[]): i64[] {', '    let mut ys = xs;', '    ys.push(1);', '    ys', '}', '', 'fun main(): i32 {', '    let xs = [5, 6];', '    let zs = add_one(xs);', '    println(xs);', '    println(zs);', '    0', '}'],
+        solution: null, startOut: ['[5, 6]', '[5, 6, 1]'], note: 'xs kept its value; the grown copy came back as zs.'
+      }
+    ];
+
+    const i = Math.max(0, Math.min(steps.length - 1, this.state.step));
+    const st = steps[i];
+    const solved = this.state.solved && !!st.solution;
+    const ran = this.state.ran;
+    const src = solved ? st.solution : st.start;
+    const showErr = ran && !solved && !!st.startErr;
+    const mainCode = src.map((s, k) => ({
+      n: k + 1, toks: hl(s),
+      bg: (showErr && k === 5) ? '#3A1C18' : ((solved && k === st.fixLine) ? '#3A2410' : 'transparent')
+    }));
+    const file = this.state.file || 'main';
+    const tomlSrc = ['[package]', 'name = "values"', 'version = "0.1.0"', 'source = "src"'];
+    const code = file === 'toml' ? tomlSrc.map((s, k) => ({ n: k + 1, toks: hlToml(s), bg: 'transparent' })) : mainCode;
+    const outLines = (solved ? (st.solvedOut || []) : (st.startOut || [])).map((s) => ({ s: s }));
+    const outNote = solved ? (st.solvedNote || '') : (st.note || '');
+
+    const picked = this.state.picked;
+    const opts = [{ id: 'a', label: '[5, 6]', mono: true }, { id: 'b', label: '[5, 6, 1]', mono: true }, { id: 'c', label: 'It doesn’t compile', mono: false }];
+    const options = opts.map((o) => {
+      const chosen = picked === o.id;
+      const right = o.id === 'a';
+      return {
+        label: o.label,
+        font: o.mono ? "'JetBrains Mono', monospace" : "'Bricolage Grotesque', sans-serif",
+        bg: chosen ? (right ? '#3A2410' : '#3A1C18') : 'transparent',
+        edge: chosen ? (right ? '#FF7400' : '#FF8A80') : '#3A3129',
+        pick: () => this.setState({ picked: o.id })
+      };
+    });
+    const fbs = {
+      a: 'Right. add_one changed its own copy and returned it as zs; xs is still [5, 6].',
+      b: 'Not quite. That’s what JavaScript or Python would print. add_one only changed its copy.',
+      c: 'Not quite. It compiles: add_one copies xs into a let mut before changing it.'
+    };
+
+    const go = (n) => this.setState({ step: n, solved: false, ran: false, picked: null, file: 'main' });
+    const dots = steps.map((x, k) => ({
+      label: 'Step ' + (k + 1) + ': ' + x.title,
+      size: k === i ? '14px' : '10px',
+      fill: k < i ? '#FF7400' : (k === i ? 'linear-gradient(180deg, #FF7400, #E8C400)' : 'transparent'),
+      ring: k <= i ? '#FF7400' : '#5E544A',
+      go: () => go(k)
+    }));
+    const basePct = this.props.progress ?? 22;
+    const coursePos = Math.min(1, (basePct + i) / 100);
+    const done = coursePos >= 1;
+    return {
+      s: { title: st.title, blocks: st.blocks, canSolve: !!st.solution },
+      stepNo: i + 1, stepCount: steps.length, isLast: i === steps.length - 1,
+      dots: dots, code: code, options: options,
+      answered: !!picked,
+      fb: { text: picked ? fbs[picked] : '', color: picked === 'a' ? '#FFB066' : '#FF8A80' },
+      idle: !ran, showErr: showErr, showOk: ran && !showErr,
+      outLines: outLines, outNote: outNote, hasNote: outNote !== '',
+      solveLabel: solved ? 'Reset' : 'Solve',
+      prevTitle: i === 0 ? 'Structs' : steps[i - 1].title,
+      nextTitle: i === steps.length - 1 ? 'Shared boxes: Ref' : steps[i + 1].title,
+      coursePct: (coursePos * 100).toFixed(1) + '%',
+      sunLeft: 'calc(' + (coursePos * 100).toFixed(1) + '% - 9px)',
+      sunZ: done ? 0 : 2,
+      treeColor: done ? '#121212' : '#7A6C5E',
+      run: () => this.setState({ ran: true }),
+      solve: () => this.setState({ solved: !this.state.solved, ran: false, file: 'main' }),
+      openMain: () => this.setState({ file: 'main' }),
+      openToml: () => this.setState({ file: 'toml' }),
+      mainBg: file === 'main' ? '#241F1B' : 'transparent',
+      mainColor: file === 'main' ? '#FFB066' : '#D6C9B6',
+      tomlBg: file === 'toml' ? '#241F1B' : 'transparent',
+      tomlColor: file === 'toml' ? '#FFB066' : '#D6C9B6',
+      prev: () => go(Math.max(0, i - 1)),
+      next: () => go(Math.min(steps.length - 1, i + 1))
+    };
+  }
+}
+</script>
+</body>
+</html>
