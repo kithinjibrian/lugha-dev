@@ -1,0 +1,123 @@
+/**
+ * Starting one sandbox container per job and reading its result (PRP-001,
+ * API-6). The container runs on gVisor (`runsc`) with no network, a
+ * read-only root, a non-root user, no capabilities, and limits on memory,
+ * processes and CPU; its only writable places are two small `tmpfs`
+ * folders, `/work` and `/tmp`. Nothing from the host is mounted into it.
+ *
+ * The API reads only what the container prints and how it exits, never a
+ * file it wrote. The whole `docker run` is bounded by `OUTER_SECONDS`, and a
+ * container that outlives it is removed by name.
+ */
+import std.json;
+import std.process;
+import std.random;
+import std.time;
+import limits { OUTER_SECONDS, COMPILE_MEMORY_MB };
+import steps { Command };
+import outcome { Captured };
+
+/** The label on every sandbox container, for the clean-up job. */
+const IMAGE_LABEL: string = "lugha-sandbox=1";
+
+/** The user every sandbox runs as: no account on the host or in the image has it. */
+const SANDBOX_USER: string = "10001:10001";
+
+/** Why a job got no result. Every one becomes the service sentence for the visitor. */
+enum SandboxError {
+    /** `docker` couldn't be started, or refused the container: its message. */
+    Docker(string),
+    /** The container outlived `OUTER_SECONDS` and was removed. */
+    TimedOut,
+    /** The container ended without a readable result: its exit code. */
+    NoResult(i64),
+    /** The runner reported its own trouble. */
+    RunnerFailed(string),
+}
+
+/** The `docker run` for one sandbox, running `argv` in `image` under the name `name`. */
+fun docker_command(image: string, name: string, argv: string[]): Command {
+    Command {
+        cmd: "timeout",
+        args: [
+            "--kill-after=5",
+            "{OUTER_SECONDS}",
+            "docker",
+            "run",
+            "--rm",
+            "-i",
+            "--name={name}",
+            "--label={IMAGE_LABEL}",
+            "--runtime=runsc",
+            "--network=none",
+            "--read-only",
+            "--user={SANDBOX_USER}",
+            "--cap-drop=ALL",
+            "--security-opt=no-new-privileges",
+            "--pids-limit=64",
+            "--memory={COMPILE_MEMORY_MB}m",
+            "--memory-swap={COMPILE_MEMORY_MB}m",
+            "--cpus=1",
+            // The visitor's program is built and run in /work, so it needs exec.
+            "--tmpfs=/work:rw,exec,nosuid,nodev,size=16m,uid=10001,gid=10001,mode=0700",
+            // lughac and cc write their temporary files here; nothing runs from it.
+            "--tmpfs=/tmp:rw,nosuid,nodev,size=64m,uid=10001,gid=10001,mode=0700",
+            "--workdir=/work",
+            image,
+        ] + argv,
+    }
+}
+
+/**
+ * Reads what a sandbox container gave back.
+ *
+ * @returns the runner's result; why there's none otherwise
+ */
+fun read_result(c: Captured): Result<json.Value, SandboxError> {
+    if c.code == 124 {
+        return Err(SandboxError.TimedOut);
+    }
+    // 125 to 127 are docker's own: it couldn't create or start the container.
+    if c.code >= 125 && c.code <= 127 && c.stdout == "" {
+        return Err(SandboxError.Docker(c.stderr));
+    }
+    let lines = c.stdout.lines();
+    if lines.len == 0 {
+        return Err(SandboxError.NoResult(c.code));
+    }
+    let result = json.parse(lines[lines.len - 1]).map_err(
+        fun(e: json.JsonError) = SandboxError.NoResult(c.code),
+    )?;
+    if json.get(result, "v").and_then(json.as_i64) != Some(1) {
+        return Err(SandboxError.NoResult(c.code));
+    }
+    if let Some(why) = json.get(result, "failure").and_then(json.as_text) {
+        return Err(SandboxError.RunnerFailed(why));
+    }
+    Ok(result)
+}
+
+/** A container name no other sandbox has. */
+fun fresh_name(): string {
+    let mut rng = random.from_os();
+    "lugha-sandbox-{time.now_ms()}-{rng.below(1000000000)}"
+}
+
+/**
+ * Runs `argv` in a fresh sandbox from `image`, with `input` on its stdin.
+ *
+ * @returns the runner's result; why there's none otherwise
+ */
+fun run_in_sandbox(image: string, argv: string[], input: string): Result<json.Value, SandboxError> {
+    let name = fresh_name();
+    let c = docker_command(image, name, argv);
+    let out = process.run_with(c.cmd, c.args, input).map_err(SandboxError.Docker)?;
+    let captured = Captured { code: out.code as i64, stdout: out.stdout, stderr: out.stderr };
+    let result = read_result(captured);
+    if let Err(TimedOut) = result {
+        // Stopping `docker run` doesn't always stop its container: remove it.
+        // Failing here is harmless: the clean-up job removes it later.
+        let _ = process.run("docker", ["rm", "--force", name]);
+    }
+    result
+}
