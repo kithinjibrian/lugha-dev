@@ -1,0 +1,137 @@
+// Turning what lughac and the program printed into the runner's result.
+// The captured texts are what lughac 0.1.0 printed, recorded 2026-11-07.
+import api.outcome { Captured, cap, stopped, run_result, test_result, format_result, failure };
+import api.files { File };
+import api.limits { MAX_OUTPUT_BYTES };
+import std.json;
+
+fun parsed(text: string): json.Value = json.parse(text).unwrap();
+
+fun at(v: json.Value, path: string[]): json.Value {
+    let mut here = v;
+    for key of path {
+        here = json.get(here, key).unwrap();
+    }
+    here
+}
+
+const E0501: string = "{{\"severity\":\"error\",\"code\":\"E0501\",\"message\":\"cannot assign to `b`: it is not mutable\",\"file\":\"src/main.la\",\"span\":{{\"start\":{{\"line\":6,\"col\":5,\"offset\":104}},\"end\":{{\"line\":6,\"col\":8,\"offset\":107}}}},\"label\":null,\"labels\":[],\"help\":\"make it mutable: `let mut b`\"}}";
+
+@test
+fun a_compile_error_passes_through() {
+    let r = parsed(run_result(Captured { code: 1, stdout: "", stderr: E0501 + "\n" }, None));
+    assert_eq(at(r, ["compile", "ok"]), json.Value.Bool(false));
+    assert_eq(json.at(at(r, ["compile", "diagnostics"]), 0).unwrap(), parsed(E0501));
+    assert_eq(at(r, ["program"]), json.Value.Null);
+}
+
+@test
+fun a_program_that_ran() {
+    let r = parsed(
+        run_result(
+            Captured { code: 0, stdout: "", stderr: "" },
+            Some(Captured { code: 0, stdout: "Point {{ x: 1, y: 2 }}\n", stderr: "" }),
+        ),
+    );
+    assert_eq(at(r, ["compile", "ok"]), json.Value.Bool(true));
+    assert_eq(at(r, ["program", "exit_code"]), json.Value.Integer(0));
+    assert_eq(at(r, ["program", "stdout"]), json.Value.Text("Point {{ x: 1, y: 2 }}\n"));
+    assert_eq(at(r, ["program", "stopped"]), json.Value.Null);
+}
+
+@test
+fun why_a_program_stopped() {
+    assert_eq(stopped(124, ""), Some("time"));
+    assert_eq(stopped(137, ""), Some("time"));
+    assert_eq(stopped(101, "panic: out of memory\n"), Some("memory"));
+    assert_eq(
+        stopped(
+            101,
+            "panic: index out of bounds: the length is 1 but the index is 5 at src/main.la:3:15\n",
+        ),
+        None,
+    );
+    assert_eq(stopped(1, "boom\n"), None);
+}
+
+@test
+fun a_slow_build_says_so() {
+    let r = parsed(run_result(Captured { code: 124, stdout: "", stderr: "" }, None));
+    assert_eq(at(r, ["compile", "stopped"]), json.Value.Text("time"));
+}
+
+@test
+fun output_is_capped_on_a_character_boundary() {
+    let mut big = "";
+    for _ in 0..MAX_OUTPUT_BYTES {
+        big += "a";
+    }
+    assert_eq(cap(big), (big, false));
+    let (cut, was) = cap(big + "b");
+    assert_eq((cut.len, was), (MAX_OUTPUT_BYTES, true));
+    // "é" is two bytes: cutting between them would leave half a character.
+    let (cut2, _) = cap(big.slice(0, MAX_OUTPUT_BYTES - 1) + "é");
+    assert_eq(cut2.len, MAX_OUTPUT_BYTES - 1);
+}
+
+@test
+fun truncation_is_reported() {
+    let mut big = "";
+    for _ in 0..MAX_OUTPUT_BYTES + 10 {
+        big += "a";
+    }
+    let r = parsed(
+        run_result(
+            Captured { code: 0, stdout: "", stderr: "" },
+            Some(Captured { code: 0, stdout: big, stderr: "" }),
+        ),
+    );
+    assert_eq(at(r, ["program", "truncated", "stdout"]), json.Value.Bool(true));
+    assert_eq(at(r, ["program", "truncated", "stderr"]), json.Value.Bool(false));
+}
+
+@test
+fun test_results_come_back_as_a_list() {
+    let out = "{{\"test\":\"tj.main.ok\",\"file\":\"src/main.la\",\"line\":2,\"status\":\"passed\",\"output\":\"\",\"ms\":5}}\n{{\"summary\":{{\"passed\":1,\"failed\":0,\"skipped\":0,\"uncompiled\":0}}}}\n";
+    let r = parsed(test_result(Captured { code: 0, stdout: out, stderr: "" }));
+    assert_eq(json.as_array(at(r, ["tests"])).unwrap().len, 1);
+    assert_eq(at(r, ["summary", "passed"]), json.Value.Integer(1));
+    assert_eq(at(r, ["compile_error"]), json.Value.Null);
+}
+
+@test
+fun tests_that_dont_compile_give_the_error_text() {
+    let out = "{{\"summary\":{{\"passed\":0,\"failed\":0,\"skipped\":0,\"uncompiled\":1}}}}\n";
+    let err = "error[E0501]: cannot assign to `x`: it is not mutable\n";
+    let r = parsed(test_result(Captured { code: 1, stdout: out, stderr: err }));
+    assert_eq(at(r, ["compile_error"]), json.Value.Text(err));
+}
+
+@test
+fun formatting_returns_only_what_changed() {
+    let before = [
+        File { path: "src/main.la", text: "fun main(){{}}\n" },
+        File { path: "src/a.la", text: "fun a() {{}}\n" },
+    ];
+    let after = [
+        File { path: "src/main.la", text: "fun main() {{}}\n" },
+        File { path: "src/a.la", text: "fun a() {{}}\n" },
+    ];
+    let r = parsed(format_result(Captured { code: 0, stdout: "", stderr: "" }, before, after));
+    let changed = json.as_array(at(r, ["files"])).unwrap();
+    assert_eq(changed.len, 1);
+    assert_eq(json.get(changed[0], "path").unwrap(), json.Value.Text("src/main.la"));
+}
+
+@test
+fun a_format_error_comes_back_as_text() {
+    let err = "error[E0201]: expected parameter name, found `{{`\n";
+    let r = parsed(format_result(Captured { code: 1, stdout: "", stderr: err }, [], []));
+    assert_eq(at(r, ["error"]), json.Value.Text(err));
+}
+
+@test
+fun a_failure_names_no_internals_to_visitors() {
+    let r = parsed(failure("couldn't write src/main.la"));
+    assert_eq(at(r, ["failure"]), json.Value.Text("couldn't write src/main.la"));
+}

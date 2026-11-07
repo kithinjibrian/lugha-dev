@@ -1,0 +1,78 @@
+/**
+ * The commands the runner runs inside the container, as argument lists for
+ * `std.process` (never a shell). Every command is wrapped in `timeout`;
+ * the visitor's program also runs under `prlimit` for memory, processes
+ * and file size (PRP-001, API-5). Commands run in the job's folder, so
+ * every path here is relative to it.
+ */
+import limits {
+    COMPILE_SECONDS,
+    RUN_SECONDS,
+    TEST_SECONDS,
+    OUTER_SECONDS,
+    RUN_MEMORY_MB,
+    RUN_PROCESSES,
+    SCRATCH_MB,
+};
+
+/** A program and its arguments. */
+struct Command {
+    cmd: string,
+    args: string[],
+}
+
+/** Where `lughac build` writes the visitor's program: a path no sent file can have. */
+const PROGRAM: string = "./.build/program";
+
+/** Bytes in a megabyte, for `prlimit`. */
+const MB: i64 = 1048576;
+
+/**
+ * `cmd args…` stopped after `seconds`: `timeout` sends TERM, then KILL
+ * `grace` seconds later, and exits 124 when it stopped the command.
+ */
+fun timed(seconds: i64, grace: i64, cmd: string, args: string[]): Command = Command {
+    cmd: "timeout",
+    args: ["--kill-after={grace}", "{seconds}", cmd] + args,
+};
+
+/** Compiling the entry with JSON diagnostics. */
+fun build_command(entry: string, opt: i64): Command = timed(COMPILE_SECONDS, 2, "lughac", [
+    "build",
+    "--diagnostics",
+    "json",
+    "-O",
+    "{opt}",
+    entry,
+    "-o",
+    PROGRAM,
+]);
+
+/** Running the visitor's program with their arguments, under the running limits. */
+fun run_command(args: string[]): Command = timed(
+    RUN_SECONDS,
+    1,
+    "prlimit",
+    [
+        "--as={RUN_MEMORY_MB * MB}",
+        "--nproc={RUN_PROCESSES}",
+        "--fsize={SCRATCH_MB * MB}",
+        "--",
+        PROGRAM,
+    ] + args,
+);
+
+/**
+ * Running every `@test` in the folder. The whole command (building and
+ * running the tests) ends before the API's outer limit; each test has its own.
+ */
+fun test_command(): Command = timed(OUTER_SECONDS - 5, 2, "lughac", [
+    "test",
+    "--json",
+    "--timeout",
+    "{TEST_SECONDS}",
+    ".",
+]);
+
+/** Formatting the given files in place. */
+fun format_command(paths: string[]): Command = timed(COMPILE_SECONDS, 2, "lughac", ["fmt"] + paths);

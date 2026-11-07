@@ -1,0 +1,172 @@
+/**
+ * Turning what `lughac` and the visitor's program printed into the runner's
+ * result: one JSON object on the container's stdout, `"v": 1` (PRP-001,
+ * "Runner ↔ API"). Compile diagnostics pass through as `lughac` wrote them;
+ * outputs are capped at `MAX_OUTPUT_BYTES` each, on a character boundary.
+ *
+ * `failure` is for the runner's own trouble (a file it couldn't write, a
+ * program it couldn't start): the API logs it and shows visitors only the
+ * service sentence.
+ */
+import std.json;
+import files { File };
+import limits { MAX_OUTPUT_BYTES };
+
+/** What one command printed, and how it ended. */
+struct Captured {
+    /** The exit code; `128 + n` when signal `n` ended it. */
+    code: i64,
+    stdout: string,
+    stderr: string,
+}
+
+/**
+ * The first `MAX_OUTPUT_BYTES` of `s`, cut before any character the cap
+ * would split.
+ *
+ * @returns the kept text, and whether anything was cut
+ */
+fun cap(s: string): (string, bool) {
+    if s.len <= MAX_OUTPUT_BYTES {
+        return (s, false);
+    }
+    let mut cut = MAX_OUTPUT_BYTES;
+    // UTF-8 continuation bytes are 0b10xxxxxx: back up to a character's start.
+    while cut > 0 && s[cut] >= 128 && s[cut] < 192 {
+        cut -= 1;
+    }
+    (s.slice(0, cut), true)
+}
+
+/**
+ * Why a command was stopped, from its exit code: `timeout` exits 124
+ * (or 137 when it had to KILL), and a Lugha program out of memory panics
+ * with exit code 101.
+ */
+fun stopped(code: i64, stderr: string): Option<string> {
+    if code == 124 || code == 137 {
+        return Some("time");
+    }
+    if code == 101 && stderr.contains("panic: out of memory") {
+        return Some("memory");
+    }
+    None
+}
+
+/** `Some(text)` as JSON text, `None` as null. */
+fun maybe(o: Option<string>): json.Value = match o {
+    Some(s) => json.Value.Text(s),
+    None => json.Value.Null,
+};
+
+/** Writes a result; every value here is finite, so writing can't fail. */
+fun written(fields: Map<string, json.Value>): string = json.stringify(
+    json.Value.Object(fields),
+).unwrap();
+
+/** The diagnostics in `lughac build --diagnostics json`'s stderr: one JSON object a line. */
+fun diagnostics(stderr: string): json.Value {
+    let mut found: json.Value[] = [];
+    for line of stderr.lines() {
+        if let Ok(v) = json.parse(line) {
+            found.push(v);
+        }
+    }
+    json.Value.Array(found)
+}
+
+/** The compile part of a Run result. */
+fun compile_part(build: Captured): json.Value = json.Value.Object(#{
+    "ok": json.Value.Bool(build.code == 0),
+    "stopped": maybe(stopped(build.code, build.stderr)),
+    "diagnostics": diagnostics(build.stderr),
+});
+
+/** The program part of a Run result. */
+fun program_part(run: Captured): json.Value {
+    let (out, out_cut) = cap(run.stdout);
+    let (err, err_cut) = cap(run.stderr);
+    json.Value.Object(#{
+        "exit_code": json.Value.Integer(run.code),
+        "stdout": json.Value.Text(out),
+        "stderr": json.Value.Text(err),
+        "stopped": maybe(stopped(run.code, run.stderr)),
+        "truncated": json.Value.Object(#{
+            "stdout": json.Value.Bool(out_cut),
+            "stderr": json.Value.Bool(err_cut),
+        }),
+    })
+}
+
+/** A Run result: the build, and the program when it was run. */
+fun run_result(build: Captured, run: Option<Captured>): string = written(#{"v": json.Value.Integer(
+    1,
+), "kind": json.Value.Text("run"), "compile": compile_part(build), "program": match run {
+    Some(r) => program_part(r),
+    None => json.Value.Null,
+}});
+
+/**
+ * A Test result: each `lughac test --json` line, the summary, and the
+ * compile errors' text when tests didn't compile (`lughac test` prints those
+ * as text, not JSON).
+ */
+fun test_result(t: Captured): string {
+    let mut tests: json.Value[] = [];
+    let mut summary = json.Value.Null;
+    for line of t.stdout.lines() {
+        if let Ok(v) = json.parse(line) {
+            match json.get(v, "summary") {
+                Some(s) => {
+                    summary = s;
+                }
+                None => tests.push(v),
+            }
+        }
+    }
+    let uncompiled = json.get(summary, "uncompiled").and_then(json.as_i64).unwrap_or(0);
+    let (err, _) = cap(t.stderr);
+    written(#{
+        "v": json.Value.Integer(1),
+        "kind": json.Value.Text("test"),
+        "tests": json.Value.Array(tests),
+        "summary": summary,
+        "compile_error": if uncompiled > 0 { json.Value.Text(err) } else { json.Value.Null },
+        "stopped": maybe(stopped(t.code, t.stderr)),
+    })
+}
+
+/** A Format result: the files whose text changed, or `lughac fmt`'s error text. */
+fun format_result(f: Captured, before: File[], after: File[]): string {
+    if f.code != 0 {
+        let (err, _) = cap(f.stderr);
+        return written(#{
+            "v": json.Value.Integer(1),
+            "kind": json.Value.Text("format"),
+            "error": json.Value.Text(err),
+            "stopped": maybe(stopped(f.code, f.stderr)),
+        });
+    }
+    let mut changed: json.Value[] = [];
+    for i in 0..after.len {
+        if i < before.len && after[i].text != before[i].text {
+            changed.push(
+                json.Value.Object(#{
+                    "path": json.Value.Text(after[i].path),
+                    "text": json.Value.Text(after[i].text),
+                }),
+            );
+        }
+    }
+    written(#{
+        "v": json.Value.Integer(1),
+        "kind": json.Value.Text("format"),
+        "files": json.Value.Array(changed),
+    })
+}
+
+/** The runner's own failure, for the API's log. */
+fun failure(why: string): string = written(#{
+    "v": json.Value.Integer(1),
+    "failure": json.Value.Text(why),
+});

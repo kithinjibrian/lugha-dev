@@ -1,0 +1,75 @@
+/**
+ * The job the API hands the runner on the container's stdin (PRP-001,
+ * "Runner ↔ API"): a checked request as JSON, plus `"v": 1` and `"kind"`
+ * (`run`, `test` or `format`). The runner decodes it with the same checks
+ * the API used, so a job is checked twice, once on each side of the
+ * sandbox's wall.
+ */
+import std.json;
+import files { File, Checked };
+import requests { RunRequest, run_request, files_request, reason };
+
+/** What the runner is asked to do. */
+enum Job {
+    Run(RunRequest),
+    Test(Checked),
+    Format(Checked),
+}
+
+/** The JSON for a list of files. */
+fun files_value(list: File[]): json.Value = json.Value.Array(
+    list.map(
+        fun(f: File) = json.Value.Object(#{
+            "path": json.Value.Text(f.path),
+            "text": json.Value.Text(f.text),
+        }),
+    ),
+);
+
+/** Writes a JSON object; every value given here is finite, so writing can't fail. */
+fun written(fields: Map<string, json.Value>): string = json.stringify(
+    json.Value.Object(fields),
+).unwrap();
+
+/** The job for a checked Run request. */
+fun run_job(r: RunRequest): string = written(#{
+    "v": json.Value.Integer(1),
+    "kind": json.Value.Text("run"),
+    "files": files_value(r.files),
+    "entry": json.Value.Text(r.entry),
+    "args": json.Value.Array(r.args.map(json.Value.Text)),
+    "stdin": json.Value.Text(r.stdin),
+    "opt": json.Value.Integer(r.opt),
+});
+
+/** The job for checked Test (`kind` `"test"`) or Format (`"format"`) files. */
+fun files_job(kind: string, c: Checked): string = written(#{
+    "v": json.Value.Integer(1),
+    "kind": json.Value.Text(kind),
+    "files": files_value(c.files),
+});
+
+/**
+ * Decodes and checks a job.
+ *
+ * @returns the job; a sentence saying what's wrong otherwise (for the log:
+ *     the API only ever sends jobs it checked)
+ */
+fun decode(text: string): Result<Job, string> {
+    let v = json.parse(text).map_err(fun(e: json.JsonError) = "the job isn't JSON: {e.message()}")?;
+    let mut fields = json.as_object(v).ok_or("the job isn't an object")?;
+    if fields.get("v").and_then(json.as_i64) != Some(1) {
+        return Err("the job isn't version 1");
+    }
+    let kind = fields.get("kind").and_then(json.as_text).unwrap_or("");
+    fields.remove("v");
+    fields.remove("kind");
+    // What's left is exactly a request body: check it as the API did.
+    let body = written(fields);
+    match kind {
+        "run" => run_request(body).map(Job.Run).map_err(reason),
+        "test" => files_request(body).map(Job.Test).map_err(reason),
+        "format" => files_request(body).map(Job.Format).map_err(reason),
+        _ => Err("the job's kind isn't run, test or format"),
+    }
+}
