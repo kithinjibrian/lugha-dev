@@ -1,6 +1,6 @@
 ## FEATURE: The website — Home, Learn, Examples and Playground, built from content files, with runnable code through the API
 
-Status: **draft, awaiting the owner's approval** (discovery 2026-11-07 and 08).
+Status: **approved by the owner, 2026-11-08**, CONTENT included: the three rewrites without comparisons are approved as written, and the "If you know another language" notes are dropped.
 
 ## OBJECTIVE
 
@@ -146,7 +146,6 @@ Every sentence a visitor can read, for the owner to approve word for word. Code 
 3. *Arrays are copied too.* "Arrays follow the same rule. `ys` starts as a copy of `xs`, and line 4 pushes onto `ys`." / "Before you run it, decide: what will line 5, `println(xs)`, print? Then press Run." / "If you said `[5, 6]`, you've got it. If you expected `[5, 6, 1]`, you were expecting `ys = xs` to give one array a second name." **[rewritten without the comparison; the prototype named JavaScript and Python]** / "Isn't copying slow? No: a copy shares the original's memory until one side writes to it, and only then is it really copied."
 4. *Functions get copies.* "A function gets its own copy of every argument, too. `add_one` pushes onto its copy and returns it." / "Run it. `xs` is still `[5, 6]`: line 9 calls `add_one` but throws away what it returns." / "Make line 10 print `[5, 6, 1]` by keeping the result:" (snippet) / "A function can't reach back and change its caller's values. It returns its results, and the caller decides what to keep."
 5. *Check yourself.* "One more, without running it first. On the right, `add_one` gets a copy of `xs`. What does line 10, `println(xs)`, print?" Options `[5, 6]` · `[5, 6, 1]` · "It doesn't compile". Answers: "Right. add_one changed its own copy and returned it as zs; xs is still [5, 6]." / "Not quite. add_one only changed its copy, which came back as zs." **[rewritten; the prototype said "That's what JavaScript or Python would print"]** / "Not quite. It compiles: add_one copies xs into a let mut before changing it." Then "Then press Run to check." and "See it in a real program: Word frequency".
-   - **[comparison, proposed to drop]** the prototype's "If you know another language" notes (JavaScript, Python; Rust).
 
 **Examples** (intro, then the notes in order):
 - *Hello, world* (Basics): "The smallest Lugha program: one function, one line of output." Notes: "Every program starts at `main`. Without a return type, it exits with code 0 when it ends." / "`println` prints a value and a newline."
@@ -183,5 +182,5 @@ Browser (Playwright, against the running stack):
 ## ACCEPTANCE
 - [ ] `npm test`, `npm run build` and `npm run check` (types) pass in `services/ui-web`; the content checks and Playwright pass against the stack.
 - [ ] `docker compose --profile sandbox build` builds the site into Caddy; `docker compose up -d` serves it at `http://127.0.0.1:8080` with `/content/v1/index.json`.
-- [ ] Every sentence in CONTENT is approved by the owner (including each **[comparison]** item).
+- [x] Every sentence in CONTENT is approved by the owner (2026-11-08).
 - [ ] For the owner, by eye: Home, the five steps (fix step 2 by hand and with Solve; see the sun move), an example's notes beside its code, the Playground's Share link in another browser, and all of it at phone width.
