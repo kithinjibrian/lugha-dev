@@ -1,0 +1,41 @@
+/* docs/DESIGN.md as CSS variables (Machweo, dark only). Views use these, never raw values. */
+:root {
+  --night: #14110f;
+  --bar: #1a1613;
+  --raised: #241f1b;
+  --line: #2a241f;
+  --line-strong: #3a3129;
+  --ground: #0c0a09;
+  --editor: #17130f;
+  --sand: #f3e9da;
+  --sand-2: #d6c9b6;
+  --dust: #a99c8a;
+  --faint: #5e544a;
+  --sun: #ff7400;
+  --gold: #e8c400;
+  --link: #ffb066;
+  --error: #ff8a80;
+  --sun-gradient: linear-gradient(180deg, var(--sun), var(--gold));
+
+  --code-keyword: #ff8a2a;
+  --code-type: #8cc8f2;
+  --code-literal: #f0d040;
+  --code-comment: #8a7e70;
+  --code-text: #f3e9da;
+  --code-changed: #3a2410;
+  --code-error: #3a1c18;
+
+  --font-ui: "Bricolage Grotesque Variable", sans-serif;
+  --font-prose: "Source Serif 4 Variable", serif;
+  --font-code: "JetBrains Mono Variable", monospace;
+
+  --prose-size: 18px;
+  --prose-leading: 1.65;
+  --code-size: 15px;
+  --target: 44px;
+  --radius-pill: 999px;
+  --radius-code: 16px;
+  --radius-card: 28px;
+
+  color-scheme: dark;
+}
