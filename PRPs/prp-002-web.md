@@ -164,7 +164,7 @@ In three layers (WEB-11). Unit (Vitest):
 - [ ] Share links: round trip of files, args and stdin; `v1.` prefix; an unknown version refused; the 16 KB limit; a corrupt link refused with no crash.
 - [ ] Progress: each kind of step's "done" rule; the sun's position; Start over.
 - [ ] Content: reading each file kind; `//:` notes split from code (several lines, none, notes with no code after); every build-failure check.
-- [ ] Diagnostics: the E0501 JSON rebuilt exactly as `lughac` prints it.
+- [ ] Diagnostics: a `rendered` text shown unchanged; without one (until `lughac` adds it, O8), the header, location and help from the JSON; the lines to highlight.
 - [ ] The tokenizer: keywords, types, numbers, strings with interpolation, comments, `@test`; its keywords equal the grammar's.
 - [ ] The API client: each response and failure maps to its panel state.
 
