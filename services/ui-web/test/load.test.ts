@@ -35,6 +35,10 @@ const good: Record<string, string> = {
     '---\ntitle: Check\nsee_also: hello\n---\n\nWhich?\n\n```quiz\noptions = ["a", "b"]\nanswer = 0\nfeedback = ["y", "n"]\n```\n',
   "learn/01-values/01-copies-lesson/03-quiz/start/src/main.la": MAIN,
   "learn/01-values/01-copies-lesson/03-quiz/expected.txt": "3\n",
+  "home/src/main.la": "fun main() { println(1); }\n",
+  "home/expected.txt": "1\n",
+  "playground/src/main.la": MAIN,
+  "playground/expected.txt": "",
   "examples/groups.toml": 'groups = ["Basics"]\n',
   "examples/hello/example.toml": 'title = "Hello"\ngroup = "Basics"\norder = 1\nintro = "Hi."\ntags = ["println"]\n',
   "examples/hello/src/main.la": "//: Starts here.\nfun main() {}\n",
@@ -72,12 +76,16 @@ describe("loadContent", () => {
         expected: "Hello\n",
       },
     ]);
+    expect(r.value.home).toEqual({ source: "fun main() { println(1); }\n", expected: "1\n" });
+    expect(r.value.playground).toEqual({ source: MAIN, expected: "" });
   });
 
   it("reads the real content/", async () => {
     const r = await loadContent(join(import.meta.dirname, "../../../content"), code);
     if (!r.ok) throw new Error(r.error.join("\n"));
     expect(r.value.chapters[0].lessons[0].steps).toHaveLength(5);
+    expect(r.value.home.expected).toBe("832040\n");
+    expect(r.value.playground.source).toContain("enum Shape");
     expect(r.value.examples.map((e) => e.slug)).toEqual(["hello-world", "fibonacci", "word-frequency", "green-threads", "actor-counter"]);
   });
 
@@ -95,6 +103,8 @@ describe("loadContent", () => {
     ["an example missing a field", { "examples/hello/example.toml": 'title = "Hello"\n' }, "examples/hello/example.toml: needs group, order, intro, tags"],
     ["an example with an unknown field", { "examples/hello/example.toml": good["examples/hello/example.toml"] + "x = 1\n" }, "examples/hello/example.toml: unknown keys: x"],
     ["an example in no group", { "examples/hello/example.toml": good["examples/hello/example.toml"].replace("Basics", "Misc") }, "examples/hello/example.toml: its group isn't in examples/groups.toml: Misc"],
+    ["a missing home program", { "home/src/main.la": null }, "home/src/main.la: missing"],
+    ["a missing playground program", { "playground/expected.txt": null }, "playground/expected.txt: missing"],
     ["an example that isn't TOML", { "examples/hello/example.toml": "title = " }, "examples/hello/example.toml: isn't TOML"],
   ];
 

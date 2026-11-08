@@ -67,9 +67,17 @@ export interface Example {
   expected: string;
 }
 
+/** A program shown on its own: Home's card, and the Playground's first project. */
+export interface Program {
+  source: string;
+  expected: string;
+}
+
 export interface Content {
   chapters: Chapter[];
   examples: Example[];
+  home: Program;
+  playground: Program;
 }
 
 const FRONT_KEYS = ["title", "start_error", "start_output", "error_note", "see_also"];
@@ -266,10 +274,19 @@ function loadExamples(r: Reader, highlight: Highlight): Example[] {
     .sort((a, b) => groups.indexOf(a.group) - groups.indexOf(b.group) || a.order - b.order);
 }
 
+function loadProgram(r: Reader, name: string): Program {
+  return {
+    source: r.text(`${name}/src/main.la`) ?? "",
+    expected: r.text(`${name}/expected.txt`) ?? "",
+  };
+}
+
 export async function loadContent(root: string, highlight: Highlight): Promise<Result<Content, string[]>> {
   const r = new Reader(root);
   const chapters = loadCourse(r, highlight);
   const examples = loadExamples(r, highlight);
+  const home = loadProgram(r, "home");
+  const playground = loadProgram(r, "playground");
   const slugs = examples.map((e) => e.slug);
   for (const c of chapters) {
     for (const l of c.lessons) {
@@ -280,5 +297,5 @@ export async function loadContent(root: string, highlight: Highlight): Promise<R
       }
     }
   }
-  return r.problems.length > 0 ? err(r.problems) : ok({ chapters, examples });
+  return r.problems.length > 0 ? err(r.problems) : ok({ chapters, examples, home, playground });
 }

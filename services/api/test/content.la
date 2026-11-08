@@ -4,6 +4,9 @@
 // is checked both ways: the start code gives its start_error (or prints its
 // start_output), and the solution prints expected.txt.
 //
+// Home's card (content/home) and the Playground's opening program
+// (content/playground) are checked the same way.
+//
 // Runs only when asked, like the hostile suite:
 //   scripts/content
 // CONTENT_DIR names the content folder (default ../../content, from services/api).
@@ -194,6 +197,24 @@ fun every_example_prints_what_it_says() {
         let source = read_file("{dir}/src/main.la").expect("every example has src/main.la");
         let expected = read_file("{dir}/expected.txt").expect("every example has expected.txt");
         problems = check(problems, name, run(source, stdin), "", expected);
+    }
+    for p of problems {
+        eprintln(p);
+    }
+    assert_eq(problems, []);
+}
+
+@test
+fun home_and_playground_programs_print_what_they_say() {
+    if !ready() {
+        skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
+    }
+    let mut problems: string[] = [];
+    for name of ["home", "playground"] {
+        let dir = "{root()}/{name}";
+        let source = read_file("{dir}/src/main.la").expect("the program is src/main.la");
+        let expected = read_file("{dir}/expected.txt").expect("the program has expected.txt");
+        problems = check(problems, name, run(source, ""), "", expected);
     }
     for p of problems {
         eprintln(p);
