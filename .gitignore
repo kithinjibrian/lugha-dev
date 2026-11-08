@@ -11,3 +11,4 @@ node_modules/
 .DS_Store
 *.swp
 /services/ui-web/.astro/
+/services/ui-web/generated/

@@ -93,7 +93,16 @@ function asQuiz(toml: string): Result<Quiz, string> {
   return ok({ options, answer, feedback });
 }
 
-export function renderMarkdown(body: string, highlight: Highlight): Result<Rendered, string> {
+/** What else a text may hold: lists, and ```text blocks (lughac's explanations use both). */
+export interface Allow {
+  lists: boolean;
+}
+
+export function renderMarkdown(
+  body: string,
+  highlight: Highlight,
+  allow: Allow = { lists: false },
+): Result<Rendered, string> {
   const lines = body.split("\n");
   const parts: string[] = [""];
   let quiz: Quiz | null = null;
@@ -119,6 +128,10 @@ export function renderMarkdown(body: string, highlight: Highlight): Result<Rende
       const inside = lines.slice(i + 1, close);
       i = close;
       const info = fence[1].trim();
+      if (info === "text" && allow.lists) {
+        parts[parts.length - 1] += `<pre class="text"><code>${escapeHtml(inside.join("\n"))}</code></pre>\n`;
+        continue;
+      }
       if (info === "quiz") {
         if (quiz) return err("has more than one quiz");
         const q = asQuiz(inside.join("\n"));
@@ -137,6 +150,25 @@ export function renderMarkdown(body: string, highlight: Highlight): Result<Rende
     if (line.trim() === "") {
       const problem = flush();
       if (problem) return err(problem);
+      continue;
+    }
+    if (allow.lists && /^- /.test(line)) {
+      const problem = flush();
+      if (problem) return err(problem);
+      const items: string[] = [];
+      while (i < lines.length && /^(- |  \S)/.test(lines[i])) {
+        if (lines[i].startsWith("- ")) items.push(lines[i].slice(2));
+        else items[items.length - 1] += "\n" + lines[i].trim();
+        i++;
+      }
+      i--;
+      const html: string[] = [];
+      for (const item of items) {
+        const r = inline(item);
+        if (!r.ok) return r;
+        html.push(`<li>${r.value}</li>\n`);
+      }
+      parts[parts.length - 1] += `<ul>\n${html.join("")}</ul>\n`;
       continue;
     }
     if (/^(#|>|[-*+] |\d+\. |\s{4})/.test(line)) {
