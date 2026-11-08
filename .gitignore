@@ -12,3 +12,5 @@ node_modules/
 *.swp
 /services/ui-web/.astro/
 /services/ui-web/generated/
+/services/ui-web/test-results/
+/services/ui-web/playwright-report/

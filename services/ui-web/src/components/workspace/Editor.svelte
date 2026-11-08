@@ -5,7 +5,7 @@
   import { indentUnit } from "@codemirror/language";
   import { EditorState, StateEffect, StateField, type Extension } from "@codemirror/state";
   import { Decoration, EditorView, keymap, lineNumbers, type DecorationSet } from "@codemirror/view";
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { editorTheme, lughaEditor } from "../../editor/theme";
 
   interface Props {
@@ -56,7 +56,7 @@
       ]),
       path.endsWith(".la") ? lughaEditor : editorTheme,
       errors,
-      EditorView.contentAttributes.of({ "aria-label": label }),
+      EditorView.contentAttributes.of({ "aria-label": label, tabindex: "0" }),
       EditorView.updateListener.of((u) => {
         if (u.docChanged) onchange(u.state.doc.toString());
       }),
@@ -69,7 +69,7 @@
   });
 
   // A new file, or text changed from outside: start the editor over with it.
-  let shownPath = path;
+  let shownPath = untrack(() => path);
   $effect(() => {
     const t = text;
     const p = path;

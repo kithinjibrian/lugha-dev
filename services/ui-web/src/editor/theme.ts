@@ -42,7 +42,7 @@ const base = EditorView.theme(
     ".cm-scroller": { fontFamily: "var(--font-code)", lineHeight: "1.6" },
     ".cm-content": { caretColor: "var(--sun)" },
     ".cm-cursor": { borderLeftColor: "var(--sun)" },
-    ".cm-gutters": { backgroundColor: "var(--editor)", color: "var(--faint)", border: "none" },
+    ".cm-gutters": { backgroundColor: "var(--editor)", color: "var(--dust)", border: "none" },
     ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "transparent" },
     "&.cm-focused": { outline: "none" },
     ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {

@@ -1,7 +1,72 @@
 ---
+import Footer from "../components/Footer.astro";
+import RunCard from "../components/RunCard.svelte";
+import { site } from "../content/site";
 import Site from "../layouts/Site.astro";
+import { copy } from "../lib/copy";
+
+const s = await site();
 ---
 
 <Site title="Lugha">
-  <h1>A language that doesn't get in your way, but still has your back.</h1>
+  <main class="hero" aria-labelledby="headline">
+    <div class="words">
+      <h1 id="headline">{copy.headline}</h1>
+      <div class="actions">
+        <a class="pill sun" href="/learn">{copy.home.start}</a>
+        <a class="pill" href="/examples">{copy.home.examples}</a>
+        <a class="pill" href="/playground">{copy.home.playground}</a>
+      </div>
+    </div>
+    <RunCard client:load source={s.home.source} html={s.highlight(s.home.source.trimEnd())} />
+  </main>
+  <Footer version={s.version} />
 </Site>
+
+<style>
+  .hero {
+    flex: 1;
+    max-width: 1328px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 80px var(--gutter) 72px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 56px;
+  }
+  .words {
+    flex: 1 1 480px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(40px, 4.8vw, 74px);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.034em;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .actions .pill {
+    min-height: 54px;
+    font-size: 17px;
+    padding: 0 26px;
+  }
+  @media (max-width: 640px) {
+    .hero {
+      padding-top: 40px;
+      gap: 40px;
+    }
+    .words {
+      flex-basis: 100%;
+    }
+  }
+</style>

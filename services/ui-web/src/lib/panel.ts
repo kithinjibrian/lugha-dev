@@ -10,7 +10,9 @@ export type Panel =
   | { kind: "running" }
   | { kind: "compile-error"; diagnostics: Diagnostic[] }
   | { kind: "ran"; stdout: string; stderr: string; exit: number; notes: string[]; warnings: Diagnostic[] }
-  | { kind: "message"; sentence: string };
+  | { kind: "message"; sentence: string }
+  /** lughac's own text, as it printed it (Format's and Test's errors). */
+  | { kind: "text"; text: string };
 
 export function failureSentence(f: Failure): string {
   switch (f.kind) {

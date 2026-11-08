@@ -23,7 +23,7 @@ The site's look is **Machweo** (core decision 4). Every colour, font and size in
 | `sand` | `#F3E9DA` | main text |
 | `sand-2` | `#D6C9B6` | secondary text |
 | `dust` | `#A99C8A` | labels, inactive links |
-| `faint` | `#5E544A` | line numbers, hints |
+| `faint` | `#5E544A` | lines and marks, never text: it is under 4.5:1 on every background (line numbers and hints use `dust`) |
 | `sun` | `#FF7400` | primary buttons (with `night` text), the horizon walked |
 | `gold` | `#E8C400` | the sun gradient's end, program output |
 | `link` | `#FFB066` | links, the active nav item |

@@ -15,8 +15,8 @@
   }
   let { panel, note = null }: Props = $props();
 
-  let explained: Record<string, Explanation> = $state({});
-  let open: Record<string, boolean> = $state({});
+  let explained = $state<Record<string, Explanation>>({});
+  let open = $state<Record<string, boolean>>({});
 
   /** The error codes to explain, once each, in order. */
   const codes = $derived(
@@ -38,6 +38,8 @@
     <p class="hint">{copy.running}</p>
   {:else if panel.kind === "message"}
     <p class="sentence">{panel.sentence}</p>
+  {:else if panel.kind === "text"}
+    <pre>{panel.text}</pre>
   {:else if panel.kind === "compile-error"}
     <div class="errors">
       <div class="diagnostics">
@@ -91,7 +93,7 @@
   }
   .hint {
     margin: 0;
-    color: var(--faint);
+    color: var(--dust);
   }
   .sentence {
     margin: 12px 0 0;

@@ -1,0 +1,54 @@
+---
+// A Learn step: /learn/<chapter>/<lesson>/<step>.
+import type { GetStaticPaths } from "astro";
+import LearnStep from "../../components/learn/LearnStep.svelte";
+import type { CourseChapter, StepData } from "../../components/learn/course";
+import type { Chapter, Lesson, Step } from "../../content/load";
+import { site } from "../../content/site";
+import Site from "../../layouts/Site.astro";
+import { CONTENT_ON_GITHUB } from "../../lib/copy";
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const s = await site();
+  return s.chapters.flatMap((chapter) =>
+    chapter.lessons.flatMap((lesson) => lesson.steps.map((step) => ({ params: { id: step.id }, props: { chapter, lesson, step } }))),
+  );
+};
+
+const { chapter, lesson, step } = Astro.props as { chapter: Chapter; lesson: Lesson; step: Step };
+const s = await site();
+const course: CourseChapter[] = s.chapters.map((c) => ({
+  title: c.title,
+  lessons: c.lessons.map((l) => ({ title: l.title, steps: l.steps.map((x) => ({ id: x.id, title: x.title })) })),
+}));
+const seeAlso = s.examples.find((e) => e.slug === step.seeAlso);
+const data: StepData = {
+  id: step.id,
+  title: step.title,
+  kind: step.kind,
+  html: step.html,
+  quiz: step.quiz,
+  after: step.after,
+  start: step.start,
+  solution: step.solution,
+  startError: step.startError,
+  errorNote: step.errorNote,
+  seeAlso: seeAlso ? { slug: seeAlso.slug, title: seeAlso.title } : null,
+  editUrl: `${CONTENT_ON_GITHUB}/${step.path.split("/").slice(0, -1).join("/")}`,
+};
+---
+
+<Site title={`${step.title} · ${lesson.title} · Lugha`} current="learn" fill>
+  <main class="learn">
+    <LearnStep client:load {course} step={data} chapterTitle={chapter.title} lessonTitle={lesson.title} playgroundOpening={s.playground.source} />
+  </main>
+</Site>
+
+<style>
+  .learn {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+</style>
