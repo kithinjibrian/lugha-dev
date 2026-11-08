@@ -1,0 +1,2 @@
+# The order of the groups on the Examples page. Every example's group is one of these.
+groups = ["Basics", "Text", "Concurrency"]
