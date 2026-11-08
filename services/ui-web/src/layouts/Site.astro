@@ -1,14 +1,19 @@
 ---
-// Every page: fonts, tokens and (later) the header.
+// Every page: fonts, tokens and the header. `fill` pages (Learn, Playground)
+// take the window's height and scroll inside their panels.
 import "@fontsource-variable/bricolage-grotesque";
 import "@fontsource-variable/source-serif-4";
 import "@fontsource-variable/jetbrains-mono";
 import "../styles/tokens.css";
+import "../styles/base.css";
+import Header from "../components/Header.astro";
 
 interface Props {
   title: string;
+  current?: "learn" | "examples" | "playground";
+  fill?: boolean;
 }
-const { title } = Astro.props;
+const { title, current, fill = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -16,18 +21,11 @@ const { title } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <title>{title}</title>
   </head>
-  <body>
+  <body class:list={{ fill }}>
+    <Header current={current} />
     <slot />
   </body>
 </html>
-
-<style is:global>
-  body {
-    margin: 0;
-    background: var(--night);
-    color: var(--sand);
-    font-family: var(--font-ui);
-  }
-</style>

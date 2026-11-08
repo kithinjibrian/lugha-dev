@@ -131,6 +131,8 @@ export interface TestLine {
   line: number;
   status: "passed" | "failed" | "skipped";
   message: string;
+  /** Where a failed test panicked. */
+  at: { file: string; line: number; col: number } | null;
   output: string;
 }
 
@@ -147,7 +149,7 @@ export type TestOutcome =
 
 function asTestLine(v: unknown): TestLine | null {
   if (!isObj(v)) return null;
-  const { test, file, line, status, message, output } = v;
+  const { test, file, line, status, message, output, at } = v;
   if (
     typeof test !== "string" ||
     typeof file !== "string" ||
@@ -162,6 +164,10 @@ function asTestLine(v: unknown): TestLine | null {
     line,
     status,
     message: typeof message === "string" ? message : "",
+    at:
+      isObj(at) && typeof at.file === "string" && typeof at.line === "number" && typeof at.col === "number"
+        ? { file: at.file, line: at.line, col: at.col }
+        : null,
     output: typeof output === "string" ? output : "",
   };
 }

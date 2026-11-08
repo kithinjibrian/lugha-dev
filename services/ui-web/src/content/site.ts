@@ -7,6 +7,8 @@ import { highlighter } from "./highlight";
 import { loadContent, type Content } from "./load";
 
 export interface Site extends Content {
+  /** The sandbox image's `lughac --version`: "lughac 0.1.0". */
+  version: string;
   explanations: Record<string, Explanation>;
   /** Highlights Lugha for a page (Home's card). */
   highlight: (source: string, marks?: number[]) => string;
@@ -30,7 +32,8 @@ async function load(): Promise<Site> {
   }
   return {
     ...content.value,
-    explanations: explanations.value,
+    version: explanations.value.version,
+    explanations: explanations.value.explanations,
     highlight: (source, marks = []) => highlight(source, marks),
   };
 }

@@ -1,0 +1,20 @@
+---
+// The icon: a black baobab on the sun disc (core decision 3).
+import Baobab from "./Baobab.astro";
+
+interface Props {
+  size: number;
+}
+const { size } = Astro.props;
+---
+
+<svg width={size} height={size} viewBox="0 0 128 128" aria-hidden="true">
+  <defs>
+    <linearGradient id="logo-sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--sun)"></stop><stop offset="1" stop-color="var(--gold)"></stop>
+    </linearGradient>
+    <clipPath id="logo-disc"><circle cx="64" cy="64" r="64"></circle></clipPath>
+  </defs>
+  <circle cx="64" cy="64" r="64" fill="url(#logo-sun)"></circle>
+  <g clip-path="url(#logo-disc)"><Baobab color="var(--tree)" /></g>
+</svg>

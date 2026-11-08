@@ -9,3 +9,17 @@ export interface Project {
   args: string[];
   stdin: string;
 }
+
+/** The lugha.toml every project starts with: the API's default (services/api/src/checks/manifest.la). */
+export const DEFAULT_TOML = '[package]\nname = "playground"\nversion = "0.1.0"\nsource = "src"\n';
+
+export function projectOf(source: string, stdin = ""): Project {
+  return {
+    files: [
+      { path: "src/main.la", text: source },
+      { path: "lugha.toml", text: DEFAULT_TOML },
+    ],
+    args: [],
+    stdin,
+  };
+}

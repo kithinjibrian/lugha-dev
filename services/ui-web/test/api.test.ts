@@ -138,8 +138,8 @@ describe("readTest", () => {
     expect(r).toEqual({
       state: "tested",
       tests: [
-        { name: "src.main.b", file: "src/main.la", line: 4, status: "skipped", message: "later", output: "" },
-        { name: "src.main.a", file: "src/main.la", line: 2, status: "failed", message: "assert_eq failed: left 1, right 2", output: "" },
+        { name: "src.main.b", file: "src/main.la", line: 4, status: "skipped", message: "later", at: null, output: "" },
+        { name: "src.main.a", file: "src/main.la", line: 2, status: "failed", message: "assert_eq failed: left 1, right 2", at: { file: "main.la", line: 2, col: 11 }, output: "" },
       ],
       summary: { passed: 0, failed: 1, skipped: 1, uncompiled: 0 },
       stopped: null,

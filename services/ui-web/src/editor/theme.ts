@@ -53,4 +53,8 @@ const base = EditorView.theme(
   { dark: true },
 );
 
-export const lughaEditor = [lughaLanguage, syntaxHighlighting(highlight), base];
+/** The editor's look, for any file. */
+export const editorTheme = [syntaxHighlighting(highlight), base];
+
+/** The look and Lugha's highlighting, for .la files. */
+export const lughaEditor = [lughaLanguage, ...editorTheme];

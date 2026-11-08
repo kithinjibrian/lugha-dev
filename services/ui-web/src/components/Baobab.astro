@@ -1,0 +1,15 @@
+---
+// The baobab from the icon (core decision 3), drawn in `color`.
+interface Props {
+  color: string;
+}
+const { color } = Astro.props;
+---
+
+<g transform="translate(12 24) scale(1.625)">
+  <g stroke={color} stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M31 27 L24 17 L18 15"></path><path d="M32 26 L33 11"></path><path d="M33 11 L30 6"></path>
+    <path d="M33 11 L37 7"></path><path d="M33 27 L44 18 L50 17"></path><path d="M30 31 L18 27 L12 28"></path>
+  </g>
+  <path d="M21 64 C19.5 47 24 34 30 25.5 H34 C40 34 44.5 47 43 64 Z" fill={color}></path>
+</g>
