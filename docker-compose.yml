@@ -5,7 +5,7 @@
 # The API starts one sandbox container per job from the sandbox image; those
 # containers are never services here.
 #
-#   docker compose --profile sandbox build    # both images (lughac is built once)
+#   docker compose build                      # the sandbox, the API and the site (lughac is built once)
 #   docker compose up -d                      # caddy, api, cleanup (local: http://127.0.0.1:8080)
 #   docker compose --profile tunnel up -d     # on the droplet: with cloudflared too
 #
@@ -36,16 +36,21 @@ services:
     profiles:
       - tunnel
 
+  # Caddy with the built site inside (services/ui-web/Dockerfile): its first
+  # stage reads lughac's explanations from the sandbox image.
   caddy:
-    image: caddy:2.8.4
+    build:
+      context: .
+      dockerfile: services/ui-web/Dockerfile
+      additional_contexts:
+        sandbox: service:sandbox
+    image: lugha-web:${LUGHAC_REF:-m154}
     restart: unless-stopped
     # Only on this machine's loopback, for trying the site locally: nothing
     # outside the droplet can reach it. Visitors come through cloudflared.
     ports:
       - "127.0.0.1:8080:80"
     volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./services/ui-web/dist:/srv:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
@@ -93,7 +98,8 @@ services:
     security_opt:
       - no-new-privileges:true
 
-  # Build-only: the image the API runs per job. Never started.
+  # Build-only: the image the API runs per job, and the site's build reads its
+  # explanations. Never started (scale 0).
   sandbox:
     build:
       context: ./services/api
@@ -101,8 +107,7 @@ services:
       args:
         LUGHAC_REF: ${LUGHAC_REF:-m154}
     image: lugha-sandbox:${LUGHAC_REF:-m154}
-    profiles:
-      - sandbox
+    scale: 0
 
 volumes:
   caddy_data:

@@ -1,0 +1,10 @@
+# The build context is the repository root; the site needs only these.
+*
+!content/
+!deploy/Caddyfile
+!services/ui-web/
+services/ui-web/node_modules/
+services/ui-web/dist/
+services/ui-web/generated/
+services/ui-web/.astro/
+services/ui-web/test-results/
