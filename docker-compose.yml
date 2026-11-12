@@ -8,6 +8,7 @@
 #   docker compose build                      # the sandbox, the API and the site (lughac is built once)
 #   docker compose up -d                      # caddy, api, cleanup (local: http://127.0.0.1:8080)
 #   docker compose --profile tunnel up -d     # on the droplet: with cloudflared too
+#   deploy/droplet.sh                         # on the droplet, as root: set up or update everything
 #
 # Needs on the host: Docker with gVisor's runsc registered as a runtime, and in
 # .env (or the environment):
