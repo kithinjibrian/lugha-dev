@@ -1,0 +1,5 @@
+title = "Hello, world"
+group = "Basics"
+order = 1
+intro = "The smallest Lugha program: one function, one line of output."
+tags = ["fun main", "println"]

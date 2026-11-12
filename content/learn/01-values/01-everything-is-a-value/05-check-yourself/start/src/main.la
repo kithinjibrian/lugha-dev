@@ -1,0 +1,13 @@
+fun add_one(xs: i64[]): i64[] {
+    let mut ys = xs;
+    ys.push(1);
+    ys
+}
+
+fun main(): i32 {
+    let xs = [5, 6];
+    let zs = add_one(xs);
+    println(xs);
+    println(zs);
+    0
+}

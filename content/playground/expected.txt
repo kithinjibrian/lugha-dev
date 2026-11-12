@@ -1,0 +1,4 @@
+Circle(1.0) has area 3.14
+Square(2.0) has area 4.00
+Circle(0.5) has area 0.79
+total: 7.93

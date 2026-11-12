@@ -161,26 +161,39 @@ Every sentence a visitor can read, for the owner to approve word for word. Code 
 ## TESTS
 
 In three layers (WEB-11). Unit (Vitest):
-- [ ] Share links: round trip of files, args and stdin; `v1.` prefix; an unknown version refused; the 16 KB limit; a corrupt link refused with no crash.
-- [ ] Progress: each kind of step's "done" rule; the sun's position; Start over.
-- [ ] Content: reading each file kind; `//:` notes split from code (several lines, none, notes with no code after); every build-failure check.
-- [ ] Diagnostics: the E0501 JSON rebuilt exactly as `lughac` prints it.
-- [ ] The tokenizer: keywords, types, numbers, strings with interpolation, comments, `@test`; its keywords equal the grammar's.
-- [ ] The API client: each response and failure maps to its panel state.
+- [x] Share links: round trip of files, args and stdin; `v1.` prefix; an unknown version refused; the 16 KB limit; a corrupt link refused with no crash.
+- [x] Progress: each kind of step's "done" rule; the sun's position; Start over.
+- [x] Content: reading each file kind; `//:` notes split from code (several lines, none, notes with no code after); every build-failure check.
+- [x] Diagnostics: a `rendered` text shown unchanged; without one (until `lughac` adds it, O8), the header, location and help from the JSON; the lines to highlight.
+- [x] The tokenizer: keywords, types, numbers, strings with interpolation, comments, `@test`; its keywords equal the grammar's.
+- [x] The API client: each response and failure maps to its panel state.
 
 Content (`services/api/scripts/content`, one at a time, against the real sandbox):
-- [ ] Every step's start code, and its solution where there is one, prints exactly its `expected.txt` (for a fix step, the start code gives its expected error code instead).
-- [ ] Every example (with its stdin) prints exactly its `expected.txt`.
+- [x] Every step's start code, and its solution where there is one, prints exactly its `expected.txt` (for a fix step, the start code gives its expected error code instead).
+- [x] Every example (with its stdin) prints exactly its `expected.txt`.
 
 Browser (Playwright, against the running stack):
-- [ ] A Learn step: Run shows the output; the step counts as done; the sun moves.
-- [ ] Step 2: Run shows E0501 and its explanation; Solve, Run shows the output.
-- [ ] Share: the link opens the same code in a fresh browser.
-- [ ] With the API stopped, Run shows the service sentence and the code is still there.
-- [ ] axe finds no violations on Home, a step, an example and the Playground.
+- [x] A Learn step: Run shows the output; the step counts as done; the sun moves.
+- [x] Step 2: Run shows E0501 and its explanation; Solve, Run shows the output.
+- [x] Share: the link opens the same code in a fresh browser.
+- [x] With the API unreachable (Caddy answers 502), Run shows "The server is busy. Try again in a moment." and the code is still there; offline, the offline sentence.
+- [x] axe finds no violations on Home, a step, an example and the Playground.
+
+## IMPLEMENTATION NOTES
+
+Where building it differed from the design above, and why (2026-11-08):
+- **Versions.** Astro 7.4.1 and `@astrojs/svelte` 9.1.0 are pinned: later releases need Node 22.23.4, and the development machine has 22.22.1. The Docker build uses `node:22.22.1-bookworm-slim` to match. `npm audit` reports 3 low-severity issues in `deepmerge`, used by the Svelte build plugin at build time only; nothing of it reaches a browser.
+- **Dependencies added, with their reasons:** `@fontsource-variable/*` (the three fonts, served from the site), `smol-toml` (the TOML files and the quiz; Astro already depends on it), `@lezer/highlight` (the editor theme imports it; CodeMirror depends on it), `@types/node` (the tests read fixtures from disk).
+- **Content loading** is a plain TypeScript loader (`src/content/load.ts`) rather than Astro content collections: the layout (start and solution code, expected output, quizzes, `//:` notes) is custom, and a loader that lists every problem is simpler to test. Step text is a strict markdown subset; anything else fails the build.
+- **Error text** (O8, resolved): `lughac` will give the rendered text; until it does, the panel shows each diagnostic's header, location and help from the JSON. The Tests tab uses `lughac test`'s own line shapes from its JSON.
+- **The footer's version** is read at build time from the same pinned sandbox image as the explanations, not from `/api/version` on every page.
+- **New content files:** `content/examples/groups.toml` (the order of the example groups), `content/home/` (Home's `fib.la`) and `content/playground/` (the opening shapes program). The last two were only in the canvas; the content checks now run them too.
+- **Compose:** the sandbox service is build-only with `scale: 0` (no longer behind a profile), so the site's build can read the sandbox image as a build context and plain `docker compose up -d` still works. `docker compose build` builds all three images.
+- **Accessibility:** axe found `faint` text under 4.5:1, so line numbers and hints use `dust` (DESIGN.md updated). The outline dialog has no close button (its label isn't approved copy); Escape and a click outside close it.
+- **Copy waiting for approval:** a compile that runs out of time shows the service sentence until it has its own; "Edit this lesson on GitHub" points at `github.com/kithinjibrian/lugha-dev`, which doesn't exist yet.
 
 ## ACCEPTANCE
-- [ ] `npm test`, `npm run build` and `npm run check` (types) pass in `services/ui-web`; the content checks and Playwright pass against the stack.
-- [ ] `docker compose --profile sandbox build` builds the site into Caddy; `docker compose up -d` serves it at `http://127.0.0.1:8080` with `/content/v1/index.json`.
+- [x] `npm test`, `npm run build` and `npm run check` (types) pass in `services/ui-web`; the content checks and Playwright pass against the stack.
+- [x] `docker compose build` builds the site into Caddy; `docker compose up -d` serves it at `http://127.0.0.1:8080` with `/content/v1/index.json`.
 - [x] Every sentence in CONTENT is approved by the owner (2026-11-08).
 - [ ] For the owner, by eye: Home, the five steps (fix step 2 by hand and with Solve; see the sun move), an example's notes beside its code, the Playground's Share link in another browser, and all of it at phone width.

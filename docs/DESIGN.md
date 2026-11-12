@@ -23,11 +23,13 @@ The site's look is **Machweo** (core decision 4). Every colour, font and size in
 | `sand` | `#F3E9DA` | main text |
 | `sand-2` | `#D6C9B6` | secondary text |
 | `dust` | `#A99C8A` | labels, inactive links |
-| `faint` | `#5E544A` | line numbers, hints |
+| `faint` | `#5E544A` | lines and marks, never text: it is under 4.5:1 on every background (line numbers and hints use `dust`) |
 | `sun` | `#FF7400` | primary buttons (with `night` text), the horizon walked |
 | `gold` | `#E8C400` | the sun gradient's end, program output |
 | `link` | `#FFB066` | links, the active nav item |
 | `error` | `#FF8A80` | errors, wrong answers |
+| `tree` | `#121212` | the baobab in the logo, and on the horizon when the course is done |
+| `tree-far` | `#7A6C5E` | the baobab on the horizon before the course is done |
 
 The sun is always the gradient `#FF7400` → `#E8C400`, top to bottom.
 

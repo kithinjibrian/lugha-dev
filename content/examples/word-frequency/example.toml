@@ -1,0 +1,6 @@
+title = "Word frequency"
+group = "Text"
+order = 1
+intro = "Read text from standard input, count every word, and print the five most common. A map, a sort and some format specifiers do all the work."
+tags = ["Map", "read_line", "while let", "sort_by", "format specifiers"]
+stdin = "the cat sat on the mat\nthe dog sat on the cat\n  and the mat sat still"

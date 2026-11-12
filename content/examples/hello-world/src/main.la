@@ -1,0 +1,5 @@
+//: Every program starts at `main`. Without a return type, it exits with code 0 when it ends.
+fun main() {
+//: `println` prints a value and a newline.
+    println("Hello, world!");
+}

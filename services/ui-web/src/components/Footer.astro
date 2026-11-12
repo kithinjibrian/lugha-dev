@@ -1,0 +1,42 @@
+---
+import { copy } from "../lib/copy";
+
+interface Props {
+  version: string;
+}
+const [version, lugha, license] = copy.footer(Astro.props.version);
+---
+
+<footer>
+  <div class="inner">
+    <span class="version">{version}</span>
+    <span>{lugha}</span>
+    <span>{license}</span>
+  </div>
+</footer>
+
+<style>
+  footer {
+    min-height: 72px;
+    border-top: 1px solid var(--line);
+    background: var(--ground);
+    display: flex;
+  }
+  .inner {
+    max-width: 1328px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 16px var(--gutter);
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 24px;
+    font-size: 15px;
+    color: var(--dust);
+  }
+  .version {
+    font-family: var(--font-code);
+    color: var(--sand-2);
+  }
+</style>

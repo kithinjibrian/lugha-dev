@@ -1,0 +1,28 @@
+//: A map literal is `#{}`. Its type says what it holds: each word and how often it appears.
+fun main() {
+    let mut counts: Map<string, i64> = #{};
+//: `read_line()` gives `None` at the end of the input, which ends the `while let`. Each line is split on spaces, and the empty pieces are skipped.
+    while let Some(line) = read_line() {
+        for w of line.split(" ") {
+            let word = w.trim();
+            if word != "" {
+//: `get` returns an `Option`, so `unwrap_or(0)` starts a new word at zero.
+                counts[word] = counts.get(word).unwrap_or(0) + 1;
+            }
+        }
+    }
+
+//: A map iterates as `(key, value)` tuples. Copy them into an array so they can be sorted.
+    let mut entries: (string, i64)[] = [];
+    for (w, c) of counts {
+        entries.push((w, c));
+    }
+//: `sort_by` takes a function that says whether `a` comes before `b`: the highest count first, then alphabetical. It returns a new, sorted array.
+    let top = entries.sort_by(fun(a, b) = a.1 > b.1 || a.1 == b.1 && a.0 < b.0);
+
+//: Format specifiers line the columns up: `{w:<8}` pads the word to 8 characters, `{c:>3}` right-aligns the count.
+    println("{counts.len} different words");
+    for (w, c) of top.iter().take(5) {
+        println("{w:<8} {c:>3}");
+    }
+}

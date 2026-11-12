@@ -1,7 +1,8 @@
 # The Lugha site behind Caddy (PRP-001, API-8 and API-10). Caddy listens on
 # plain HTTP inside the compose network: Cloudflare handles the domain and
 # HTTPS, and cloudflared brings visitors' requests here. The static site is
-# services/ui-web's build, mounted at /srv; /api/* goes to the API.
+# services/ui-web's build, copied to /srv by its Dockerfile, with the content
+# bundle at /content/v1/; /api/* goes to the API.
 
 :80 {
 	encode zstd gzip

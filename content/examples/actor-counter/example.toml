@@ -1,0 +1,5 @@
+title = "An actor counter"
+group = "Concurrency"
+order = 2
+intro = "State that one green thread owns. Other code talks to it by calling its methods, which become messages."
+tags = ["actor", "spawn", "mut self"]

@@ -1,0 +1,7 @@
+---
+// /examples opens the first example.
+import { site } from "../../content/site";
+
+const first = (await site()).examples[0];
+return Astro.redirect(first ? `/examples/${first.slug}` : "/");
+---

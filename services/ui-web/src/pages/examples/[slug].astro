@@ -1,0 +1,149 @@
+---
+// An example: its notes beside its code, then Run.
+import type { GetStaticPaths } from "astro";
+import ExampleList from "../../components/examples/ExampleList.svelte";
+import RunBox from "../../components/examples/RunBox.svelte";
+import type { Example } from "../../content/load";
+import { site } from "../../content/site";
+import Site from "../../layouts/Site.astro";
+
+export const getStaticPaths: GetStaticPaths = async () => (await site()).examples.map((e) => ({ params: { slug: e.slug }, props: { e } }));
+
+const { e } = Astro.props as { e: Example };
+const s = await site();
+const groups: { name: string; items: { slug: string; title: string; tags: string[] }[] }[] = [];
+for (const x of s.examples) {
+  let g = groups.find((g) => g.name === x.group);
+  if (!g) groups.push((g = { name: x.group, items: [] }));
+  g.items.push({ slug: x.slug, title: x.title, tags: x.tags });
+}
+---
+
+<Site title={`${e.title} · Lugha`} current="examples">
+  <div class="page">
+    <aside aria-label="Examples">
+      <ExampleList client:load {groups} current={e.slug} />
+    </aside>
+    <main>
+      <header>
+        <div class="group">{e.group}</div>
+        <h1>{e.title}</h1>
+        <p class="intro">{e.intro}</p>
+        <ul class="tags">{e.tags.map((t) => <li>{t}</li>)}</ul>
+      </header>
+      <div class="pieces">
+        {
+          e.pieces.map((p) => (
+            <div class="piece">
+              <div class="note prose" set:html={p.note} />
+              <div class="code" set:html={p.html} />
+            </div>
+          ))
+        }
+      </div>
+      <RunBox client:load source={e.source} stdin={e.stdin} playgroundOpening={s.playground.source} />
+    </main>
+  </div>
+</Site>
+
+<style>
+  .page {
+    max-width: 1328px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 40px var(--gutter) 96px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px;
+    align-items: flex-start;
+  }
+  aside {
+    flex: 1 1 240px;
+    max-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  main {
+    flex: 999 1 640px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .group {
+    font-size: 15px;
+    color: var(--dust);
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(40px, 4.4vw, 60px);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  .intro {
+    margin: 0;
+    font: 20px/1.55 var(--font-prose);
+    color: var(--sand-2);
+    max-width: 720px;
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 4px 0 0;
+  }
+  .tags li {
+    font: 13px var(--font-code);
+    color: var(--sand-2);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    padding: 4px 10px;
+  }
+  .piece {
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--line);
+  }
+  .note {
+    flex: 1 1 260px;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 16px 24px 16px 0;
+    font: 17px/1.6 var(--font-prose);
+    color: var(--sand-2);
+  }
+  .note :global(p) {
+    margin: 0;
+  }
+  .code {
+    flex: 2 1 420px;
+    min-width: 0;
+    background: var(--ground);
+  }
+  .piece:first-child .code {
+    border-top-left-radius: var(--radius-code);
+    border-top-right-radius: var(--radius-code);
+  }
+  .piece:last-child .code {
+    border-bottom-left-radius: var(--radius-code);
+    border-bottom-right-radius: var(--radius-code);
+  }
+  @media (max-width: 640px) {
+    aside {
+      max-width: none;
+    }
+    .note {
+      padding-right: 0;
+    }
+  }
+</style>
