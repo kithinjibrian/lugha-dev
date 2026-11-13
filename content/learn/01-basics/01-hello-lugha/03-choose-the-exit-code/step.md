@@ -1,5 +1,5 @@
 ---
-title: The exit code
+title: Choose the exit code
 start_output: checking the input\n
 ---
 
