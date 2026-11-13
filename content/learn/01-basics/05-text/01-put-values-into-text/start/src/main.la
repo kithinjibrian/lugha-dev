@@ -1,0 +1,6 @@
+fun main() {
+    let name = "Amina";
+    let points = 7;
+    println("{name} has {points} points");
+    println("doubled: {points * 2}");
+}

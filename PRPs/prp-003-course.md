@@ -114,6 +114,7 @@ Every sentence a visitor reads is approved by the owner, one lesson at a time (d
 - **Hello, Lugha** (2026-11-13): Run it · Print any value · Choose the exit code, as in `content/learn/01-basics/01-hello-lugha/`. The owner retitled "Any value" to "Print any value", and asked for its prediction to be a real doubt.
 - **Names** (2026-11-13): Name a value · Give a name a new value · Divide whole numbers · Convert a number with as, as in `content/learn/01-basics/02-names/`. The owner caught "On the right", which is wrong on a phone; every step now names the editor or a line instead, the approved Values lesson included (two phrases).
 - **Functions** (2026-11-13): Declare a function · Remove the semicolon · Swap the braces for = · Change a parameter, as in `content/learn/01-basics/03-functions/`.
+- **Choosing and repeating** (2026-11-13): Choose a value with if · Repeat while a condition holds · Count with a range · Go through an array · Break with a value, as in `content/learn/01-basics/04-choosing-and-repeating/`.
 
 ## TESTS
 
