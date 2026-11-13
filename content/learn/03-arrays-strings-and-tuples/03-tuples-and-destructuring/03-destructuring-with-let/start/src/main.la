@@ -1,0 +1,7 @@
+fun divmod(a: i64, b: i64): (i64, i64) = (a / b, a % b);
+
+fun main() {
+    let mut (weeks, days) = divmod(17, 7);
+    days += 1;
+    println("{weeks} weeks and {days} days");
+}

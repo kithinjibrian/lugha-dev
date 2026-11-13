@@ -1,5 +1,0 @@
-fun main() {
-    let points = 7;
-    let line = "points: " + points;
-    println(line);
-}

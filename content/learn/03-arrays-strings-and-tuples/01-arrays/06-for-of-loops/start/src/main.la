@@ -1,0 +1,6 @@
+fun main() {
+    let scores = [70, 85, 90];
+    for score in scores {
+        println(score);
+    }
+}

@@ -1,9 +1,0 @@
----
-title: Put values into text
----
-
-Line 4 puts `name` and `points` inside the string, in braces.
-Press Run.
-
-Each pair of braces is replaced by the value of what's inside it, written the way `println` would print it.
-The braces can hold any expression, like `points * 2` on line 5.

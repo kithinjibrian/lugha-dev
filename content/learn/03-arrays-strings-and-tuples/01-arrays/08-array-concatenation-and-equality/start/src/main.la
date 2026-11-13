@@ -1,0 +1,7 @@
+fun main() {
+    let first = [1, 2];
+    let second = [3];
+    let both = first + second;
+    println(both);
+    println(both == [1, 2, 3]);
+}

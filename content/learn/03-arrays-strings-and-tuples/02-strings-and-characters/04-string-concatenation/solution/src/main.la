@@ -1,0 +1,6 @@
+fun main() {
+    let name = "Amina";
+    let points = 7;
+    let line = name + " has {points}";
+    println(line);
+}

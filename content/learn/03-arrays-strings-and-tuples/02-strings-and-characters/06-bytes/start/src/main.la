@@ -1,0 +1,7 @@
+fun main() {
+    let word = "hi";
+    println(word[0]);
+    for b of word {
+        println(b);
+    }
+}

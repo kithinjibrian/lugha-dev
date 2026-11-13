@@ -1,0 +1,6 @@
+fun divmod(a: i64, b: i64): (i64, i64) = (a / b, a % b);
+
+fun main() {
+    let result = divmod(17, 5);
+    println(result);
+}

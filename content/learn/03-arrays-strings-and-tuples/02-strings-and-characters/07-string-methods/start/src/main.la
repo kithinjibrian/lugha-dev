@@ -1,0 +1,9 @@
+fun main() {
+    let line = "  milk,bread,eggs  ";
+    let items = line.trim().split(",");
+    println(items);
+    println(items.join(" + "));
+    println(line.contains("bread"));
+    println(line.trim().starts_with("milk"));
+    println("one\ntwo".lines());
+}

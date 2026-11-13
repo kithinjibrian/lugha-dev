@@ -1,0 +1,1 @@
+write {name} to put a value in

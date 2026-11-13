@@ -1,0 +1,6 @@
+fun main() {
+    let item = ("milk", 2);
+    println(item);
+    println(item.0);
+    println(item.1);
+}
