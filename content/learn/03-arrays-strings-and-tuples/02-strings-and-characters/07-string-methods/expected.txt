@@ -1,0 +1,5 @@
+["milk", "bread", "eggs"]
+milk + bread + eggs
+true
+true
+["one", "two"]

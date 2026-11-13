@@ -1,0 +1,6 @@
+fun main() {
+    let people = [("Ann", 31), ("Ben", 25)];
+    for (name, age) of people {
+        println("{name} is {age}");
+    }
+}

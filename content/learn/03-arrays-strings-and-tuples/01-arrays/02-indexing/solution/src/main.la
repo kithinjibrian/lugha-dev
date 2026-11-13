@@ -1,0 +1,6 @@
+fun main() {
+    let mut scores = [70, 85, 90];
+    scores[1] = 88;
+    println(scores[0]);
+    println(scores);
+}

@@ -1,0 +1,5 @@
+fun main() {
+    let name = "Zoë";
+    println(name.slice(0, 2));
+    println(name.slice(2, 4));
+}

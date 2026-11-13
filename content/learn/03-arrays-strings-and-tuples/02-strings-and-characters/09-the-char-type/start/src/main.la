@@ -1,0 +1,9 @@
+fun main() {
+    let grade = 'b';
+    println(grade < 'c');
+    println('7'.is_digit());
+    println(grade.to_upper());
+    println('é'.to_upper());
+    println('ß'.to_upper());
+    println('ж'.to_upper());
+}

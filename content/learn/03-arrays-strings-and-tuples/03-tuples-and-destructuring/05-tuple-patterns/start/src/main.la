@@ -1,0 +1,13 @@
+fun describe(x: i64, y: i64): string {
+    match (x, y) {
+        (0, 0) => "the origin",
+        (0, _) => "on the y axis",
+        (_, 0) => "on the x axis",
+        _ => "somewhere else",
+    }
+}
+
+fun main() {
+    println(describe(0, 4));
+    println(describe(2, 3));
+}
