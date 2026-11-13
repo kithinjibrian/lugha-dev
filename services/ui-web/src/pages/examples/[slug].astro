@@ -138,10 +138,19 @@ for (const x of s.examples) {
     border-bottom-left-radius: var(--radius-code);
     border-bottom-right-radius: var(--radius-code);
   }
-  @media (max-width: 640px) {
+  @media (max-width: 720px) {
+    .page {
+      padding-top: 20px;
+      gap: 28px;
+    }
     aside {
       max-width: none;
+      flex-basis: 100%;
+      min-width: 0;
+      gap: 0;
     }
+  }
+  @media (max-width: 640px) {
     .note {
       padding-right: 0;
     }

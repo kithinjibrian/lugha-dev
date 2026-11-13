@@ -1,6 +1,7 @@
 ---
 // The site's header: the logo home, the three pages, and GitHub. Home has no menu link; the logo
 // is the way back.
+import { entries, site } from "../content/site";
 import { copy, GITHUB } from "../lib/copy";
 import Logo from "./Logo.astro";
 
@@ -8,9 +9,10 @@ interface Props {
   current?: "learn" | "examples" | "playground";
 }
 const { current } = Astro.props;
+const start = entries(await site());
 const links = [
-  { id: "learn", href: "/learn", label: copy.nav.learn },
-  { id: "examples", href: "/examples", label: copy.nav.examples },
+  { id: "learn", href: start.learn, label: copy.nav.learn },
+  { id: "examples", href: start.examples, label: copy.nav.examples },
   { id: "playground", href: "/playground", label: copy.nav.playground },
 ] as const;
 ---
@@ -30,14 +32,14 @@ const links = [
     }
   </nav>
   <div class="grow"></div>
-  <a class="github" href={GITHUB}>
+  <a class="github" href={GITHUB} aria-label={copy.nav.github}>
     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
       <path
         fill="currentColor"
         d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 2.9.8.1-.6.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.8-1 2.8-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"
       ></path>
     </svg>
-    {copy.nav.github}
+    <span class="label">{copy.nav.github}</span>
   </a>
 </header>
 
@@ -105,8 +107,13 @@ const links = [
       gap: 14px;
     }
     .home span,
-    .github {
+    .github .label {
       display: none;
+    }
+    .github {
+      width: var(--target);
+      padding: 0;
+      justify-content: center;
     }
     nav {
       gap: 14px;

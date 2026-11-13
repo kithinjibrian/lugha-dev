@@ -1,7 +1,6 @@
 ---
 // /learn opens the course's first step.
-import { site } from "../../content/site";
+import { entries, site } from "../../content/site";
 
-const first = (await site()).chapters[0]?.lessons[0]?.steps[0];
-return Astro.redirect(first ? `/learn/${first.id}` : "/");
+return Astro.redirect(entries(await site()).learn);
 ---

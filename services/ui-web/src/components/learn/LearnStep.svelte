@@ -322,4 +322,24 @@
       display: none;
     }
   }
+  /* The page scrolls as a whole on a phone, with the steps bar kept in reach at the top. The
+     step's title is the heading just below, so the bar doesn't repeat it. */
+  @media (max-width: 720px) {
+    .bar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding: 0 8px;
+      gap: 2px;
+    }
+    .crumbs {
+      display: none;
+    }
+    .split {
+      overflow: visible;
+    }
+    .work {
+      height: 85vh;
+    }
+  }
 </style>

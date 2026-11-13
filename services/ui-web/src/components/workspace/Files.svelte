@@ -85,9 +85,24 @@
     background: var(--raised);
     color: var(--link);
   }
+  /* On a phone the files sit in a row above the editor, which then gets the full width. */
   @media (max-width: 720px) {
     .files {
-      width: 120px;
+      width: auto;
+      flex-direction: row;
+      align-items: center;
+      overflow-x: auto;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+      padding: 4px 8px;
+    }
+    .heading {
+      display: none;
+    }
+    .file,
+    .file.nested {
+      padding: 6px 12px;
+      white-space: nowrap;
     }
   }
 </style>
