@@ -1,5 +1,5 @@
 // The editor's tokenizer (PRP-002, WEB-9): a small CodeMirror stream parser
-// following grammar/lugha.tmLanguage.json (copied at tag m154). A test checks
+// following grammar/lugha.tmLanguage.json (copied at tag m159). A test checks
 // its word lists against the grammar. Words that are keywords only in context
 // (`after`, `default`, `out`, `ptr`, `union`, loop labels) stay plain here.
 import type { StreamParser, StringStream } from "@codemirror/language";

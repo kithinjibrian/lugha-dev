@@ -8,7 +8,7 @@
  * one at a time.
  *
  * Environment: `SANDBOX_IMAGE` (required, a pinned tag such as
- * `lugha-sandbox:m154`) and `PORT` (default 8080).
+ * `lugha-sandbox:m159`) and `PORT` (default 8080).
  *
  * Wiring only: what's worth testing lives in `server` and `checks`.
  */
@@ -47,7 +47,7 @@ fun version_of(image: string): string = match run_in_sandbox(image, [RUNNER, "--
 fun main() {
     let image = env.get("SANDBOX_IMAGE").unwrap_or("");
     if image == "" {
-        eprintln("SANDBOX_IMAGE must name the sandbox image, such as lugha-sandbox:m154");
+        eprintln("SANDBOX_IMAGE must name the sandbox image, such as lugha-sandbox:m159");
         exit(2);
     }
     let port = env.get("PORT").unwrap_or("8080");

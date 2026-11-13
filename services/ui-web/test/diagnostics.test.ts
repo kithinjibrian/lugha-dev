@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { asDiagnostics, errorLines, text } from "../src/lib/diagnostics";
 
-// lughac m154's own output for content step 2 (lughac build --diagnostics json).
+// lughac's own output for content step 2 (captured at m154, unchanged at m159) (lughac build --diagnostics json).
 const e0501: unknown = JSON.parse(readFileSync(new URL("fixtures/e0501.json", import.meta.url), "utf8"));
 
 describe("asDiagnostics", () => {

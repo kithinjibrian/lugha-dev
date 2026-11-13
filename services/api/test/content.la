@@ -21,7 +21,7 @@ import api.checks.requests { RunRequest };
 import api.checks.job { run_job };
 import api.server.sandbox { run_in_sandbox };
 
-fun image(): string = env.get("SANDBOX_IMAGE").unwrap_or("lugha-sandbox:m154");
+fun image(): string = env.get("SANDBOX_IMAGE").unwrap_or("lugha-sandbox:m159");
 
 fun root(): string = env.get("CONTENT_DIR").unwrap_or("../../content");
 

@@ -14,7 +14,7 @@ ARG UBUNTU=ubuntu:26.04
 # ---- lughac, from source at a pinned tag -------------------------------
 FROM ${UBUNTU} AS lughac
 ARG LUGHAC_REPO=https://github.com/kithinjibrian/lugha.git
-ARG LUGHAC_REF=m154
+ARG LUGHAC_REF=m159
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       ca-certificates curl git build-essential llvm-21-dev libssl-dev pkg-config \
