@@ -6,7 +6,7 @@ export type StepKind = "fix" | "read" | "quiz";
 
 /** Describes what the visitor just did on a step: a Run, or an answer to its quiz. */
 export type Event =
-  | { kind: "run"; compiled: boolean; exit: number }
+  | { kind: "run"; compiled: boolean; exit: number; stdout: string }
   | { kind: "answer"; correct: boolean };
 
 /** Lists the ids ("chapter/lesson/step") of the steps done. */
@@ -14,11 +14,14 @@ export interface Progress {
   done: string[];
 }
 
-/** Tells whether `event` completes a step of kind `step`. */
-export function doneBy(step: StepKind, event: Event): boolean {
+/**
+ * Tells whether `event` completes a step of kind `step`. `expected` is what the step's solution
+ * prints: a fix step whose start already runs would otherwise count as done before it was fixed.
+ */
+export function doneBy(step: StepKind, event: Event, expected: string): boolean {
   switch (step) {
     case "fix":
-      return event.kind === "run" && event.compiled && event.exit === 0;
+      return event.kind === "run" && event.compiled && event.exit === 0 && event.stdout === expected;
     case "read":
       return event.kind === "run";
     case "quiz":

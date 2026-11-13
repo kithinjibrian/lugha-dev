@@ -16,6 +16,8 @@ export interface StepData {
   after: string;
   start: string;
   solution: string | null;
+  /** What the step's solution (or, without one, its start) prints. */
+  expected: string;
   startError: string | null;
   errorNote: string | null;
   seeAlso: { slug: string; title: string } | null;

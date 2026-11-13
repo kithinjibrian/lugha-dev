@@ -69,3 +69,15 @@ test("Start learning opens the course's first step", async ({ page }) => {
   await expect(page).toHaveURL(/\/learn\/basics\/hello-lugha\/run-it/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Run it");
 });
+
+test("a fix step whose start already runs is done only once it's fixed", async ({ page }) => {
+  await page.goto("/learn/values/everything-is-a-value/functions-get-copies/");
+  const current = page.locator('.bar .dots a[aria-current="step"]');
+  await page.getByRole("button", { name: "Run" }).click();
+  await expect(page.getByText("Exited with code 0")).toBeVisible();
+  await expect(current).not.toHaveClass(/done/);
+  await page.getByRole("button", { name: "Solve" }).click();
+  await page.getByRole("button", { name: "Run" }).click();
+  await expect(page.locator(".stdout")).toHaveText(content(`${lesson}/04-functions-get-copies/expected.txt`));
+  await expect(current).toHaveClass(/done/);
+});

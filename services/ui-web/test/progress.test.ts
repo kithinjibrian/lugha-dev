@@ -3,26 +3,33 @@ import { describe, expect, it } from "vitest";
 import { asProgress, doneBy, markDone, startOver, sunPosition, type Progress } from "../src/lib/progress";
 
 describe("a step's done rule", () => {
-  it("a fix step: its code compiles and exits 0", () => {
-    expect(doneBy("fix", { kind: "run", compiled: true, exit: 0 })).toBe(true);
-    expect(doneBy("fix", { kind: "run", compiled: false, exit: 1 })).toBe(false);
-    expect(doneBy("fix", { kind: "run", compiled: true, exit: 101 })).toBe(false);
+  const ran = (stdout: string, exit = 0) => ({ kind: "run", compiled: true, exit, stdout }) as const;
+
+  it("a fix step: it compiles, exits 0 and prints what the solution prints", () => {
+    expect(doneBy("fix", ran("[5, 6, 1]\n"), "[5, 6, 1]\n")).toBe(true);
+    expect(doneBy("fix", { kind: "run", compiled: false, exit: 1, stdout: "" }, "1\n")).toBe(false);
+    expect(doneBy("fix", ran("1\n", 101), "1\n")).toBe(false);
+  });
+
+  it("a fix step whose start already runs isn't done until its output changes", () => {
+    expect(doneBy("fix", ran("[5, 6]\n"), "[5, 6, 1]\n")).toBe(false);
+    expect(doneBy("fix", ran("checking the input\n", 1), "checking the input\n")).toBe(false);
   });
 
   it("a reading step: any Run that came back", () => {
-    expect(doneBy("read", { kind: "run", compiled: true, exit: 0 })).toBe(true);
-    expect(doneBy("read", { kind: "run", compiled: false, exit: 1 })).toBe(true);
+    expect(doneBy("read", ran("hot\n"), "")).toBe(true);
+    expect(doneBy("read", { kind: "run", compiled: false, exit: 1, stdout: "" }, "")).toBe(true);
   });
 
   it("a quiz step: the right answer, and only an answer", () => {
-    expect(doneBy("quiz", { kind: "answer", correct: true })).toBe(true);
-    expect(doneBy("quiz", { kind: "answer", correct: false })).toBe(false);
-    expect(doneBy("quiz", { kind: "run", compiled: true, exit: 0 })).toBe(false);
+    expect(doneBy("quiz", { kind: "answer", correct: true }, "")).toBe(true);
+    expect(doneBy("quiz", { kind: "answer", correct: false }, "")).toBe(false);
+    expect(doneBy("quiz", ran(""), "")).toBe(false);
   });
 
   it("an answer never finishes a fix or reading step", () => {
-    expect(doneBy("fix", { kind: "answer", correct: true })).toBe(false);
-    expect(doneBy("read", { kind: "answer", correct: true })).toBe(false);
+    expect(doneBy("fix", { kind: "answer", correct: true }, "")).toBe(false);
+    expect(doneBy("read", { kind: "answer", correct: true }, "")).toBe(false);
   });
 });
 
