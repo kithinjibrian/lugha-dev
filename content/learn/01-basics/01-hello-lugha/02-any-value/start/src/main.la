@@ -1,0 +1,6 @@
+fun main() {
+    println("one line");
+    println(6 * 7);
+    println([1, 2, 3]);
+    println(true);
+}

@@ -1,0 +1,4 @@
+fun main(): i32 {
+    println("checking the input");
+    1
+}
