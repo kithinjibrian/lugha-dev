@@ -1,0 +1,7 @@
+fun main() {
+    let mut n = 3;
+    while n {
+        println(n);
+        n = n - 1;
+    }
+}

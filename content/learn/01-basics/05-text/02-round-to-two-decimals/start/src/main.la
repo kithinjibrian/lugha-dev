@@ -1,0 +1,5 @@
+fun main() {
+    let share = 2.0 / 3.0;
+    println("{share}");
+    println("{share:.2}");
+}

@@ -1,0 +1,5 @@
+fun main() {
+    let name = "Zoë";
+    println(name.len);
+    println(name.char_count());
+}
