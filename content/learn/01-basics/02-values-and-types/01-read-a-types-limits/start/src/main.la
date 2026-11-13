@@ -1,0 +1,6 @@
+fun main() {
+    println(i8.MIN);
+    println(i8.MAX);
+    println(u8.MAX);
+    println(i64.MAX);
+}

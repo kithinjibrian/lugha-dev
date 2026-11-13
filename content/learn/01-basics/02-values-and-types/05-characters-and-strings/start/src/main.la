@@ -1,0 +1,6 @@
+fun main() {
+    println('a');
+    println("tab:\tend");
+    println("first line
+second line");
+}

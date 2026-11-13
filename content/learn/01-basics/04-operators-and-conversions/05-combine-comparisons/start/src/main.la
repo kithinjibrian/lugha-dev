@@ -1,0 +1,6 @@
+fun main() {
+    let age = 30;
+    let member = false;
+    println(18 <= age < 65);
+    println(!member || age > 60);
+}

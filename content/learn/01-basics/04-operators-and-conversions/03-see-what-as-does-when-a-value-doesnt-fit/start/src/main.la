@@ -1,0 +1,6 @@
+fun main() {
+    println(3.99 as i64);
+    println(-3.99 as i64);
+    println(300 as u8);
+    println(1.0e20 as i64);
+}

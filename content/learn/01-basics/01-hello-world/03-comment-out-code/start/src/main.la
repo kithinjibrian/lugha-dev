@@ -1,0 +1,7 @@
+fun main() {
+    println("one"); // a comment to the end of the line
+    /* println("two");
+       /* println("three"); */
+       println("four"); */
+    println("five");
+}

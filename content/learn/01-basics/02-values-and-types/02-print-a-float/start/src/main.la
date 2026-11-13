@@ -1,0 +1,5 @@
+fun main() {
+    println(2.0);
+    println(10000000000000000.0);
+    println(true);
+}
