@@ -109,6 +109,10 @@ No warmth or humour is added: no jokes, puns, praise of the learner, or enthusia
 
 Every sentence a visitor reads is approved by the owner, one lesson at a time (discovery answer 8). Approved here: the chapter and lesson titles in the table above. Each lesson's step text, code, outputs and quiz go to the owner on the local site, and are recorded here as each one is approved.
 
+**Approved:**
+
+- **Hello, Lugha** (2026-11-13): Run it · Print any value · Choose the exit code, as in `content/learn/01-basics/01-hello-lugha/`. The owner retitled "Any value" to "Print any value", and asked for its prediction to be a real doubt.
+
 ## TESTS
 
 - [ ] `services/api/scripts/content`: every new step's `start` (and `solution`) runs in the sandbox and prints its `expected.txt`, or gives its declared `start_error`.

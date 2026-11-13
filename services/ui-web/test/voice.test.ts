@@ -10,7 +10,7 @@ describe("voiceProblems", () => {
   it("passes plain sentences, code and a quiz", () => {
     const md = step(
       [
-        "On the right, `b` starts as a copy of `a`.",
+        "Line 5 starts `b` as a copy of `a`.",
         "Press Run and look at what `a` prints.",
         "",
         "```lugha",
@@ -94,5 +94,12 @@ describe("every step in content/learn", () => {
 describe("voiceProblems in code blocks", () => {
   it("leaves a code line that starts like a heading or bullet alone", () => {
     expect(voiceProblems(step("```lugha\n#{1, 2}\n- 1\n```"))).toEqual([]);
+  });
+});
+
+describe("voiceProblems and the page's layout", () => {
+  it("finds a direction, which is wrong on a phone where the code sits below the text", () => {
+    expect(voiceProblems(step("On the right, `b` is a copy."))).toEqual(['points in a direction: "On the right"']);
+    expect(voiceProblems(step("The code to the left of the output."))).toEqual(['points in a direction: "to the left"']);
   });
 });

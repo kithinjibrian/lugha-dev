@@ -2,7 +2,7 @@
 title: Run it
 ---
 
-On the right is a whole Lugha program.
+The editor holds a whole Lugha program.
 It starts at `main`, and line 2 calls `println`, which prints what it's given and then a newline.
 Press Run.
 

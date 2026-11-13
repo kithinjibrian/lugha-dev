@@ -1,6 +1,6 @@
 // Finds what a rule can catch in a lesson step's wording: selling words, announcements, exclamation
 // marks, emoji, headings and bullets, other languages' names, and sentences or steps that run long.
-// Doesn't judge tone: that's for the reviewer and the owner.
+// Doesn't judge tone: that takes a person reading the step.
 import { splitFront } from "./markdown";
 
 /** The most words a sentence may have. */
@@ -13,6 +13,10 @@ const SELLING = /\b(simply|just|easy|easily|effortless(?:ly)?|powerful|seamless(
 // Case matters: "Go" and "Java" are names, "go" and "java" in prose are not.
 const LANGUAGES = /\b(Rust|Python|JavaScript|TypeScript|Java|Ruby|Kotlin|Swift|Haskell|Zig|Golang|Go|Elixir|Erlang|Scala|PHP|Perl|Lua|Dart|OCaml|Nim)\b|C\+\+|C#/g;
 
+// The text sits beside the code on a wide screen and above it on a phone, so a direction is wrong on
+// one of them.
+const DIRECTIONS = /\b(?:on|to) the (?:right|left)\b|\b(?:right|left)-hand\b/gi;
+
 /** Text with its inline code removed, so `!=` or `just_one` in backticks isn't read as prose. */
 const words = (text: string) => text.replace(/`[^`]*`/g, "code");
 
@@ -23,6 +27,7 @@ function wordingProblems(text: string): string[] {
   if (t.includes("!")) found.push("has an exclamation mark");
   if (/\p{Extended_Pictographic}/u.test(t)) found.push("has an emoji");
   for (const m of t.matchAll(LANGUAGES)) found.push(`names another language: "${m[0]}"`);
+  for (const m of t.matchAll(DIRECTIONS)) found.push(`points in a direction: "${m[0]}"`);
   return found;
 }
 

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 
 const content = (p: string) => readFileSync(new URL(`../../../../content/${p}`, import.meta.url), "utf8");
-const lesson = "learn/01-values/01-everything-is-a-value";
+const lesson = "learn/02-values/01-everything-is-a-value";
 
 test("a step: Run shows the output, the step counts as done and the sun moves", async ({ page }) => {
   await page.goto("/learn/values/everything-is-a-value/copies/");
@@ -13,7 +13,8 @@ test("a step: Run shows the output, the step counts as done and the sun moves", 
   await expect(page.locator(".stdout")).toHaveText(content(`${lesson}/01-copies/expected.txt`));
   await expect(page.getByText("Exited with code 0")).toBeVisible();
   await expect(page.locator('.bar .dots a[aria-current="step"]')).toHaveClass(/done/);
-  await expect(walked).toHaveAttribute("style", /width: 20(\.0)?%/);
+  // How far depends on how many steps the course has, so only check that the sun moved.
+  await expect(walked).not.toHaveAttribute("style", /width: 0(\.0)?%/);
   // It stays done after a reload.
   await page.reload();
   await expect(page.locator('.bar .dots a[aria-current="step"]')).toHaveClass(/done/);
@@ -60,4 +61,11 @@ test("edits are kept, and Reset returns to the start", async ({ page }) => {
   await expect(page.locator(".cm-content")).toContainText("// mine");
   await page.getByRole("button", { name: "Reset" }).click();
   await expect(page.locator(".cm-content")).not.toContainText("// mine");
+});
+
+test("Start learning opens the course's first step", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Start learning" }).click();
+  await expect(page).toHaveURL(/\/learn\/basics\/hello-lugha\/run-it/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Run it");
 });

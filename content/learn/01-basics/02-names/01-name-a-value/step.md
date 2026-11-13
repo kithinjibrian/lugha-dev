@@ -2,7 +2,7 @@
 title: Name a value
 ---
 
-On the right, `let` on line 2 gives `7` the name `width`.
+`let` on line 2 gives `7` the name `width`.
 Line 3 does the same for `height`, and writes its type, `i64`, after a colon.
 Press Run.
 

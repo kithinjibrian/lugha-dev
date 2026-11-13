@@ -4,7 +4,7 @@ see_also: word-frequency
 ---
 
 One more, without running it first.
-On the right, `add_one` gets a copy of `xs`.
+In the editor, `add_one` gets a copy of `xs`.
 What does line 10, `println(xs)`, print?
 
 ```quiz

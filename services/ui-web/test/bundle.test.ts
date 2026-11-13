@@ -10,12 +10,13 @@ describe("the content bundle", async () => {
   const r = await loadContent(join(import.meta.dirname, "../../../content"), code);
   if (!r.ok) throw new Error(r.error.join("\n"));
   const { chapters, examples } = r.value;
+  const values = chapters.findIndex((c) => c.slug === "values");
 
   it("indexes chapters, lessons, steps and examples, with their URLs", () => {
     const i = index(chapters, examples);
     expect(i.v).toBe(1);
-    expect(i.chapters[0].lessons[0].url).toBe("/content/v1/lessons/values/everything-is-a-value.json");
-    expect(i.chapters[0].lessons[0].steps[1]).toEqual({
+    expect(i.chapters[values].lessons[0].url).toBe("/content/v1/lessons/values/everything-is-a-value.json");
+    expect(i.chapters[values].lessons[0].steps[1]).toEqual({
       id: "values/everything-is-a-value/your-copy-needs-mut",
       title: "Your copy needs mut",
       kind: "fix",
@@ -25,7 +26,7 @@ describe("the content bundle", async () => {
   });
 
   it("gives a lesson's steps whole, without the site's own folder paths", () => {
-    const l = lesson(chapters[0], chapters[0].lessons[0]);
+    const l = lesson(chapters[values], chapters[values].lessons[0]);
     expect(l.chapter).toEqual({ slug: "values", title: "Values" });
     expect(l.steps[1]).toMatchObject({ startError: "E0501", solution: expect.any(String), expected: expect.any(String) });
     expect(l.steps.every((s) => !("path" in s))).toBe(true);

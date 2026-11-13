@@ -84,7 +84,8 @@ describe("loadContent", () => {
   it("reads the real content/", async () => {
     const r = await loadContent(join(import.meta.dirname, "../../../content"), code);
     if (!r.ok) throw new Error(r.error.join("\n"));
-    expect(r.value.chapters[0].lessons[0].steps).toHaveLength(5);
+    expect(r.value.chapters.map((c) => c.slug)).toEqual(["basics", "values"]);
+    expect(r.value.chapters.find((c) => c.slug === "values")?.lessons[0].steps).toHaveLength(5);
     expect(r.value.home.expected).toBe("832040\n");
     expect(r.value.playground.source).toContain("enum Shape");
     expect(r.value.examples.map((e) => e.slug)).toEqual(["hello-world", "fibonacci", "word-frequency", "green-threads", "actor-counter"]);
