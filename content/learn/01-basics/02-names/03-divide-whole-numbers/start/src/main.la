@@ -1,5 +1,0 @@
-fun main() {
-    let total = 7;
-    println(total / 2);
-    println(7.0 / 2.0);
-}

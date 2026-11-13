@@ -27,7 +27,7 @@ describe("the content bundle", async () => {
 
   it("gives a lesson's steps whole, without the site's own folder paths", () => {
     const l = lesson(chapters[values], chapters[values].lessons[0]);
-    expect(l.chapter).toEqual({ slug: "values", title: "Values" });
+    expect(l.chapter).toEqual({ slug: "values", title: "Value semantics" });
     expect(l.steps[1]).toMatchObject({ startError: "E0501", solution: expect.any(String), expected: expect.any(String) });
     expect(l.steps.every((s) => !("path" in s))).toBe(true);
   });

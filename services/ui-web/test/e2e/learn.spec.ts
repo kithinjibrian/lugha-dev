@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 
 const content = (p: string) => readFileSync(new URL(`../../../../content/${p}`, import.meta.url), "utf8");
-const lesson = "learn/02-values/01-everything-is-a-value";
+const lesson = "learn/05-values/01-everything-is-a-value";
 
 test("a step: Run shows the output, the step counts as done and the sun moves", async ({ page }) => {
   await page.goto("/learn/values/everything-is-a-value/copies/");
@@ -66,8 +66,8 @@ test("edits are kept, and Reset returns to the start", async ({ page }) => {
 test("Start learning opens the course's first step", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Start learning" }).click();
-  await expect(page).toHaveURL(/\/learn\/basics\/hello-lugha\/run-it/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Run it");
+  await expect(page).toHaveURL(/\/learn\/basics\/hello-world\/run-a-program/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Run a program");
 });
 
 test("a fix step whose start already runs is done only once it's fixed", async ({ page }) => {

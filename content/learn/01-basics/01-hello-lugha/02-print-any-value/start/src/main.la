@@ -1,5 +1,0 @@
-fun main() {
-    println("one");
-    println(6 * 7);
-    println(["one", "two"]);
-}

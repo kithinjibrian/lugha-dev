@@ -1,0 +1,5 @@
+fun main() {
+    let level: u8 = 250;
+    println(level + 5);
+    println(level + 10);
+}

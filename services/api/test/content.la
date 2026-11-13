@@ -61,9 +61,18 @@ fun run(source: string, stdin: string): Result<Ran, string> {
     let v = run_in_sandbox(image(), ["/usr/local/bin/runner", "/work"], run_job(r)).map_err(
         fun(e) = "{e}",
     )?;
-    let error = json.get(v, "compile").and_then(fun(c) = json.get(c, "diagnostics")).and_then(
-        fun(d) = json.at(d, 0),
-    ).and_then(fun(d) = json.get(d, "code")).and_then(json.as_text).unwrap_or("");
+    // A step may show a warning on purpose (W0107 for `017`), so only an
+    // error-severity diagnostic counts as the step's error.
+    let diagnostics = json.get(v, "compile").and_then(fun(c) = json.get(c, "diagnostics")).and_then(
+        json.as_array,
+    ).unwrap_or([]);
+    let mut error = "";
+    for d of diagnostics {
+        let severity = json.get(d, "severity").and_then(json.as_text).unwrap_or("");
+        if error == "" && severity == "error" {
+            error = json.get(d, "code").and_then(json.as_text).unwrap_or("");
+        }
+    }
     let stdout = json.get(v, "program").and_then(fun(p) = json.get(p, "stdout")).and_then(
         json.as_text,
     ).unwrap_or("");

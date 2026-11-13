@@ -1,0 +1,6 @@
+const MAX_SCORE: i64 = 100;
+
+fun main() {
+    let score = 40;
+    println(MAX_SCORE - score);
+}

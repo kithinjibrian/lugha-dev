@@ -1,0 +1,4 @@
+/** Says hello. */
+fun main() {
+    println("Hello, world");
+}

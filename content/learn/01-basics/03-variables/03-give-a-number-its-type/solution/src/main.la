@@ -1,0 +1,7 @@
+fun main() {
+    let width = 7;
+    let height: u8 = 7;
+    let doubled = height * 30;
+    println(width);
+    println(doubled);
+}
