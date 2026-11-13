@@ -1,6 +1,6 @@
-# Checks, builds and deploys the site on every push to main (API-10).
+# Checks, builds and deploys the site on every push to main.
 #
-# 1. check: the site's unit tests, types and build (the content checks and the
+# 1. check: the site's unit tests and types (the content checks and the
 #    hostile suite need gVisor and run before merging, on a developer's machine).
 # 2. images: the sandbox, the API and the site, pushed to GHCR. lughac's slow
 #    build is cached in the registry, so it only runs again when LUGHAC_REF or

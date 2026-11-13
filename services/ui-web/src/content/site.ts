@@ -1,4 +1,4 @@
-// Everything the pages need from content/ and lughac, loaded once per build.
+// Loads everything the pages need from content/ and lughac, once per build.
 // Any problem fails the build, listing every one.
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -6,6 +6,7 @@ import { parseExplanations, type Explanation } from "./explanations";
 import { highlighter } from "./highlight";
 import { loadContent, type Content } from "./load";
 
+/** Holds the content, lughac's version and explanations, and a highlighter. */
 export interface Site extends Content {
   /** The sandbox image's `lughac --version`: "lughac 0.1.0". */
   version: string;
@@ -38,6 +39,10 @@ async function load(): Promise<Site> {
   };
 }
 
+/**
+ * Gives the site's content, loading it on the first call; throws when anything is wrong, which
+ * fails the build.
+ */
 export function site(): Promise<Site> {
   loaded ??= load();
   return loaded;

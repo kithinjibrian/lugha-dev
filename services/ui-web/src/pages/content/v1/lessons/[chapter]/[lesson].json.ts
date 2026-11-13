@@ -1,3 +1,4 @@
+// Serves one lesson and its steps as /content/v1/lessons/<chapter>/<lesson>.json.
 import type { APIRoute, GetStaticPaths } from "astro";
 import { lesson } from "../../../../../content/bundle";
 import type { Chapter, Lesson } from "../../../../../content/load";

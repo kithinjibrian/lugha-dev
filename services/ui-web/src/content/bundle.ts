@@ -1,7 +1,11 @@
-// The content bundle at /content/v1/ (PRP-002, WEB-2): what services/ui-rk
+// Shapes the content bundle at /content/v1/: what services/ui-rk
 // will read. `v1` is in the path so the shape can change without breaking it.
 import type { Chapter, Example, Lesson } from "./load";
 
+/**
+ * Gives the bundle's index: every chapter, lesson, step and example, with the URL of each lesson's
+ * and example's JSON.
+ */
 export function index(chapters: Chapter[], examples: Example[]) {
   return {
     v: 1,
@@ -27,6 +31,7 @@ export function index(chapters: Chapter[], examples: Example[]) {
   };
 }
 
+/** Gives one lesson's JSON, without its steps' folders in content/. */
 export function lesson(chapter: Chapter, l: Lesson) {
   return {
     v: 1,
@@ -37,6 +42,7 @@ export function lesson(chapter: Chapter, l: Lesson) {
   };
 }
 
+/** Gives one example's JSON. */
 export function example(e: Example) {
   return { v: 1, ...e };
 }

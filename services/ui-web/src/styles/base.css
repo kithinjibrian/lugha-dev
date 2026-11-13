@@ -1,4 +1,4 @@
-/* What every page shares. Sizes and colours are tokens (tokens.css). */
+/* Styles what every page shares. Sizes and colours are tokens (tokens.css). */
 :root {
   --gutter: 24px;
 }
@@ -59,7 +59,7 @@ code {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
-/* Shiki's blocks (src/content/highlight.ts). */
+/* Shiki's blocks, from `content/highlight`. */
 pre.shiki {
   margin: 0;
   padding: 12px 0;

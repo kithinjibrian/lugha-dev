@@ -1,7 +1,7 @@
 /**
- * Checking the `lugha.toml` a request sends. Only `[package]` with `name`,
+ * Checks the `lugha.toml` a request sends. Only `[package]` with `name`,
  * `version` and `source = "src"` is allowed: `[link]` would compile and link
- * C, and `[packages]` would load other code, git included (PRP-001, API-3).
+ * C, and `[packages]` would load other code, git included.
  *
  * Doesn't read files: it checks the text it's given.
  */
@@ -35,9 +35,10 @@ enum ManifestError {
 }
 
 /**
- * Checks a request's `lugha.toml`.
+ * Checks a request's `lugha.toml` and gives back the package's name and version.
  *
- * @returns the package's name and version; the first problem found otherwise
+ * Errors: the first found of `Invalid`, `NotAllowed`, `NoPackage`,
+ * `NotAllowedInPackage`, `BadName`, `BadVersion` and `BadSource`, in that order.
  */
 fun check(text: string): Result<Manifest, ManifestError> {
     let doc = toml.parse(text).map_err(
@@ -67,7 +68,7 @@ fun check(text: string): Result<Manifest, ManifestError> {
     Ok(Manifest { name: name, version: version })
 }
 
-/** The sentence a visitor sees for a refused `lugha.toml`. */
+/** Gives the sentence a visitor sees for a refused `lugha.toml`. */
 fun reason(e: ManifestError): string = match e {
     Invalid(message) => "lugha.toml isn't valid TOML: {message}",
     NotAllowed(key) => {

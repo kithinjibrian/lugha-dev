@@ -1,9 +1,9 @@
 #!/bin/sh
-# Writes generated/explanations.txt (PRP-002, WEB-8): `lughac --version` and
+# Writes generated/explanations.txt: `lughac --version` and
 # every code's `lughac explain` text from the pinned sandbox image, for `npm run build`
 # outside Docker. The Dockerfile's first stage makes the same file.
 #
-# SANDBOX_IMAGE names the image (default lugha-sandbox:m159).
+# SANDBOX_IMAGE names the image (default: the pinned sandbox image below).
 set -eu
 cd "$(dirname "$0")/.."
 mkdir -p generated

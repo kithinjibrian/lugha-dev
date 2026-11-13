@@ -1,19 +1,22 @@
-// Download (PRP-002): the project as a .zip, stored without compression.
+// Builds the Download: the project as a .zip, stored without compression.
 // The files go inside one folder, so unzipping makes a project.
 import type { File } from "./project";
 
+// CRC-32's lookup table, for the reflected polynomial 0xedb88320 that zip uses.
 const TABLE = Array.from({ length: 256 }, (_, n) => {
   let c = n;
   for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
   return c >>> 0;
 });
 
+/** Gives the CRC-32 of `bytes`, as a zip records it. */
 export function crc32(bytes: Uint8Array): number {
   let c = 0xffffffff;
   for (const b of bytes) c = TABLE[(c ^ b) & 0xff] ^ (c >>> 8);
   return (c ^ 0xffffffff) >>> 0;
 }
 
+/** Builds a zip holding `files`, each under `folder/`, stored without compression. */
 export function makeZip(files: File[], folder: string): Uint8Array<ArrayBuffer> {
   const enc = new TextEncoder();
   const parts: Uint8Array[] = [];
@@ -43,7 +46,7 @@ export function makeZip(files: File[], folder: string): Uint8Array<ArrayBuffer> 
   return out;
 }
 
-/** A record of `size` bytes with `fields` ([offset, value, width]) set, then `name`. */
+/** Makes a little-endian record of `size` bytes with `fields` ([offset, value, width]) set, then `name`. */
 function header(size: number, name: Uint8Array, fields: [number, number, 2 | 4][]): Uint8Array {
   const b = new Uint8Array(size + name.length);
   const v = new DataView(b.buffer);

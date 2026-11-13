@@ -1,7 +1,7 @@
-// The Tests tab's text: lughac test's own line shapes (src/driver/test.rs and
-// test_json.rs at m154), from the JSON lines the API passes on. Tests are in
-// file order, as lughac prints them. A failure shows its panic, its place and
-// its output: what the JSON carries.
+// Turns the JSON lines the API passes on from `lughac test` into the Tests tab's text, in the line
+// shapes lughac itself prints (its `src/driver/test.rs` and `test_json.rs`). Tests are in file
+// order, as lughac prints them. A failure shows its panic, its place and its output: what the JSON
+// carries.
 import type { Summary, TestLine, TestOutcome } from "./api";
 
 function line(t: TestLine): string {
@@ -19,6 +19,7 @@ function line(t: TestLine): string {
   return out;
 }
 
+/** Gives the summary that ends a test run, with its counts. */
 export function summaryText(s: Summary): string {
   let extra = s.skipped > 0 ? `, ${s.skipped} skipped` : "";
   if (s.uncompiled === 1) extra += ", 1 file didn't compile";
@@ -28,6 +29,7 @@ export function summaryText(s: Summary): string {
   return `\n${n} ${n === 1 ? "test" : "tests"}: ${s.passed} passed, ${s.failed} failed${extra}\n`;
 }
 
+/** Gives the whole Tests tab: each test's lines in file order, then the summary. */
 export function testText(r: Extract<TestOutcome, { state: "tested" }>): string {
   const sorted = [...r.tests].sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
   return sorted.map(line).join("") + summaryText(r.summary);

@@ -1,3 +1,4 @@
+// Tests front matter and the small Markdown the lessons are written in, quizzes included.
 import { describe, expect, it } from "vitest";
 import { renderMarkdown, splitFront } from "../src/content/markdown";
 

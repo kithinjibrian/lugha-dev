@@ -1,3 +1,4 @@
+// Tests that the site's default lugha.toml matches the API's, so both start a project the same way.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_TOML } from "../src/lib/project";

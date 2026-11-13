@@ -1,4 +1,4 @@
-# The site (PRP-002, WEB-10), built from the repository root by compose:
+# The site, built from the repository root by compose:
 #   docker compose --profile sandbox build
 # 1. explanations: lughac's version and every code's explanation, from the
 #    sandbox image itself (compose passes it in as the `sandbox` context).

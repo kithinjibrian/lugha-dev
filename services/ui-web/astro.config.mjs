@@ -1,4 +1,4 @@
-// The site (PRP-002, WEB-1): static pages with Svelte islands.
+// The site: static pages with Svelte islands.
 // In development, /api goes to the local stack (docker compose up -d).
 import { defineConfig } from "astro/config";
 import svelte from "@astrojs/svelte";

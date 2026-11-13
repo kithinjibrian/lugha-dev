@@ -1,6 +1,6 @@
 #!/bin/sh
 # Removes sandbox containers that have run longer than MAX_AGE seconds, in
-# case the API couldn't remove one itself (PRP-001). Runs in the cleanup
+# case the API couldn't remove one itself. Runs in the cleanup
 # service of docker-compose.yml, with the host's Docker socket.
 #
 # Sandbox containers are labelled lugha-sandbox=1 and named

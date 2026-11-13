@@ -1,4 +1,4 @@
-# The Lugha site (PRP-001, API-8 and API-10). Visitors reach it only through a
+# The Lugha site. Visitors reach it only through a
 # Cloudflare Tunnel: cloudflared connects out to Cloudflare, which handles the
 # domain and HTTPS, so the droplet has no open ports. cloudflared hands every
 # request to Caddy, which serves the static site and sends /api/* to the API.
@@ -10,14 +10,14 @@
 #
 # On the droplet nothing is built: GitHub Actions builds the images on every
 # push to main, pushes them to GHCR and runs deploy/update.sh there, which
-# pulls them (.github/workflows/deploy.yml, API-10).
+# pulls them (.github/workflows/deploy.yml).
 #
 # Needs on the host: Docker with gVisor's runsc registered as a runtime, and in
 # .env (or the environment):
 #   DOCKER_GID               the group of /var/run/docker.sock (stat -c %g /var/run/docker.sock)
 #   CLOUDFLARE_TUNNEL_TOKEN  the tunnel's token (the tunnel profile only); in
 #                            Cloudflare, the tunnel's public hostname points at http://caddy:80
-#   LUGHAC_REF               the lughac tag to build (default m159)
+#   LUGHAC_REF               the lughac tag to build (default below)
 #   REGISTRY, IMAGE_TAG      where the images live and which build (deploy/prod.env
 #                            on the droplet; unset here, so the images are local)
 
@@ -76,7 +76,8 @@ services:
       SANDBOX_IMAGE: ${REGISTRY:-}lugha-sandbox:${LUGHAC_REF:-m159}
       PORT: "8080"
     # The socket lets the API start sandbox containers. It is root-equivalent
-    # on the host, so the API stays small and strict (PRP-001, security notes).
+    # on the host, so the API stays small and strict: it uses Docker only to
+    # run sandbox containers.
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     group_add:

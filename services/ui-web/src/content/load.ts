@@ -1,7 +1,6 @@
-// Loading content/ at build time (PRP-002, WEB-2): the course and the
-// examples, checked. Every problem is collected as "path: problem", and the
-// build fails on any of them (src/content/site.ts). Whether the code prints
-// what it says is checked separately, against the sandbox (scripts/content).
+// Loads content/ at build time: the course and the examples, checked. Every problem is collected as
+// "path: problem", and the build fails on any of them (`content/site`). Whether the code prints what
+// it says is checked separately, against the sandbox (`services/api/scripts/content`).
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { parse as parseToml } from "smol-toml";
@@ -10,6 +9,7 @@ import { splitNotes } from "../lib/notes";
 import { err, ok, type Result } from "../lib/result";
 import { inline, renderMarkdown, splitFront, type Highlight, type Quiz } from "./markdown";
 
+/** Holds one step of a lesson, ready for a page. */
 export interface Step {
   /** "chapter/lesson/step", without the numbers: the URL under /learn/ and the progress key. */
   id: string;
@@ -32,18 +32,24 @@ export interface Step {
   seeAlso: string | null;
 }
 
+/** Holds one lesson and its steps. */
 export interface Lesson {
   slug: string;
   title: string;
   steps: Step[];
 }
 
+/** Holds one chapter and its lessons. */
 export interface Chapter {
   slug: string;
   title: string;
   lessons: Lesson[];
 }
 
+/**
+ * Holds one piece of an example: its note as HTML, its lines in the shown code, and those lines
+ * highlighted.
+ */
 export interface ExamplePiece {
   note: string;
   first: number;
@@ -51,6 +57,7 @@ export interface ExamplePiece {
   html: string;
 }
 
+/** Holds one example, ready for a page. */
 export interface Example {
   slug: string;
   title: string;
@@ -67,12 +74,13 @@ export interface Example {
   expected: string;
 }
 
-/** A program shown on its own: Home's card, and the Playground's first project. */
+/** Holds a program shown on its own: Home's card, and the Playground's first project. */
 export interface Program {
   source: string;
   expected: string;
 }
 
+/** Holds everything in content/. */
 export interface Content {
   chapters: Chapter[];
   examples: Example[];
@@ -112,7 +120,7 @@ class Reader {
     }
   }
 
-  /** The numbered folders in `path` ("01-values"), sorted, with their slugs ("values"). */
+  /** Lists the numbered folders in `path` ("01-values"), sorted, with their slugs ("values"). */
   numbered(path: string): { name: string; slug: string }[] {
     const full = join(this.root, path);
     if (!existsSync(full)) return [];
@@ -281,6 +289,13 @@ function loadProgram(r: Reader, name: string): Program {
   };
 }
 
+/**
+ * Loads and checks everything under `root`.
+ *
+ * Errors: every problem found, each as "path: problem": a missing or malformed file, a badly named
+ * folder, an unknown key, step text the markdown subset can't hold, a step without what its kind
+ * needs, or a `see_also` that names no example.
+ */
 export async function loadContent(root: string, highlight: Highlight): Promise<Result<Content, string[]>> {
   const r = new Reader(root);
   const chapters = loadCourse(r, highlight);

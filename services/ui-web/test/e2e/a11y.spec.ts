@@ -1,3 +1,4 @@
+// Checks each kind of page with axe for accessibility violations.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 

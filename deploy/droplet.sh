@@ -1,5 +1,5 @@
 #!/bin/sh
-# Prepares a fresh Ubuntu 24.04 droplet for the Lugha site (API-8, API-10):
+# Prepares a fresh Ubuntu 24.04 droplet for the Lugha site:
 # Docker, gVisor's runsc registered as Docker's "runsc" runtime, swap, and ufw
 # letting in only SSH. Safe to run again. Run as root, after
 # `apt-get update && apt-get upgrade` and a reboot if one is asked for.
@@ -25,7 +25,7 @@ if ! command -v docker >/dev/null; then
 	apt-get install -yq docker-ce docker-ce-cli containerd.io docker-compose-plugin
 fi
 
-# ---- gVisor's runsc (API-6) ---------------------------------------------
+# ---- gVisor's runsc: every sandbox runs on it ------------------------
 if ! command -v runsc >/dev/null; then
 	curl -fsSL https://gvisor.dev/archive.key | gpg --batch --yes --dearmor -o /usr/share/keyrings/gvisor-archive-keyring.gpg
 	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/gvisor-archive-keyring.gpg] https://storage.googleapis.com/gvisor/releases release main" \

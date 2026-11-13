@@ -1,9 +1,8 @@
 /**
- * The job the API hands the runner on the container's stdin (PRP-001,
- * "Runner ↔ API"): a checked request as JSON, plus `"v": 1` and `"kind"`
- * (`run`, `test` or `format`). The runner decodes it with the same checks
- * the API used, so a job is checked twice, once on each side of the
- * sandbox's wall.
+ * Writes and reads the job the API hands the runner on the container's stdin:
+ * a checked request as JSON, plus `"v": 1` and `"kind"` (`run`, `test` or
+ * `format`). The runner decodes it with the same checks the API used, so a
+ * job is checked twice, once on each side of the sandbox's wall.
  */
 import std.json;
 import checks.files { File, Checked };
@@ -16,7 +15,7 @@ enum Job {
     Format(Checked),
 }
 
-/** The JSON for a list of files. */
+/** Turns a list of files into JSON. */
 fun files_value(list: File[]): json.Value = json.Value.Array(
     list.map(
         fun(f: File) = json.Value.Object(#{
@@ -31,7 +30,7 @@ fun written(fields: Map<string, json.Value>): string = json.stringify(
     json.Value.Object(fields),
 ).unwrap();
 
-/** The job for a checked Run request. */
+/** Writes the job for a checked Run request. */
 fun run_job(r: RunRequest): string = written(#{
     "v": json.Value.Integer(1),
     "kind": json.Value.Text("run"),
@@ -42,7 +41,7 @@ fun run_job(r: RunRequest): string = written(#{
     "opt": json.Value.Integer(r.opt),
 });
 
-/** The job for checked Test (`kind` `"test"`) or Format (`"format"`) files. */
+/** Writes the job for checked Test (`kind` `"test"`) or Format (`"format"`) files. */
 fun files_job(kind: string, c: Checked): string = written(#{
     "v": json.Value.Integer(1),
     "kind": json.Value.Text(kind),
@@ -52,8 +51,9 @@ fun files_job(kind: string, c: Checked): string = written(#{
 /**
  * Decodes and checks a job.
  *
- * @returns the job; a sentence saying what's wrong otherwise (for the log:
- *     the API only ever sends jobs it checked)
+ * Errors: a sentence for the log when the job isn't JSON, isn't an object,
+ * isn't version 1, has an unknown kind, or its request fails the API's
+ * checks. The API only ever sends jobs it checked, so a visitor never sees it.
  */
 fun decode(text: string): Result<Job, string> {
     let v = json.parse(text).map_err(fun(e: json.JsonError) = "the job isn't JSON: {e.message()}")?;

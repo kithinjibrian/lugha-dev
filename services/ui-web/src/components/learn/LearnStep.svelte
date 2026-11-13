@@ -1,7 +1,7 @@
 <script lang="ts">
-  // One Learn step (core decision 6): the steps bar with the horizon, the
-  // lesson text on the left, the workspace on the right. Edits and progress
-  // stay in this browser (WEB-4, WEB-6).
+  // One Learn step: the steps bar with the horizon, the lesson text on the
+  // left, the workspace on the right. Edits and progress stay in this browser:
+  // nothing about a learner is sent anywhere.
   import { onMount, untrack } from "svelte";
   import { copy } from "../../lib/copy";
   import { kept as makeKept } from "../../lib/kept";

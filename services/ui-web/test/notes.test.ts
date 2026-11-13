@@ -1,3 +1,4 @@
+// Tests splitting an example's `//:` notes from the code each one explains.
 import { describe, expect, it } from "vitest";
 import { splitNotes } from "../src/lib/notes";
 

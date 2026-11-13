@@ -1,10 +1,11 @@
-// The step text's markdown (PRP-002): a strict subset, so anything else fails
+// Renders step text's markdown: a strict subset, so anything else fails
 // the build instead of reaching a page. Paragraphs; `code`, *em*, **strong**
 // and [links](/path or https://…) inside them; ```lugha {lines}``` code,
 // handed to the highlighter; and one ```quiz``` block in TOML.
 import { parse as parseToml } from "smol-toml";
 import { err, ok, type Result } from "../lib/result";
 
+/** Holds a step's quiz. */
 export interface Quiz {
   options: string[];
   /** The index of the right option. */
@@ -13,6 +14,7 @@ export interface Quiz {
   feedback: string[];
 }
 
+/** Holds a step's text as HTML, split around its quiz. */
 export interface Rendered {
   /** The text, up to the quiz when there is one. */
   html: string;
@@ -25,8 +27,10 @@ export interface Rendered {
 export type Highlight = (source: string, marks: number[]) => string;
 
 /**
- * The front matter's `key: value` lines, with one pair of quotes removed and
- * `\n` turned into a newline (as services/api/test/content.la reads them).
+ * Splits a step into its front matter and its body. Each front matter line is `key: value`; one pair
+ * of quotes is removed and `\n` turns into a newline, as `services/api/test/content.la` reads them.
+ *
+ * Errors: a sentence when the --- lines are missing or a line isn't `key: value`.
  */
 export function splitFront(md: string): Result<{ front: Record<string, string>; body: string }, string> {
   const lines = md.split("\n");
@@ -45,11 +49,16 @@ export function splitFront(md: string): Result<{ front: Record<string, string>; 
   return ok({ front, body: lines.slice(end + 1).join("\n") });
 }
 
+/** Escapes `&`, `<`, `>` and `"` for HTML text and attributes. */
 export function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-/** One paragraph's inline markdown as HTML, or why it can't be. */
+/**
+ * Renders one paragraph's inline markdown as HTML.
+ *
+ * Errors: a sentence when a link goes anywhere but /… or https://…, or the text holds HTML.
+ */
 export function inline(text: string): Result<string, string> {
   let out = "";
   let rest = text;
@@ -93,11 +102,18 @@ function asQuiz(toml: string): Result<Quiz, string> {
   return ok({ options, answer, feedback });
 }
 
-/** What else a text may hold: lists, and ```text blocks (lughac's explanations use both). */
+/** Lets a text hold more: lists, and ```text blocks (lughac's explanations use both). */
 export interface Allow {
   lists: boolean;
 }
 
+/**
+ * Renders a markdown body as HTML, highlighting its Lugha blocks and taking out its quiz.
+ *
+ * Errors: a sentence naming the first thing the subset can't hold: an unclosed or unknown code
+ * block, a mark on a line its block doesn't have, a second or malformed quiz, other markdown, HTML,
+ * or a link that isn't allowed.
+ */
 export function renderMarkdown(
   body: string,
   highlight: Highlight,

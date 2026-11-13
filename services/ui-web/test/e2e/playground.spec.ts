@@ -1,3 +1,4 @@
+// Browser tests for the Playground: Run, Test, Share, an unreachable API, and opening an example.
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 

@@ -1,3 +1,4 @@
+// Tests the browser store: JSON under the lugha. prefix, and no throwing when storage fails.
 import { describe, expect, it } from "vitest";
 import { makeStore } from "../src/lib/storage";
 

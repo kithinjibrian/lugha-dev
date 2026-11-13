@@ -1,7 +1,7 @@
 <script lang="ts">
+  // Runs an example as written (with its stdin, which the visitor may change),
+  // copies it, or opens it in the Playground.
   import { untrack } from "svelte";
-  // Run an example as written (with its stdin, which the visitor may change),
-  // copy it, or open it in the Playground.
   import { browserDeps, call } from "../../lib/api";
   import { copy } from "../../lib/copy";
   import { kept } from "../../lib/kept";

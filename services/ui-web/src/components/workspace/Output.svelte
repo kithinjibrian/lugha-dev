@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The output panel (PRP-002, WEB-7): a program's output and exit code, or
+  // The output panel: a program's output and exit code, or
   // lughac's errors with their explanations, or one sentence. Announced
   // politely to screen readers.
   import type { Explanation } from "../../content/explanations";

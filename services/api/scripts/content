@@ -1,10 +1,10 @@
 #!/bin/sh
-# Runs the content checks (test/content.la, PRP-002): every lesson step and
-# example in content/ through the real sandbox, compared with expected.txt.
-# Each check runs its items one after another, so this is three tests.
+# Runs the content checks (test/content.la): every lesson step and example in
+# content/ through the real sandbox, compared with expected.txt. Each check
+# runs its items one after another, so this is three tests.
 #
-# Needs Docker with runsc and the sandbox image (SANDBOX_IMAGE, default
-# lugha-sandbox:m159). CONTENT_DIR names the content (default ../../content).
+# Needs Docker with runsc and the sandbox image ($SANDBOX_IMAGE, by default the
+# pinned sandbox image). CONTENT_DIR names the content (default ../../content).
 
 set -eu
 cd "$(dirname "$0")/.."

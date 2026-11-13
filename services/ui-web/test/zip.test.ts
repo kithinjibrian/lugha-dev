@@ -1,3 +1,4 @@
+// Tests the Download zip: its CRC-32, and that unzip reads it back.
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

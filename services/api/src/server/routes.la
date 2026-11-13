@@ -1,5 +1,5 @@
 /**
- * The API's four routes (PRP-001): `POST /api/run`, `/api/test` and
+ * Answers the API's four routes: `POST /api/run`, `/api/test` and
  * `/api/format`, and `GET /api/version`. Each request is rate-limited,
  * checked, handed to the sandbox as a job, and answered with the runner's
  * result. Every refusal is a sentence; a sandbox failure is only ever the
@@ -26,13 +26,13 @@ struct Answer {
     body: json.Value,
 }
 
-/** `{ "error": sentence }` with `status`. */
+/** Builds the answer `{ "error": sentence }` with `status`. */
 fun refusal(status: i64, sentence: string): Answer = Answer {
     status: status,
     body: json.Value.Object(#{"error": json.Value.Text(sentence)}),
 };
 
-/** Runs a job in the sandbox: its result, or the service sentence. */
+/** Runs a job in the sandbox and answers with its result, or the service sentence. */
 fun ran(
     job_text: string,
     run_job_in: fun(string): Result<json.Value, SandboxError>,
@@ -60,11 +60,10 @@ fun handled(
 }
 
 /**
- * Answers one request. `ip` is the visitor's address (for the rate limit
- * only: it is never stored beyond this minute's count), `now_ms` the time,
+ * Answers one request, and gives back the limiter after counting it. `ip` is
+ * the visitor's address (for the rate limit only: it is never stored beyond
+ * this minute's count), `now_ms` the time in milliseconds since the epoch,
  * and `version` what `/api/version` reports.
- *
- * @returns the limiter after counting this request, and the answer
  */
 fun route(
     limiter: Limiter,

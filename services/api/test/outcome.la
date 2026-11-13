@@ -1,5 +1,5 @@
 // Turning what lughac and the program printed into the runner's result.
-// The captured texts are what lughac 0.1.0 printed, recorded 2026-11-07.
+// The captured texts are copied from what lughac really printed.
 import api.runner.outcome {
     Captured,
     cap,

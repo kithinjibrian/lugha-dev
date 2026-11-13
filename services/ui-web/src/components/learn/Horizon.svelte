@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The course's horizon (core decision 4): walked in sun colour up to the
+  // The course's horizon: walked in sun colour up to the
   // sun, which is where you are. At 100% the sun sits behind the baobab and
   // makes the logo.
   interface Props {

@@ -1,3 +1,4 @@
+// Tests printing a Test result the way plain `lughac test` prints it.
 import { describe, expect, it } from "vitest";
 import { readTest, type TestOutcome } from "../src/lib/api";
 import { testText } from "../src/lib/testtext";
@@ -11,7 +12,7 @@ function outcome(lines: string): Extract<TestOutcome, { state: "tested" }> {
   return r;
 }
 
-// Captured from lughac m154: the JSON lines, then what plain `lughac test` printed.
+// lughac's own output: the JSON lines, then what plain `lughac test` printed.
 describe("testText", () => {
   it("prints passed, skipped and failed tests in file order, with the summary", () => {
     const r = outcome(`

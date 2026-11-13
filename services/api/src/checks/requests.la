@@ -1,9 +1,9 @@
 /**
- * Turning a request's JSON body into a checked request (PRP-001, API-3).
- * Every field is known: an unknown one is refused, so nothing a visitor
- * adds (an environment, a working directory, a compiler flag) can reach
- * the sandbox. Run takes `files`, `entry`, `args`, `stdin` and `opt`; Test
- * and Format take only `files`.
+ * Turns a request's JSON body into a checked request. Every field is known:
+ * an unknown one is refused, so nothing a visitor adds (an environment, a
+ * working directory, a compiler flag) can reach the sandbox. Run takes
+ * `files`, `entry`, `args`, `stdin` and `opt`; Test and Format take only
+ * `files`.
  */
 import std.json;
 import checks.files { File, Checked, FilesError, check_files };
@@ -50,10 +50,14 @@ enum RequestError {
     BadOpt,
 }
 
-/** The JSON parser's limits for a request body: the defaults, shallower. */
+/** Gives the JSON parser's limits for a request body: the defaults, but shallower. */
 fun body_limits(): json.Limits = json.Limits { depth: 8, ..json.limits() };
 
-/** Parses a body into an object whose keys are all in `allowed`. */
+/**
+ * Parses a body into an object whose keys are all in `allowed`.
+ *
+ * Errors: `NotJson`, `NotObject`, or `Unknown` with the first key not allowed.
+ */
 fun object_of(body: string, allowed: string[]): Result<Map<string, json.Value>, RequestError> {
     let v = json.parse_with(body, body_limits()).map_err(
         fun(e: json.JsonError) = RequestError.NotJson,
@@ -67,7 +71,11 @@ fun object_of(body: string, allowed: string[]): Result<Map<string, json.Value>, 
     Ok(fields)
 }
 
-/** Reads and checks `files`. */
+/**
+ * Reads and checks `files`.
+ *
+ * Errors: `Missing`, `WrongType`, `BadFile`, or `Files` when the files are refused.
+ */
 fun files_of(fields: Map<string, json.Value>): Result<Checked, RequestError> {
     let list = fields.get("files").ok_or(RequestError.Missing("files"))?;
     let items = json.as_array(list).ok_or(RequestError.WrongType("files", "a list of files"))?;
@@ -84,7 +92,11 @@ fun files_of(fields: Map<string, json.Value>): Result<Checked, RequestError> {
     check_files(sent).map_err(RequestError.Files)
 }
 
-/** Reads an optional text field, or gives `fallback` when it's absent. */
+/**
+ * Reads an optional text field, or gives `fallback` when it's absent.
+ *
+ * Errors: `WrongType` when the field isn't text.
+ */
 fun text_or(
     fields: Map<string, json.Value>,
     name: string,
@@ -94,7 +106,11 @@ fun text_or(
     Some(v) => json.as_text(v).ok_or(RequestError.WrongType(name, "text")),
 };
 
-/** Reads and checks `args`. */
+/**
+ * Reads and checks `args`.
+ *
+ * Errors: `WrongType`, `TooManyArgs`, `ArgTooLong` or `ArgHasNul`.
+ */
 fun args_of(fields: Map<string, json.Value>): Result<string[], RequestError> {
     let items = match fields.get("args") {
         None => [],
@@ -121,7 +137,11 @@ fun args_of(fields: Map<string, json.Value>): Result<string[], RequestError> {
     Ok(args)
 }
 
-/** Reads and checks `opt`: absent is 0. */
+/**
+ * Reads and checks `opt`: absent is 0.
+ *
+ * Errors: `BadOpt` for anything but the integers 0 and 2.
+ */
 fun opt_of(fields: Map<string, json.Value>): Result<i64, RequestError> = match fields.get("opt") {
     None => Ok(0),
     Some(v) => match json.as_i64(v) {
@@ -134,7 +154,9 @@ fun opt_of(fields: Map<string, json.Value>): Result<i64, RequestError> = match f
 /**
  * Parses and checks a Run request.
  *
- * @returns the request; the first problem found otherwise
+ * Errors: the first found of `NotJson`, `NotObject`, `Unknown`, `Missing`,
+ * `WrongType`, `BadFile`, `Files`, `EntryNotSource`, `NoSuchEntry`,
+ * `TooManyArgs`, `ArgTooLong`, `ArgHasNul`, `StdinTooBig` and `BadOpt`.
  */
 fun run_request(body: string): Result<RunRequest, RequestError> {
     let fields = object_of(body, ["files", "entry", "args", "stdin", "opt"])?;
@@ -158,14 +180,15 @@ fun run_request(body: string): Result<RunRequest, RequestError> {
 /**
  * Parses and checks a Test or Format request: `files` only.
  *
- * @returns the checked files; the first problem found otherwise
+ * Errors: the first found of `NotJson`, `NotObject`, `Unknown`, `Missing`,
+ * `WrongType`, `BadFile` and `Files`.
  */
 fun files_request(body: string): Result<Checked, RequestError> {
     let fields = object_of(body, ["files"])?;
     files_of(fields)
 }
 
-/** The sentence a visitor sees for a refused request. */
+/** Gives the sentence a visitor sees for a refused request. */
 fun reason(e: RequestError): string = match e {
     NotJson => "The request isn't valid JSON.",
     NotObject => "The request must be a JSON object.",

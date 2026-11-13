@@ -1,3 +1,4 @@
+// Browser tests for Learn: running a step, explanations, Solve, quizzes and kept edits.
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 

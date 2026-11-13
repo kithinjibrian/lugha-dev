@@ -1,9 +1,9 @@
 /**
- * The runner: the one program that runs inside each sandbox container
- * (PRP-001). It reads one job as JSON on stdin, checks it again, writes the
+ * Runs one job inside a sandbox container: the only program the container
+ * starts. It reads one job as JSON on stdin, checks it again, writes the
  * files into its work folder, runs `lughac` and the visitor's program under
- * the limits (`api.steps`), and prints one JSON result on stdout
- * (`api.outcome`). Everything untrusted happens here, inside gVisor.
+ * the limits (`runner.steps`), and prints one JSON result on stdout
+ * (`runner.outcome`). Everything untrusted happens here, inside gVisor.
  *
  * Usage: `runner [WORK_FOLDER]` (default `/work`, the container's scratch).
  *
@@ -19,7 +19,11 @@ import api.checks.requests { RunRequest };
 import api.runner.steps { Command, build_command, run_command, test_command, format_command };
 import api.runner.outcome { Captured, run_result, test_result, format_result, failure, lughac_ran };
 
-/** Runs a command with `input` on its stdin and captures what it printed. */
+/**
+ * Runs a command with `input` on its stdin and captures what it printed.
+ *
+ * Errors: a sentence naming the command when it can't be started.
+ */
 fun capture(c: Command, input: string): Result<Captured, string> {
     let out = process.run_with(c.cmd, c.args, input).map_err(
         fun(e: string) = "couldn't run {c.cmd}: {e}",
@@ -27,13 +31,17 @@ fun capture(c: Command, input: string): Result<Captured, string> {
     Ok(Captured { code: out.code as i64, stdout: out.stdout, stderr: out.stderr })
 }
 
-/** The folder part of a path: `src/a/b.la` → `src/a`; `""` for a top-level file. */
+/** Gives the folder part of a path: `src/a/b.la` → `src/a`; `""` for a top-level file. */
 fun folder_of(path: string): string {
     let parts = path.split("/");
     if parts.len < 2 { "" } else { parts.iter().take(parts.len - 1).collect().join("/") }
 }
 
-/** Writes the job's files into the current folder, making folders as needed. */
+/**
+ * Writes the job's files into the current folder, making folders as needed.
+ *
+ * Errors: a sentence naming the folder or file that couldn't be made or written.
+ */
 fun write_all(list: File[]): Result<(), string> {
     for f of list {
         let folder = folder_of(f.path);
@@ -45,7 +53,13 @@ fun write_all(list: File[]): Result<(), string> {
     Ok(())
 }
 
-/** Builds the entry and, when it compiled, runs it with the visitor's arguments and stdin. */
+/**
+ * Builds the entry and, when it compiled, runs it with the visitor's
+ * arguments and stdin, giving back the Run result.
+ *
+ * Errors: a sentence when a file can't be written, a command can't be
+ * started, or `lughac` couldn't finish.
+ */
 fun do_run(r: RunRequest): Result<string, string> {
     write_all(r.files)?;
     fs.make_dirs(".build").map_err(fun(e: string) = "couldn't make .build: {e}")?;
@@ -57,13 +71,24 @@ fun do_run(r: RunRequest): Result<string, string> {
     Ok(run_result(build, Some(program)))
 }
 
-/** Runs every test. */
+/**
+ * Runs every test and gives back the Test result.
+ *
+ * Errors: a sentence when a file can't be written, `lughac` can't be started,
+ * or it couldn't finish.
+ */
 fun do_test(list: File[]): Result<string, string> {
     write_all(list)?;
     Ok(test_result(lughac_ran(capture(test_command(), "")?)?))
 }
 
-/** Formats the `.la` files and reports the ones that changed. */
+/**
+ * Formats the `.la` files and gives back the Format result, naming the ones
+ * that changed.
+ *
+ * Errors: a sentence when a file can't be written or read back, `lughac`
+ * can't be started, or it couldn't finish.
+ */
 fun do_format(list: File[]): Result<string, string> {
     write_all(list)?;
     let sources = list.filter(fun(f: File) = f.path.ends_with(".la"));
@@ -76,7 +101,12 @@ fun do_format(list: File[]): Result<string, string> {
     Ok(format_result(done, sources, after))
 }
 
-/** Does the job on stdin, in `work`. */
+/**
+ * Does the job on stdin, in `work`, and gives back its result.
+ *
+ * Errors: a sentence when `work` can't be entered, the job isn't UTF-8 or
+ * fails its checks, or doing it fails.
+ */
 fun serve(work: string): Result<string, string> {
     env.set_current_dir(work).map_err(fun(e: string) = "couldn't enter {work}: {e}")?;
     let text = string_from_utf8(read_stdin_bytes()).map_err(
@@ -89,7 +119,12 @@ fun serve(work: string): Result<string, string> {
     }
 }
 
-/** The `lughac` this container has, as `lughac --version` prints it. */
+/**
+ * Gives the version result: the `lughac` this container has, as
+ * `lughac --version` prints it.
+ *
+ * Errors: a sentence when `lughac` can't be started.
+ */
 fun lughac_version(): Result<string, string> {
     let out = process.run("lughac", ["--version"]).map_err(
         fun(e: string) = "couldn't run lughac: {e}",

@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The Playground: any code, one project kept in this browser (WEB-4).
-  // A #v1.… link opens a shared project (WEB-5), replacing the kept one only
+  // The Playground: any code, one project kept in this browser.
+  // A #v1.… link opens a shared project, replacing the kept one only
   // after asking when there's work to lose.
   import { onMount, untrack } from "svelte";
   import { copy } from "../../lib/copy";
@@ -61,6 +61,7 @@
       await navigator.clipboard.writeText(url);
       say(copy.linkCopied);
     } catch {
+      // No clipboard (an insecure page, or refused): the link goes in the address bar to copy from there.
       history.replaceState(null, "", `#${link.value}`);
     }
   }

@@ -1,6 +1,6 @@
 /**
- * Every limit the API enforces, in one place (PRP-001, API-3 and API-5).
- * The sandbox, the request checks and the stop sentences all read these.
+ * Holds every limit the API enforces, in one place. The sandbox, the request
+ * checks and the stop sentences all read these.
  */
 
 /** Files in one request. */
