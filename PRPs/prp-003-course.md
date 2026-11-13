@@ -135,4 +135,4 @@ Every sentence a visitor reads is approved by the owner, one lesson at a time (d
 - [x] Every lesson went through the second reader before the owner saw it, and `docs/VOICE.md` holds every edit the owner made.
 - [x] O6 is moved to RESOLVED in DECISIONS.md with this outline.
 - [x] The full suite passes, including every lesson step run through `lughac`.
-- [ ] For the owner, by eye: Learn from Home, all of Basics, then Values through Sharing on purpose, on a computer and on a phone.
+- [x] For the owner, by eye: Learn from Home, all of Basics, then Values through Sharing on purpose, on a computer and on a phone.
