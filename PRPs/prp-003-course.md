@@ -116,6 +116,7 @@ Every sentence a visitor reads is approved by the owner, one lesson at a time (d
 - **Functions** (2026-11-13): Declare a function · Remove the semicolon · Swap the braces for = · Change a parameter, as in `content/learn/01-basics/03-functions/`.
 - **Choosing and repeating** (2026-11-13): Choose a value with if · Repeat while a condition holds · Count with a range · Go through an array · Break with a value, as in `content/learn/01-basics/04-choosing-and-repeating/`.
 - **Text** (2026-11-13): Put values into text · Round to two decimals · Pad to a width · Put a number into a string · Count the bytes, as in `content/learn/01-basics/05-text/`.
+- **A struct of your own** (2026-11-13): Declare a struct · Print a whole struct · Give every field a value · Pass a struct to a function, as in `content/learn/01-basics/06-a-struct-of-your-own/`. Basics is complete.
 
 ## TESTS
 

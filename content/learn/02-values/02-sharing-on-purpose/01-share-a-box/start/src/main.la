@@ -1,0 +1,6 @@
+fun main() {
+    let a = Ref.new(1);
+    let b = a;
+    b.set(5);
+    println(a.get());
+}
