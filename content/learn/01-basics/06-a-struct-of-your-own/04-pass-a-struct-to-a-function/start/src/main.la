@@ -1,0 +1,8 @@
+struct Point { x: i64, y: i64 }
+
+fun distance_squared(p: Point): i64 = p.x * p.x + p.y * p.y;
+
+fun main() {
+    let p = Point { x: 3, y: 4 };
+    println(distance_squared(p));
+}
