@@ -1,0 +1,8 @@
+fun with_tax(price: i64): i64 {
+    price = price + price / 10;
+    price
+}
+
+fun main() {
+    println(with_tax(200));
+}
