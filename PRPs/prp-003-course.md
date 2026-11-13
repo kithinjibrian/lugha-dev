@@ -1,6 +1,6 @@
 ## FEATURE: The course outline (eight chapters, 33 lessons), with chapters 1 (Basics) and 2 (Values) written
 
-Status: **draft, waiting for the owner's approval.** The outline below comes from the discovery of 2026-11-13; every answer was the recommended option unless noted.
+Status: **approved by the owner, 2026-11-13.** The outline below comes from the discovery of 2026-11-13; every answer was the recommended option unless noted.
 
 ## OBJECTIVE
 

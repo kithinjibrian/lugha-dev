@@ -3,7 +3,9 @@ title: Check yourself
 see_also: word-frequency
 ---
 
-One more, without running it first. On the right, `add_one` gets a copy of `xs`. What does line 10, `println(xs)`, print?
+One more, without running it first.
+On the right, `add_one` gets a copy of `xs`.
+What does line 10, `println(xs)`, print?
 
 ```quiz
 options = ["[5, 6]", "[5, 6, 1]", "It doesn't compile"]
