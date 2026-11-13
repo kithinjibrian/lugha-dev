@@ -233,6 +233,11 @@
   article :global(p) {
     margin: 0;
   }
+  /* The article is a column that scrolls; without this, a long step squeezes its code blocks flat
+     instead of scrolling. */
+  article > :global(*) {
+    flex-shrink: 0;
+  }
   article :global(pre.shiki) {
     border: 1px solid var(--line);
     border-radius: 10px;
