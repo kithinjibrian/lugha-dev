@@ -1,5 +1,5 @@
 // Static code (lesson text, examples, Home): Shiki with the Lugha grammar
-// copied at tag m154 (PRP-002, WEB-9), coloured with docs/DESIGN.md's code
+// copied at tag m159 (PRP-002, WEB-9), coloured with docs/DESIGN.md's code
 // tokens as CSS variables, like the editor.
 import { createHighlighter, type LanguageRegistration, type ThemeRegistration } from "shiki";
 import grammar from "../../grammar/lugha.tmLanguage.json" with { type: "json" };

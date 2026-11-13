@@ -26,7 +26,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  LUGHAC_REF: m154
+  LUGHAC_REF: m159
   REGISTRY: ghcr.io/kithinjibrian/
 
 jobs:

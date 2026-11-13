@@ -18,7 +18,7 @@ import api.checks.requests { RunRequest, run_request, reason };
 import api.checks.job { run_job };
 import api.server.sandbox { SandboxError, run_in_sandbox };
 
-fun image(): string = env.get("SANDBOX_IMAGE").unwrap_or("lugha-sandbox:m154");
+fun image(): string = env.get("SANDBOX_IMAGE").unwrap_or("lugha-sandbox:m159");
 
 /** Whether the suite was asked for, Docker has runsc and the sandbox image is built. */
 fun ready(): bool {

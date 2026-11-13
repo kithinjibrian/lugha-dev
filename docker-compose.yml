@@ -17,7 +17,7 @@
 #   DOCKER_GID               the group of /var/run/docker.sock (stat -c %g /var/run/docker.sock)
 #   CLOUDFLARE_TUNNEL_TOKEN  the tunnel's token (the tunnel profile only); in
 #                            Cloudflare, the tunnel's public hostname points at http://caddy:80
-#   LUGHAC_REF               the lughac tag to build (default m154)
+#   LUGHAC_REF               the lughac tag to build (default m159)
 #   REGISTRY, IMAGE_TAG      where the images live and which build (deploy/prod.env
 #                            on the droplet; unset here, so the images are local)
 
@@ -66,14 +66,14 @@ services:
       context: ./services/api
       target: api
       args:
-        LUGHAC_REF: ${LUGHAC_REF:-m154}
+        LUGHAC_REF: ${LUGHAC_REF:-m159}
     image: ${REGISTRY:-}lugha-api:${IMAGE_TAG:-local}
     restart: unless-stopped
     # Reachable only by Caddy on the compose network: no published port.
     expose:
       - "8080"
     environment:
-      SANDBOX_IMAGE: ${REGISTRY:-}lugha-sandbox:${LUGHAC_REF:-m154}
+      SANDBOX_IMAGE: ${REGISTRY:-}lugha-sandbox:${LUGHAC_REF:-m159}
       PORT: "8080"
     # The socket lets the API start sandbox containers. It is root-equivalent
     # on the host, so the API stays small and strict (PRP-001, security notes).
@@ -111,8 +111,8 @@ services:
       context: ./services/api
       target: sandbox
       args:
-        LUGHAC_REF: ${LUGHAC_REF:-m154}
-    image: ${REGISTRY:-}lugha-sandbox:${LUGHAC_REF:-m154}
+        LUGHAC_REF: ${LUGHAC_REF:-m159}
+    image: ${REGISTRY:-}lugha-sandbox:${LUGHAC_REF:-m159}
     scale: 0
 
 volumes:

@@ -63,7 +63,7 @@ describe("parseExplanations", () => {
     expect(parseExplanations(v + "%%% E0501\n# E0501: T\n\n## Sub\n", code).ok).toBe(false);
   });
 
-  it("reads every explanation lughac m154 gives, when they've been generated", () => {
+  it("reads every explanation lughac gives, when they've been generated", () => {
     let text: string;
     try {
       text = readFileSync(new URL("../generated/explanations.txt", import.meta.url), "utf8");
