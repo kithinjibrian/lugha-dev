@@ -2,10 +2,13 @@
 title: Name a value
 ---
 
-`let` gives a value a name, and `lughac` works out its type from the value.
-In the editor, line 2 gives `7` the name `width`.
-Line 3 gives `3` the name `height`, and writes its type, `i64`, after a colon.
+`let` gives a value a name.
+A whole number takes its type from what's around it, so the `7` on line 2 and the `7` on line 3 are different types.
+Line 2 asks for nothing, so its `7` is an `i64`, the default for a whole number.
+Line 3 asks for a `u8`, a whole number from 0 to 255.
 Press Run.
 
-Both are `i64`, so line 4 can multiply them.
-A whole number like `7` is an `i64` unless something around it expects another type, so writing the type is up to you.
+The `2` on line 4 becomes a `u8` as well, because `height` on the other side of the `*` is one.
+So `doubled` is a `u8` holding `14`.
+`lughac` refuses a whole number that doesn't fit its type, or that is asked to be an `f64`.
+An `f64` takes a decimal point or an `as`.
