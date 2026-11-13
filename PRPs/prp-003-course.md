@@ -117,21 +117,22 @@ Every sentence a visitor reads is approved by the owner, one lesson at a time (d
 - **Choosing and repeating** (2026-11-13): Choose a value with if · Repeat while a condition holds · Count with a range · Go through an array · Break with a value, as in `content/learn/01-basics/04-choosing-and-repeating/`.
 - **Text** (2026-11-13): Put values into text · Round to two decimals · Pad to a width · Put a number into a string · Count the bytes, as in `content/learn/01-basics/05-text/`.
 - **A struct of your own** (2026-11-13): Declare a struct · Print a whole struct · Give every field a value · Pass a struct to a function, as in `content/learn/01-basics/06-a-struct-of-your-own/`. Basics is complete.
+- **Sharing on purpose** (2026-11-13): Share a box · Change a box without mut · Change what get gave you · Add to what's in the box, as in `content/learn/02-values/02-sharing-on-purpose/`. The lesson keeps its approved title. Every lesson in this PRP is approved.
 
 ## TESTS
 
-- [ ] `services/api/scripts/content`: every new step's `start` (and `solution`) runs in the sandbox and prints its `expected.txt`, or gives its declared `start_error`.
-- [ ] `npm run build`: the content loads with no problems (titles, front matter, quizzes, marked lines).
-- [ ] `npm test`: the bundle and loader tests still pass with two chapters.
-- [ ] `npm test`: `voice.test.ts` passes on every step, the approved lesson included, and fails on a sample step with each thing it checks for.
-- [ ] `npm run e2e`: the Learn tests (which name Values' steps) pass unchanged; a new test opens Learn from Home and lands on Basics' first step.
+- [x] `services/api/scripts/content`: every new step's `start` (and `solution`) runs in the sandbox and prints its `expected.txt`, or gives its declared `start_error`.
+- [x] `npm run build`: the content loads with no problems (titles, front matter, quizzes, marked lines).
+- [x] `npm test`: the bundle and loader tests still pass with two chapters.
+- [x] `npm test`: `voice.test.ts` passes on every step, the approved lesson included, and fails on a sample step with each thing it checks for.
+- [x] `npm run e2e`: the Learn tests (which name Values' steps) pass unchanged; a new test opens Learn from Home and lands on Basics' first step.
 
 ## ACCEPTANCE
 
-- [ ] All 33 lesson titles are recorded in the outline; chapters 1 and 2 are written.
-- [ ] Each of the eight lessons in chapters 1 and 2 has been approved by the owner, by eye, on the local site.
-- [ ] At least one step in Basics lets the learner make a mistake that `lughac` stops.
-- [ ] Every lesson went through the second reader before the owner saw it, and `docs/VOICE.md` holds every edit the owner made.
-- [ ] O6 is moved to RESOLVED in DECISIONS.md with this outline.
-- [ ] The full suite passes, including every lesson step run through `lughac`.
+- [x] All 33 lesson titles are recorded in the outline; chapters 1 and 2 are written.
+- [x] Each of the eight lessons in chapters 1 and 2 has been approved by the owner, by eye, on the local site.
+- [x] At least one step in Basics lets the learner make a mistake that `lughac` stops.
+- [x] Every lesson went through the second reader before the owner saw it, and `docs/VOICE.md` holds every edit the owner made.
+- [x] O6 is moved to RESOLVED in DECISIONS.md with this outline.
+- [x] The full suite passes, including every lesson step run through `lughac`.
 - [ ] For the owner, by eye: Learn from Home, all of Basics, then Values through Sharing on purpose, on a computer and on a phone.
