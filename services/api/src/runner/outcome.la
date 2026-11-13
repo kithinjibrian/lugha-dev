@@ -1,7 +1,7 @@
 /**
- * Turning what `lughac` and the visitor's program printed into the runner's
- * result: one JSON object on the container's stdout, `"v": 1` (PRP-001,
- * "Runner ↔ API"). Compile diagnostics pass through as `lughac` wrote them;
+ * Turns what `lughac` and the visitor's program printed into the runner's
+ * result: one JSON object on the container's stdout, `"v": 1`. Compile
+ * diagnostics pass through as `lughac` wrote them;
  * outputs are capped at `MAX_OUTPUT_BYTES` each, on a character boundary.
  *
  * `failure` is for the runner's own trouble (a file it couldn't write, a
@@ -21,10 +21,8 @@ struct Captured {
 }
 
 /**
- * The first `MAX_OUTPUT_BYTES` of `s`, cut before any character the cap
- * would split.
- *
- * @returns the kept text, and whether anything was cut
+ * Keeps the first `MAX_OUTPUT_BYTES` of `s`, cut before any character the cap
+ * would split, and says whether anything was cut.
  */
 fun cap(s: string): (string, bool) {
     if s.len <= MAX_OUTPUT_BYTES {
@@ -39,7 +37,7 @@ fun cap(s: string): (string, bool) {
 }
 
 /**
- * Why a command was stopped, from its exit code: `timeout` exits 124
+ * Says why a command was stopped, from its exit code: `timeout` exits 124
  * (or 137 when it had to KILL), and a Lugha program out of memory panics
  * with exit code 101.
  */
@@ -53,7 +51,7 @@ fun stopped(code: i64, stderr: string): Option<string> {
     None
 }
 
-/** `Some(text)` as JSON text, `None` as null. */
+/** Turns `Some(text)` into JSON text and `None` into null. */
 fun maybe(o: Option<string>): json.Value = match o {
     Some(s) => json.Value.Text(s),
     None => json.Value.Null,
@@ -64,7 +62,10 @@ fun written(fields: Map<string, json.Value>): string = json.stringify(
     json.Value.Object(fields),
 ).unwrap();
 
-/** The diagnostics in `lughac build --diagnostics json`'s stderr: one JSON object a line. */
+/**
+ * Collects the diagnostics in `lughac build --diagnostics json`'s stderr: one JSON object a
+ * line.
+ */
 fun diagnostics(stderr: string): json.Value {
     let mut found: json.Value[] = [];
     for line of stderr.lines() {
@@ -75,14 +76,14 @@ fun diagnostics(stderr: string): json.Value {
     json.Value.Array(found)
 }
 
-/** The compile part of a Run result. */
+/** Builds the compile part of a Run result. */
 fun compile_part(build: Captured): json.Value = json.Value.Object(#{
     "ok": json.Value.Bool(build.code == 0),
     "stopped": maybe(stopped(build.code, build.stderr)),
     "diagnostics": diagnostics(build.stderr),
 });
 
-/** The program part of a Run result. */
+/** Builds the program part of a Run result. */
 fun program_part(run: Captured): json.Value {
     let (out, out_cut) = cap(run.stdout);
     let (err, err_cut) = cap(run.stderr);
@@ -98,7 +99,7 @@ fun program_part(run: Captured): json.Value {
     })
 }
 
-/** A Run result: the build, and the program when it was run. */
+/** Writes a Run result: the build, and the program when it was run. */
 fun run_result(build: Captured, run: Option<Captured>): string = written(#{"v": json.Value.Integer(
     1,
 ), "kind": json.Value.Text("run"), "compile": compile_part(build), "program": match run {
@@ -107,7 +108,7 @@ fun run_result(build: Captured, run: Option<Captured>): string = written(#{"v": 
 }});
 
 /**
- * A Test result: each `lughac test --json` line, the summary, and the
+ * Writes a Test result: each `lughac test --json` line, the summary, and the
  * compile errors' text when tests didn't compile (`lughac test` prints those
  * as text, not JSON).
  */
@@ -136,7 +137,7 @@ fun test_result(t: Captured): string {
     })
 }
 
-/** A Format result: the files whose text changed, or `lughac fmt`'s error text. */
+/** Writes a Format result: the files whose text changed, or `lughac fmt`'s error text. */
 fun format_result(f: Captured, before: File[], after: File[]): string {
     if f.code != 0 {
         let (err, _) = cap(f.stderr);
@@ -165,7 +166,7 @@ fun format_result(f: Captured, before: File[], after: File[]): string {
     })
 }
 
-/** The runner's own failure, for the API's log. */
+/** Writes the runner's own failure, for the API's log. */
 fun failure(why: string): string = written(#{
     "v": json.Value.Integer(1),
     "failure": json.Value.Text(why),
@@ -176,7 +177,7 @@ fun failure(why: string): string = written(#{
  * the visitor's code has errors) and 2 when it couldn't do the job, which is
  * the runner's trouble, not the visitor's.
  *
- * @returns the captured output; `Err` with `lughac`'s message on exit code 2
+ * Errors: a sentence with `lughac`'s message, on exit code 2.
  */
 fun lughac_ran(c: Captured): Result<Captured, string> {
     if c.code == 2 {

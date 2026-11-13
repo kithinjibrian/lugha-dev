@@ -1,9 +1,9 @@
 /**
- * Starting one sandbox container per job and reading its result (PRP-001,
- * API-6). The container runs on gVisor (`runsc`) with no network, a
- * read-only root, a non-root user, no capabilities, and limits on memory,
- * processes and CPU; its only writable places are two small `tmpfs`
- * folders, `/work` and `/tmp`. Nothing from the host is mounted into it.
+ * Starts one sandbox container per job and reads its result. The container
+ * runs on gVisor (`runsc`) with no network, a read-only root, a non-root
+ * user, no capabilities, and limits on memory, processes and CPU; its only
+ * writable places are two small `tmpfs` folders, `/work` and `/tmp`. Nothing
+ * from the host is mounted into it.
  *
  * The API reads only what the container prints and how it exits, never a
  * file it wrote. The whole `docker run` is bounded by `OUTER_SECONDS`, and a
@@ -35,7 +35,7 @@ enum SandboxError {
     RunnerFailed(string),
 }
 
-/** The `docker run` for one sandbox, running `argv` in `image` under the name `name`. */
+/** Builds the `docker run` for one sandbox, running `argv` in `image` under the name `name`. */
 fun docker_command(image: string, name: string, argv: string[]): Command {
     Command {
         cmd: "timeout",
@@ -56,7 +56,7 @@ fun docker_command(image: string, name: string, argv: string[]): Command {
             "--security-opt=no-new-privileges",
             // A backstop only: gVisor's own threads count against it, and when it
             // is hit gVisor ends the whole sandbox with no result. The program's
-            // limit is prlimit --nproc (16), which fails its forks instead.
+            // limit is prlimit --nproc (`RUN_PROCESSES`), which fails its forks instead.
             "--pids-limit=256",
             "--memory={COMPILE_MEMORY_MB}m",
             "--memory-swap={COMPILE_MEMORY_MB}m",
@@ -73,9 +73,13 @@ fun docker_command(image: string, name: string, argv: string[]): Command {
 }
 
 /**
- * Reads what a sandbox container gave back.
+ * Reads the runner's result from what a sandbox container gave back: the
+ * last line of its stdout.
  *
- * @returns the runner's result; why there's none otherwise
+ * Errors: `TimedOut` when `timeout` stopped it (exit 124); `Docker` when
+ * docker couldn't create or start it (125 to 127, with no stdout);
+ * `RunnerFailed` when the runner reported its own trouble; `NoResult` when
+ * the last line isn't a version 1 result.
  */
 fun read_result(c: Captured): Result<json.Value, SandboxError> {
     if c.code == 124 {
@@ -101,16 +105,18 @@ fun read_result(c: Captured): Result<json.Value, SandboxError> {
     Ok(result)
 }
 
-/** A container name no other sandbox has. */
+/** Makes a container name no other sandbox has. */
 fun fresh_name(): string {
     let mut rng = random.from_os();
     "lugha-sandbox-{time.now_ms()}-{rng.below(1000000000)}"
 }
 
 /**
- * Runs `argv` in a fresh sandbox from `image`, with `input` on its stdin.
+ * Runs `argv` in a fresh sandbox from `image`, with `input` on its stdin, and
+ * gives back the runner's result.
  *
- * @returns the runner's result; why there's none otherwise
+ * Errors: `Docker` when `timeout` or `docker` can't be started, and every
+ * error `read_result` gives.
  */
 fun run_in_sandbox(image: string, argv: string[], input: string): Result<json.Value, SandboxError> {
     let name = fresh_name();

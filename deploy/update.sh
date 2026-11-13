@@ -1,5 +1,5 @@
 #!/bin/sh
-# Brings the droplet up to one commit of main (API-10). GitHub Actions runs it
+# Brings the droplet up to one commit of main. GitHub Actions runs it
 # over SSH after pushing that commit's images, with a key that can run nothing
 # else: in /root/.ssh/authorized_keys it is
 #

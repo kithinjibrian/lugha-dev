@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The workspace (architecture rule 2): files, editor, Run and the output,
-  // used by Learn and the Playground alike. The Playground adds the Tests and
+  // The workspace: files, editor, Run and the output, the one component Learn
+  // and the Playground share so it's never built twice. The Playground adds the Tests and
   // Input tabs, and drives Run, Test and Format from its own toolbar through
   // the functions this component exports.
   import { browserDeps, call, readFormat, readTest } from "../../lib/api";

@@ -1,4 +1,4 @@
-// The hostile suite (PRP-001): programs that attack the sandbox, each run
+// The hostile suite: programs that attack the sandbox, each run
 // through the real sandbox (Docker with gVisor's runsc) exactly as the API
 // runs a visitor's code. Each must be contained, and the sandbox must answer
 // the next request normally. Skipped with "no sandbox" where Docker, runsc
@@ -93,8 +93,9 @@ fun a_fork_bomb_is_held_by_the_process_limit() {
     if !ready() {
         skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
     }
-    // prlimit --nproc fails its forks; timeout ends it. (With the container's
-    // own pids limit too low, gVisor ended the whole sandbox instead.)
+    // prlimit --nproc fails its forks and timeout ends it. The container's own
+    // pids limit sits well above it, because gVisor ends the whole sandbox
+    // when that one is hit.
     let v = run(include_str("hostile/fork_bomb.la.txt"), []).expect("no result");
     assert_eq(stopped_of(v), "time");
     still_works();
@@ -105,9 +106,9 @@ fun a_flood_of_output_never_reaches_the_api_whole() {
     if !ready() {
         skip("set SANDBOX_TESTS=1, with runsc and the sandbox image");
     }
-    // Until std.process can cap what it collects (DECISIONS.md, deferred), the
-    // runner is killed by the container's 1 GB while collecting: no result.
-    // Once the cap lands, this becomes a result with stdout truncated.
+    // `std.process` in lughac can't cap what it collects yet, so the runner is
+    // killed by the container's 1 GB while collecting: no result. Once it can,
+    // this becomes a result with stdout truncated.
     match run(include_str("hostile/flood.la.txt"), []) {
         Ok(v) => assert_eq(
             json.get(v, "program").and_then(fun(p) = json.get(p, "truncated")).and_then(

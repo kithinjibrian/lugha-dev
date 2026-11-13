@@ -1,9 +1,9 @@
-// Notes beside example code (PRP-002, WEB-3). An example's main.la carries its
+// Splits the notes shown beside example code from the code. An example's main.la carries its
 // notes as `//:` lines at the start of a line. Each run of them starts a new
 // piece of code and is that piece's note. The site shows the code without them;
 // the file runs as written.
 
-/** One piece: its note ("" for code before the first note) and its lines in the shown code, from 1. */
+/** Holds one piece: its note ("" for code before the first note) and its lines in the shown code, from 1. */
 export interface Piece {
   note: string;
   first: number;
@@ -11,6 +11,7 @@ export interface Piece {
   last: number;
 }
 
+/** Holds an example's shown code and its pieces. */
 export interface Split {
   /** The source without its note lines. */
   code: string;
@@ -19,6 +20,7 @@ export interface Split {
 
 const MARK = "//:";
 
+/** Splits an example's source into the code shown and its pieces, each with its note. */
 export function splitNotes(source: string): Split {
   if (source === "") {
     return { code: "", pieces: [] };

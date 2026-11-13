@@ -1,4 +1,4 @@
-/* docs/DESIGN.md as CSS variables (Machweo, dark only). Views use these, never raw values. */
+/* The design tokens as CSS variables (Machweo, dark only). Views use these, never raw values. */
 :root {
   --night: #14110f;
   --bar: #1a1613;

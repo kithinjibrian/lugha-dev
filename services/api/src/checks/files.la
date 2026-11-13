@@ -1,9 +1,9 @@
 /**
- * Checking the files a request sends, before any sandbox starts: which paths
- * are allowed, how many files and how much text, and `lugha.toml` (PRP-001,
- * API-3). A path is `lugha.toml`, or a `.la` file under `src/` or `test/`
- * whose parts use only letters, digits, `_` and `-`, so nothing a visitor
- * names can climb out of the scratch folder or hide.
+ * Checks the files a request sends, before any sandbox starts: which paths
+ * are allowed, how many files and how much text, and `lugha.toml`. A path is
+ * `lugha.toml`, or a `.la` file under `src/` or `test/` whose parts use only
+ * letters, digits, `_` and `-`, so nothing a visitor names can climb out of
+ * the scratch folder or hide. Doesn't touch the disk.
  */
 import checks.limits { MAX_FILES, MAX_TOTAL_BYTES, MAX_PATH_BYTES, MAX_PATH_PARTS };
 import checks.manifest { Manifest, ManifestError, DEFAULT, check };
@@ -55,10 +55,10 @@ fun is_name(part: string): bool {
 }
 
 /**
- * Checks one path.
+ * Checks one path: `lugha.toml`, or `src/…/name.la` or `test/…/name.la` within
+ * `MAX_PATH_BYTES` bytes and `MAX_PATH_PARTS` parts.
  *
- * @returns `Ok` for `lugha.toml` and for `src/…/name.la` or `test/…/name.la`
- *     within the length and depth limits; `Err(BadPath)` otherwise
+ * Errors: `BadPath` with the path as sent, for any other path.
  */
 fun check_path(path: string): Result<(), FilesError> {
     if path == "lugha.toml" {
@@ -82,10 +82,11 @@ fun check_path(path: string): Result<(), FilesError> {
 
 /**
  * Checks a request's files: there are some, not too many or too big, every
- * path allowed and none twice, and `lugha.toml` (the default when missing).
+ * path allowed and none twice, and `lugha.toml`. Gives back the files, with
+ * the default `lugha.toml` added when it was missing, and the manifest.
  *
- * @returns the files, with `lugha.toml` added if it was missing, and the
- *     manifest; the first problem found otherwise
+ * Errors: the first found of `NoFiles`, `TooMany`, `TooBig`, `BadPath`,
+ * `Duplicate` and `Manifest`.
  */
 fun check_files(files: File[]): Result<Checked, FilesError> {
     if files.len == 0 {
@@ -116,7 +117,7 @@ fun check_files(files: File[]): Result<Checked, FilesError> {
     Ok(Checked { files: all, manifest: package })
 }
 
-/** The sentence a visitor sees for refused files. */
+/** Gives the sentence a visitor sees for refused files. */
 fun reason(e: FilesError): string = match e {
     NoFiles => "There's no code to run: add src/main.la.",
     TooMany => "Too many files: the limit is {MAX_FILES}.",

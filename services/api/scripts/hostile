@@ -6,8 +6,8 @@
 # small machine they slow each other past any time limit. The API itself runs
 # one sandbox at a time, so the suite does too.
 #
-# Needs Docker with runsc and the sandbox image (SANDBOX_IMAGE, default
-# lugha-sandbox:m159). Exits 1 if any test fails.
+# Needs Docker with runsc and the sandbox image ($SANDBOX_IMAGE, by default the
+# pinned sandbox image). Exits 1 if any test fails.
 
 set -eu
 cd "$(dirname "$0")/.."

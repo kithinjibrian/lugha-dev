@@ -1,4 +1,4 @@
-# The Lugha site behind Caddy (PRP-001, API-8 and API-10). Caddy listens on
+# The Lugha site behind Caddy. Caddy listens on
 # plain HTTP inside the compose network: Cloudflare handles the domain and
 # HTTPS, and cloudflared brings visitors' requests here. The static site is
 # services/ui-web's build, copied to /srv by its Dockerfile, with the content
@@ -22,8 +22,9 @@
 		# Cloudflare's CF-Connecting-IP passes through untouched: the API's rate
 		# limit reads it.
 		reverse_proxy api:8080 {
-			# One request at a time until std.process stops blocking (API-7):
-			# a request may wait behind another's run before its own starts.
+			# `std.process` in lughac blocks every green thread, so the API
+			# serves one request at a time: a request may wait behind another's
+			# run before its own starts.
 			transport http {
 				response_header_timeout 60s
 			}

@@ -1,3 +1,4 @@
+// Tests when a step counts as done, and where the sun sits on the horizon.
 import { describe, expect, it } from "vitest";
 import { asProgress, doneBy, markDone, startOver, sunPosition, type Progress } from "../src/lib/progress";
 

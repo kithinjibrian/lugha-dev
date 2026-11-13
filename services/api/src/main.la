@@ -1,16 +1,14 @@
 /**
- * The API (PRP-001): an HTTP server for Run, Test, Format and the version,
+ * Serves the API: an HTTP server for Run, Test, Format and the version,
  * behind Caddy. Every job runs in a fresh sandbox container from
- * `$SANDBOX_IMAGE`.
+ * `$SANDBOX_IMAGE`. Wiring only: what's worth testing lives in `server` and
+ * `checks`.
  *
- * Until `std.process` stops blocking every green thread (DECISIONS.md,
- * API-7), one sandbox run holds up the whole server: requests are served
- * one at a time.
+ * `std.process` in lughac blocks every green thread, so one sandbox run
+ * holds up the whole server and requests are served one at a time.
  *
- * Environment: `SANDBOX_IMAGE` (required, a pinned tag such as
- * `lugha-sandbox:m159`) and `PORT` (default 8080).
- *
- * Wiring only: what's worth testing lives in `server` and `checks`.
+ * Environment: `SANDBOX_IMAGE` (required: the pinned sandbox image) and
+ * `PORT` (default 8080).
  */
 import std.env;
 import std.http;
@@ -26,7 +24,11 @@ const RUNNER: string = "/usr/local/bin/runner";
 /** Request bodies past this are refused before any route sees them: 512 KB. */
 const MAX_BODY_BYTES: i64 = 524288;
 
-/** Runs a job in a sandbox, logging why when there's no result (never the job itself). */
+/**
+ * Runs a job in a sandbox, logging why when there's no result (never the job itself).
+ *
+ * Errors: the `SandboxError` from `run_in_sandbox`, after logging it.
+ */
 fun run_logged(image: string, job_text: string): Result<json.Value, SandboxError> {
     let result = run_in_sandbox(image, [RUNNER, "/work"], job_text);
     if let Err(e) = result {
@@ -35,7 +37,7 @@ fun run_logged(image: string, job_text: string): Result<json.Value, SandboxError
     result
 }
 
-/** The sandbox's `lughac --version`, asked once at start. */
+/** Asks a sandbox for its `lughac --version`, giving "unknown" when it can't answer. */
 fun version_of(image: string): string = match run_in_sandbox(image, [RUNNER, "--version"], "") {
     Ok(v) => json.get(v, "lughac").and_then(json.as_text).unwrap_or("unknown"),
     Err(e) => {

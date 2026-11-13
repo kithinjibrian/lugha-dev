@@ -1,3 +1,4 @@
+// Tests the editor's Lugha tokenizer, and that its word lists match the grammar.
 import { readFileSync } from "node:fs";
 import { StringStream } from "@codemirror/language";
 import { describe, expect, it } from "vitest";

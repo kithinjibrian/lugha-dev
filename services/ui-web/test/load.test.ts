@@ -1,3 +1,4 @@
+// Tests reading the content tree, and the build failing on content that doesn't hold together.
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";

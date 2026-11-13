@@ -1,3 +1,4 @@
+// Tests the build-time highlighting of Lugha code.
 import { describe, expect, it } from "vitest";
 import { highlighter } from "../src/content/highlight";
 

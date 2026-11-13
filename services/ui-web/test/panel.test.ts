@@ -1,3 +1,4 @@
+// Tests turning a Run's answer into the output panel's states.
 import { describe, expect, it } from "vitest";
 import { asDiagnostics } from "../src/lib/diagnostics";
 import { runPanel } from "../src/lib/panel";

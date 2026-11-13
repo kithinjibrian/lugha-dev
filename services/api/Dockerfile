@@ -1,4 +1,4 @@
-# The API's two images (PRP-001, API-6 and API-10), built from services/api:
+# The API's two images, built from services/api:
 #
 #   target sandbox: what every sandbox container runs. A pinned lughac, the C
 #     compiler lughac links with, the runner, and a warm, read-only cache.

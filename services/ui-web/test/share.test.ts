@@ -1,3 +1,4 @@
+// Tests share links: encoding a project into the link, and refusing links that aren't one.
 import { describe, expect, it } from "vitest";
 import { decodeShare, encodeShare, SHARE_LIMIT } from "../src/lib/share";
 import type { Project } from "../src/lib/project";

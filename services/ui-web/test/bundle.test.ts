@@ -1,3 +1,4 @@
+// Tests the content bundle at /content/v1/ against the real content.
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { example, index, lesson } from "../src/content/bundle";

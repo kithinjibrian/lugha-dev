@@ -1,3 +1,4 @@
+// Tests `lib/api`: what each route is sent, and how answers, refusals, timeouts and being offline come back.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { call, readFormat, readRun, readTest, TIMEOUT_MS, type Deps } from "../src/lib/api";
@@ -13,7 +14,7 @@ const json = (status: number, body: unknown) =>
   Promise.resolve(new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }));
 
 describe("call", () => {
-  it("posts the project to the route as PRP-001's request", async () => {
+  it("posts the project to the route in the API's request shape", async () => {
     let seen: { url: string; init: RequestInit } | null = null;
     const r = await call("run", { ...project, args: ["a"], stdin: "x\n" }, 2, deps((url, init) => {
       seen = { url, init };

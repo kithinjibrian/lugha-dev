@@ -1,23 +1,30 @@
-// lughac's explanations (PRP-002, WEB-8), from generated/explanations.txt
-// (scripts/explanations.sh, or the Dockerfile's first stage): every code's
-// `lughac explain` text, each after a line "%%% CODE", after `lughac --version`
-// under "%%% version". Under an error the
-// panel shows the first paragraph; "More about E0501" shows the rest.
+// Parses lughac's explanations from generated/explanations.txt (written by scripts/explanations.sh,
+// or the Dockerfile's first stage): every code's `lughac explain` text, each after a line
+// "%%% CODE", after `lughac --version` under "%%% version". Under an error the panel shows the first
+// paragraph; "More about E0501" shows the rest.
 import { err, ok, type Result } from "../lib/result";
 import { renderMarkdown, type Highlight } from "./markdown";
 
+/** Holds one code's explanation as HTML: its title, its first paragraph and the rest. */
 export interface Explanation {
   title: string;
   first: string;
   rest: string;
 }
 
+/** Holds every explanation and the lughac version that wrote them. */
 export interface Explained {
   /** What `lughac --version` printed: "lughac 0.1.0". */
   version: string;
   explanations: Record<string, Explanation>;
 }
 
+/**
+ * Parses the explanations file.
+ *
+ * Errors: one line per problem: a code whose text doesn't start with its "# CODE: title" line or
+ * holds markdown the subset can't, a missing version, or no explanations at all.
+ */
 export function parseExplanations(text: string, highlight: Highlight): Result<Explained, string[]> {
   const out: Record<string, Explanation> = {};
   const problems: string[] = [];
@@ -40,6 +47,7 @@ export function parseExplanations(text: string, highlight: Highlight): Result<Ex
       continue;
     }
     const html = r.value.html;
+    // 5 is the length of "</p>\n", which stays with the first paragraph.
     const cut = html.indexOf("</p>\n");
     const firstIsParagraph = html.startsWith("<p>") && cut >= 0;
     out[code] = {

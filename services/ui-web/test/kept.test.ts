@@ -1,3 +1,4 @@
+// Tests what the browser keeps: a step's edits, progress and the Playground's project.
 import { describe, expect, it } from "vitest";
 import { makeStore } from "../src/lib/storage";
 import { kept } from "../src/lib/kept";

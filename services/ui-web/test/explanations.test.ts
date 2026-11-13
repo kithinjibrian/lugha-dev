@@ -1,3 +1,4 @@
+// Tests parsing `lughac explain`'s text into each code's title, first paragraph and the rest.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseExplanations } from "../src/content/explanations";
@@ -68,7 +69,8 @@ describe("parseExplanations", () => {
     try {
       text = readFileSync(new URL("../generated/explanations.txt", import.meta.url), "utf8");
     } catch {
-      return; // scripts/explanations.sh hasn't been run; the build will say so.
+      // scripts/explanations.sh hasn't been run; the build will say so.
+      return;
     }
     const r = parseExplanations(text, code);
     if (!r.ok) throw new Error(r.error.join("\n"));

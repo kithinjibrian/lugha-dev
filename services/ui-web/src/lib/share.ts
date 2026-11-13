@@ -1,10 +1,10 @@
-// Share links (PRP-002, WEB-5): /playground#v1.<data>, where <data> is the
+// Encodes and decodes share links: /playground#v1.<data>, where <data> is the
 // project as JSON, compressed (deflate-raw) and base64url-encoded. The link is
 // never sent to a server: it only lives after the #.
 import type { File, Project } from "./project";
 import { err, ok, type Result } from "./result";
 
-/** The most compressed bytes a link may carry. */
+/** Limits a link to this many bytes of compressed project. */
 export const SHARE_LIMIT = 16 * 1024;
 
 const PREFIX = "v1.";
@@ -15,6 +15,11 @@ interface Wire {
   stdin?: string;
 }
 
+/**
+ * Encodes a project as a share link's fragment, without the #.
+ *
+ * Errors: `too-big` when the compressed project is over `SHARE_LIMIT` bytes.
+ */
 export async function encodeShare(project: Project): Promise<Result<string, "too-big">> {
   const wire: Wire = { files: project.files };
   if (project.args.length > 0) wire.args = project.args;
@@ -26,6 +31,12 @@ export async function encodeShare(project: Project): Promise<Result<string, "too
   return ok(PREFIX + toBase64url(bytes));
 }
 
+/**
+ * Reads a project back from a share link's fragment, with or without its #.
+ *
+ * Errors: `unknown-version` when it doesn't start with `v1.`; `corrupt` when it isn't base64url, is
+ * empty or over `SHARE_LIMIT` bytes, doesn't inflate, isn't UTF-8 JSON, or doesn't hold a project.
+ */
 export async function decodeShare(
   link: string,
 ): Promise<Result<Project, "unknown-version" | "corrupt">> {
@@ -81,7 +92,7 @@ function toBase64url(bytes: Uint8Array): string {
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-/** Throws on characters outside base64url; decodeShare catches it. */
+/** Decodes base64url, throwing on any other character; `decodeShare` catches it. */
 function fromBase64url(text: string): Uint8Array {
   if (!/^[A-Za-z0-9_-]*$/.test(text)) {
     throw new Error("not base64url");

@@ -1,9 +1,10 @@
-// The editor's tokenizer (PRP-002, WEB-9): a small CodeMirror stream parser
-// following grammar/lugha.tmLanguage.json (copied at tag m159). A test checks
+// Tokenizes Lugha for the editor: a small CodeMirror stream parser following
+// grammar/lugha.tmLanguage.json, copied from lughac. A test checks
 // its word lists against the grammar. Words that are keywords only in context
 // (`after`, `default`, `out`, `ptr`, `union`, loop labels) stay plain here.
 import type { StreamParser, StringStream } from "@codemirror/language";
 
+/** Lists the words highlighted as keywords, grouped by the grammar's scope. */
 export const KEYWORDS = new Set([
   // keyword.control
   "if", "else", "while", "for", "in", "of", "match", "return", "break", "continue",
@@ -14,17 +15,21 @@ export const KEYWORDS = new Set([
   "mut", "private", "public", "as", "self",
 ]);
 
+/** Lists the primitive type names. */
 export const PRIMITIVES = new Set([
   "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64", "f32", "f64", "bool", "string", "char",
 ]);
 
+/** Lists the boolean literals. */
 export const BOOLEANS = new Set(["true", "false"]);
 
+/** Lists the names highlighted as constants. */
 export const CONSTANTS = new Set(["Some", "None", "Ok", "Err"]);
 
 /** A string being read, or an interpolation inside one with its open braces. */
 type Frame = { kind: "string" } | { kind: "interpolation"; braces: number };
 
+/** Tracks open block comments, and the strings and interpolations being read. */
 export interface State {
   /** How deep inside nested block comments. */
   comment: number;
@@ -117,6 +122,7 @@ function inCode(stream: StringStream, state: State): string | null {
   return null;
 }
 
+/** Tokenizes Lugha for CodeMirror's `StreamLanguage`. */
 export const lugha: StreamParser<State> = {
   name: "lugha",
   startState: () => ({ comment: 0, frames: [] }),

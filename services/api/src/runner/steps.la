@@ -1,9 +1,9 @@
 /**
- * The commands the runner runs inside the container, as argument lists for
- * `std.process` (never a shell). Every command is wrapped in `timeout`;
- * the visitor's program also runs under `prlimit` for memory, processes
- * and file size (PRP-001, API-5). Commands run in the job's folder, so
- * every path here is relative to it.
+ * Builds the commands the runner runs inside the container, as argument lists
+ * for `std.process` (never a shell). Every command is wrapped in `timeout`;
+ * the visitor's program also runs under `prlimit` for memory, processes and
+ * file size. Commands run in the job's folder, so every path here is relative
+ * to it. Doesn't run anything itself.
  */
 import checks.limits {
     COMPILE_SECONDS,
@@ -28,7 +28,7 @@ const PROGRAM: string = "./.build/program";
 const MB: i64 = 1048576;
 
 /**
- * `cmd args…` stopped after `seconds`: `timeout` sends TERM, then KILL
+ * Wraps `cmd args…` to stop after `seconds`: `timeout` sends TERM, then KILL
  * `grace` seconds later, and exits 124 when it stopped the command.
  */
 fun timed(seconds: i64, grace: i64, cmd: string, args: string[]): Command = Command {
@@ -36,7 +36,7 @@ fun timed(seconds: i64, grace: i64, cmd: string, args: string[]): Command = Comm
     args: ["--kill-after={grace}", "{seconds}", cmd] + args,
 };
 
-/** Compiling the entry with JSON diagnostics. */
+/** Gives the command that compiles the entry with JSON diagnostics. */
 fun build_command(entry: string, opt: i64): Command = timed(COMPILE_SECONDS, 2, "lughac", [
     "build",
     "--diagnostics",
@@ -48,7 +48,10 @@ fun build_command(entry: string, opt: i64): Command = timed(COMPILE_SECONDS, 2, 
     PROGRAM,
 ]);
 
-/** Running the visitor's program with their arguments, under the running limits. */
+/**
+ * Gives the command that runs the visitor's program with their arguments, under the running
+ * limits.
+ */
 fun run_command(args: string[]): Command = timed(
     RUN_SECONDS,
     1,
@@ -63,8 +66,9 @@ fun run_command(args: string[]): Command = timed(
 );
 
 /**
- * Running every `@test` in the folder. The whole command (building and
- * running the tests) ends before the API's outer limit; each test has its own.
+ * Gives the command that runs every `@test` in the folder. The whole command
+ * (building and running the tests) ends before the API's outer limit; each
+ * test has its own.
  */
 fun test_command(): Command = timed(OUTER_SECONDS - 5, 2, "lughac", [
     "test",
@@ -74,5 +78,5 @@ fun test_command(): Command = timed(OUTER_SECONDS - 5, 2, "lughac", [
     ".",
 ]);
 
-/** Formatting the given files in place. */
+/** Gives the command that formats the given files in place. */
 fun format_command(paths: string[]): Command = timed(COMPILE_SECONDS, 2, "lughac", ["fmt"] + paths);

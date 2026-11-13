@@ -1,7 +1,7 @@
-// Every sentence the interface shows, as approved in PRP-002's CONTENT
-// (2026-11-08). Nothing a visitor reads is written anywhere else; lesson and
-// example text comes from content/.
+// Holds every sentence the interface shows, each one approved as written. Nothing a visitor reads
+// is written anywhere else; lesson and example text comes from content/.
 
+/** Gives every sentence the interface shows. */
 export const copy = {
   headline: "A language that doesn't get in your way, but still has your back.",
   nav: { learn: "Learn", examples: "Examples", playground: "Playground", github: "GitHub", home: "Lugha home" },
@@ -46,7 +46,7 @@ export const copy = {
   editOnGitHub: "Edit this lesson on GitHub",
   seeAlso: (title: string) => `See it in a real program: ${title}`,
 
-  // The output panel (WEB-7): the API's sentences (PRP-001) and the site's own.
+  // The output panel: the API's sentences and the site's own.
   stoppedTime: "Your program was stopped after 5 seconds.",
   stoppedMemory: "Your program was stopped because it used more than 256 MB of memory.",
   outputCut: "Its output was cut off at 64 KB.",
@@ -55,6 +55,7 @@ export const copy = {
   service: "Couldn't run your code right now. Try again in a moment.",
 } as const;
 
+/** Links to Lugha's repository on GitHub. */
 export const GITHUB = "https://github.com/kithinjibrian/lugha";
-/** Where content/ lives on GitHub, for "Edit this lesson on GitHub". */
+/** Links to content/ on GitHub, for "Edit this lesson on GitHub". */
 export const CONTENT_ON_GITHUB = "https://github.com/kithinjibrian/lugha-dev/tree/main/content";

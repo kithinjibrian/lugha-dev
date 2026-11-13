@@ -1,4 +1,4 @@
-// The content checks (PRP-002, WEB-11): every lesson step and every example
+// The content checks: every lesson step and every example
 // in content/ runs through the real sandbox, exactly as a visitor's code
 // would, and must print what its expected.txt says. A step with a solution
 // is checked both ways: the start code gives its start_error (or prints its
@@ -76,8 +76,9 @@ fun folders(path: string): string[] = fs.list_dir(path).unwrap_or([]).filter(
 );
 
 /**
- * A key's value in a step.md's front matter (between the --- lines), with
- * one pair of quotes removed and `\n` turned into a newline; "" if absent.
+ * Reads a key's value from a step's front matter (between the --- lines at
+ * the top of its Markdown), with one pair of quotes removed and `\n` turned
+ * into a newline; "" if absent.
  */
 fun front(md: string, key: string): string {
     let lines = md.lines();

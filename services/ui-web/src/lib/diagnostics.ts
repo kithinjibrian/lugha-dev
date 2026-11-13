@@ -1,7 +1,8 @@
-// lughac's diagnostics (PRP-001 passes its JSON through unchanged). The text
-// shown is lughac's own `rendered` field (O8); until lughac adds it, the
-// header, location and help from the JSON, never a drawing of our own.
+// Reads lughac's diagnostics, which the API passes through unchanged, and gives the text shown for
+// each. The text is lughac's own `rendered` field. `lughac` has no `rendered` field yet, so until it
+// does the text is the header, location and help from the JSON, never a drawing of our own.
 
+/** Holds the parts of one of lughac's diagnostics that the site shows. */
 export interface Diagnostic {
   severity: "error" | "warning";
   code: string;
@@ -13,7 +14,7 @@ export interface Diagnostic {
   rendered: string | null;
 }
 
-/** The diagnostics in `v` (an array of lughac's JSON objects), skipping anything malformed. */
+/** Reads the diagnostics in `v` (an array of lughac's JSON objects), skipping anything malformed. */
 export function asDiagnostics(v: unknown): Diagnostic[] {
   if (!Array.isArray(v)) return [];
   return v.flatMap((item) => {
@@ -48,6 +49,7 @@ function asDiagnostic(v: unknown): Diagnostic | null {
   };
 }
 
+/** Gives a diagnostic's text: lughac's `rendered` when it has one, otherwise one built from its fields. */
 export function text(d: Diagnostic): string {
   if (d.rendered !== null) return d.rendered;
   let out = `${d.severity}[${d.code}]: ${d.message}\n  --> ${d.file}:${d.line}:${d.col}\n`;
@@ -55,7 +57,7 @@ export function text(d: Diagnostic): string {
   return out;
 }
 
-/** The lines in `file` holding an error, in order, once each: the editor marks them. */
+/** Gives the lines in `file` holding an error, in order, once each, for the editor to mark. */
 export function errorLines(ds: Diagnostic[], file: string): number[] {
   const lines = ds.filter((d) => d.severity === "error" && d.file === file).map((d) => d.line);
   return [...new Set(lines)].sort((a, b) => a - b);

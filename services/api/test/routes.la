@@ -9,9 +9,10 @@ const BODY: string = "{{\"files\": [{{\"path\": \"src/main.la\", \"text\": \"fun
 
 const RESULT: string = "{{\"v\":1,\"kind\":\"run\",\"compile\":{{\"ok\":true,\"stopped\":null,\"diagnostics\":[]}},\"program\":null}}";
 
-/** A sandbox that always answers `RESULT`, and one that always fails. */
+/** A sandbox that always answers `RESULT`. */
 fun works(text: string): Result<json.Value, SandboxError> = Ok(json.parse(RESULT).unwrap());
 
+/** A sandbox that always fails. */
 fun broken(text: string): Result<json.Value, SandboxError> = Err(SandboxError.TimedOut);
 
 fun call(

@@ -1,12 +1,12 @@
-// Static code (lesson text, examples, Home): Shiki with the Lugha grammar
-// copied at tag m159 (PRP-002, WEB-9), coloured with docs/DESIGN.md's code
-// tokens as CSS variables, like the editor.
+// Highlights static code (lesson text, examples, Home) with Shiki and the Lugha grammar copied from
+// lughac, coloured with the design's code tokens as CSS variables, like the editor.
 import { createHighlighter, type LanguageRegistration, type ThemeRegistration } from "shiki";
 import grammar from "../../grammar/lugha.tmLanguage.json" with { type: "json" };
 import type { Highlight } from "./markdown";
 
 const keyword = "var(--code-keyword)";
 
+/** Colours the grammar's scopes with the code tokens. */
 export const theme: ThemeRegistration = {
   name: "machweo",
   type: "dark",
@@ -36,7 +36,7 @@ export const theme: ThemeRegistration = {
 
 let made: Promise<Highlight> | null = null;
 
-/** The highlighter, made once per build. */
+/** Gives the highlighter, made once per build. */
 export function highlighter(): Promise<Highlight> {
   made ??= createHighlighter({
     themes: [theme],

@@ -1,4 +1,4 @@
-// The browser tests (PRP-002, WEB-11), against the running stack:
+// The browser tests, against the running stack:
 // docker compose up -d, then npm run e2e. E2E_URL names another one.
 import { defineConfig } from "@playwright/test";
 
