@@ -55,7 +55,7 @@
   }
 
   function happened(e: Event) {
-    if (!doneBy(step.kind, e)) return;
+    if (!doneBy(step.kind, e, step.expected)) return;
     progress = markDone(progress, step.id);
     kept?.setProgress(progress);
   }

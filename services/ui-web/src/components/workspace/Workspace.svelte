@@ -18,7 +18,7 @@
     project: Project;
     onchange: (p: Project) => void;
     /** After every Run that came back with a program result or compile errors. */
-    onran?: (r: { compiled: boolean; exit: number }) => void;
+    onran?: (r: { compiled: boolean; exit: number; stdout: string }) => void;
     /** A step's own words for one error code. */
     note?: { code: string; html: string } | null;
     opt?: 0 | 2;
@@ -48,8 +48,8 @@
     const r = await call("run", project, opt, browserDeps());
     panel = runPanel(r);
     busy = false;
-    if (panel.kind === "ran") onran?.({ compiled: true, exit: panel.exit });
-    if (panel.kind === "compile-error") onran?.({ compiled: false, exit: 1 });
+    if (panel.kind === "ran") onran?.({ compiled: true, exit: panel.exit, stdout: panel.stdout });
+    if (panel.kind === "compile-error") onran?.({ compiled: false, exit: 1, stdout: "" });
   }
 
   export async function test() {

@@ -1,11 +1,34 @@
 #!/bin/sh
 # Runs the content checks (test/content.la): every lesson step and example in
-# content/ through the real sandbox, compared with expected.txt. Each check
-# runs its items one after another, so this is three tests.
+# content/ through the real sandbox, compared with expected.txt.
+#
+# lughac test runs a file's tests in parallel. Each content test compiles
+# program after program in its own sandbox, and side by side on one machine
+# they can push a sandbox past its time limit, so they run one at a time, as
+# the hostile suite does.
 #
 # Needs Docker with runsc and the sandbox image ($SANDBOX_IMAGE, by default the
 # pinned sandbox image). CONTENT_DIR names the content (default ../../content).
+# Exits 1 if any test fails.
 
 set -eu
 cd "$(dirname "$0")/.."
-SANDBOX_TESTS=1 exec lughac test --timeout 600 test/content.la
+
+export SANDBOX_TESTS=1
+failed=0
+passed=0
+
+for name in $(lughac test --list test/content.la | awk '{print $2}'); do
+	if out=$(lughac test --timeout 600 --exact --filter "$name" test/content.la 2>&1); then
+		echo "ok      $name"
+		passed=$((passed + 1))
+	else
+		echo "FAILED  $name"
+		echo "$out" | sed 's/^/        /'
+		failed=$((failed + 1))
+	fi
+done
+
+echo
+echo "$passed passed, $failed failed"
+[ "$failed" -eq 0 ]
