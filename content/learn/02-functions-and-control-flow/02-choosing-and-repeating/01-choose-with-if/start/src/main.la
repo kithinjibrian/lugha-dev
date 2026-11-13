@@ -1,5 +1,0 @@
-fun main() {
-    let temperature = 31;
-    let label = if temperature > 25 { "hot" } else { "mild" };
-    println(label);
-}

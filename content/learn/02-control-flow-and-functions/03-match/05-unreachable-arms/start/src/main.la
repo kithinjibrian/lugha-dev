@@ -1,0 +1,10 @@
+fun main() {
+    let day = 3;
+    let name = match day {
+        _ => "another day",
+        1 => "Monday",
+        2 => "Tuesday",
+        3 => "Wednesday",
+    };
+    println(name);
+}

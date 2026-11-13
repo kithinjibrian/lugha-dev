@@ -1,0 +1,8 @@
+fun main() {
+    let total = {
+        let price = 40;
+        let tax = 6;
+        price + tax;
+    };
+    println(total);
+}

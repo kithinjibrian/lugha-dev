@@ -1,0 +1,8 @@
+fun main() {
+    let mut seconds = 3;
+    while seconds > 0 {
+        println(seconds);
+        seconds -= 1;
+    }
+    println("go");
+}

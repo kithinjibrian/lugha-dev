@@ -1,7 +1,0 @@
-fun main() {
-    let mut n = 3;
-    while n > 0 {
-        println(n);
-        n = n - 1;
-    }
-}

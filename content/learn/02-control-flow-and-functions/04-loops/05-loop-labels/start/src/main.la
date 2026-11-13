@@ -1,0 +1,10 @@
+fun main() {
+    for row in 1..4 {
+        for col in 1..4 {
+            if row * col == 4 {
+                break;
+            }
+            println("{row} {col}");
+        }
+    }
+}

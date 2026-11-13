@@ -1,0 +1,8 @@
+fun area(width: i64, height: i64): i64 = width * height;
+
+fun area(side: i64): i64 = side * side;
+
+fun main() {
+    println(area(7, 3));
+    println(area(4));
+}

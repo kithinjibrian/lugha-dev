@@ -66,8 +66,8 @@ test("edits are kept, and Reset returns to the start", async ({ page }) => {
 test("Start learning opens the course's first step", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Start learning" }).click();
-  await expect(page).toHaveURL(/\/learn\/basics\/hello-world\/run-a-program/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Run a program");
+  await expect(page).toHaveURL(/\/learn\/basics\/hello-world\/the-main-function/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("The main function");
 });
 
 test("a fix step whose start already runs is done only once it's fixed", async ({ page }) => {

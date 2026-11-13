@@ -1,0 +1,6 @@
+fun main() {
+    let unread = 3;
+    if (unread > 0) {
+        println("you have mail");
+    }
+}

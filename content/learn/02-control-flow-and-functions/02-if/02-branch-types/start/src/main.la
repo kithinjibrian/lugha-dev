@@ -1,0 +1,9 @@
+fun main() {
+    let temperature = 31;
+    let advice = if temperature > 30 {
+        "stay inside"
+    } else {
+        0
+    };
+    println(advice);
+}
