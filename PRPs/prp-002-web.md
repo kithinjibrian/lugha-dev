@@ -196,4 +196,4 @@ Where building it differed from the design above, and why (2026-11-08):
 - [x] `npm test`, `npm run build` and `npm run check` (types) pass in `services/ui-web`; the content checks and Playwright pass against the stack.
 - [x] `docker compose build` builds the site into Caddy; `docker compose up -d` serves it at `http://127.0.0.1:8080` with `/content/v1/index.json`.
 - [x] Every sentence in CONTENT is approved by the owner (2026-11-08).
-- [ ] For the owner, by eye: Home, the five steps (fix step 2 by hand and with Solve; see the sun move), an example's notes beside its code, the Playground's Share link in another browser, and all of it at phone width.
+- [x] For the owner, by eye: Home, the five steps (fix step 2 by hand and with Solve; see the sun move), an example's notes beside its code, the Playground's Share link in another browser, and all of it at phone width.
