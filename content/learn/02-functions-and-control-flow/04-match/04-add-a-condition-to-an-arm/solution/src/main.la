@@ -1,0 +1,9 @@
+fun main() {
+    let temperature = -4;
+    let advice = match temperature {
+        0 => "exactly zero",
+        _ if temperature < 0 => "below zero",
+        _ => "above zero",
+    };
+    println(advice);
+}

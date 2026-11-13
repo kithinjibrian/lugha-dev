@@ -1,0 +1,10 @@
+fun distance(from: i64, to: i64): i64 {
+    if to < from {
+        return from - to;
+    }
+}
+
+fun main() {
+    println(distance(3, 10));
+    println(distance(10, 3));
+}

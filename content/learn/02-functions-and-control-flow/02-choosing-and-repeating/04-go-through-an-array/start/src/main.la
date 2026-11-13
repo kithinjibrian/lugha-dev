@@ -1,5 +1,0 @@
-fun main() {
-    for word of ["red", "green", "blue"] {
-        println(word);
-    }
-}

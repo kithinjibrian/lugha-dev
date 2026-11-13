@@ -1,0 +1,8 @@
+fun main() {
+    let day = 6;
+    let kind = match day {
+        6 | 7 => "weekend",
+        _ => "weekday",
+    };
+    println(kind);
+}

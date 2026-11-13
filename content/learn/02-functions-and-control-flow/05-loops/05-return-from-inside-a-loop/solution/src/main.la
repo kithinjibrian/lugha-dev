@@ -1,0 +1,13 @@
+fun first_over(limit: i64): i64 {
+    let mut n = 1;
+    loop {
+        n = n * 2;
+        if n > limit {
+            return n;
+        }
+    }
+}
+
+fun main() {
+    println(first_over(100));
+}
