@@ -1,12 +1,12 @@
 #!/bin/sh
 # Prepares a fresh Ubuntu 24.04 droplet for the Lugha site (API-8, API-10):
-# Docker, gVisor's runsc registered as Docker's "runsc" runtime, and swap.
-# Nothing is built here: deploy/ship.sh builds the images on a developer's
-# machine and copies them over. Safe to run again. Run as root; ship.sh runs
-# it for you.
+# Docker, gVisor's runsc registered as Docker's "runsc" runtime, swap, and ufw
+# letting in only SSH. Safe to run again. Run as root, after
+# `apt-get update && apt-get upgrade` and a reboot if one is asked for.
 #
-# The droplet needs no open ports: cloudflared connects out. Allow only SSH
-# in, in DigitalOcean's firewall.
+# Nothing is built here: GitHub Actions builds the images and runs
+# deploy/update.sh (see .github/workflows/deploy.yml). The droplet needs no
+# open ports but SSH: cloudflared connects out.
 
 set -eu
 
@@ -48,5 +48,12 @@ if [ ! -e /swapfile ]; then
 	echo "/swapfile none swap sw 0 0" >> /etc/fstab
 fi
 
-mkdir -p /opt/lugha/deploy
+# ---- the firewall: SSH only, rate-limited --------------------------------
+# Docker's published ports bypass ufw; compose publishes only 127.0.0.1:8080.
+apt-get install -yq ufw git
+ufw default deny incoming
+ufw default allow outgoing
+ufw limit OpenSSH
+ufw --force enable
+
 echo "droplet ready: $(docker --version), $(runsc --version | head -1)"

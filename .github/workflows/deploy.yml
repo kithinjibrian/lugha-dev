@@ -1,0 +1,122 @@
+# Checks, builds and deploys the site on every push to main (API-10).
+#
+# 1. check: the site's unit tests, types and build (the content checks and the
+#    hostile suite need gVisor and run before merging, on a developer's machine).
+# 2. images: the sandbox, the API and the site, pushed to GHCR. lughac's slow
+#    build is cached in the registry, so it only runs again when LUGHAC_REF or
+#    services/api/Dockerfile changes.
+# 3. deploy: runs deploy/update.sh on the droplet over SSH, with a key that can
+#    run nothing else.
+#
+# Repository secrets: DEPLOY_HOST (the droplet's address), DEPLOY_SSH_KEY (the
+# private key) and DEPLOY_KNOWN_HOSTS (the droplet's host key line).
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  LUGHAC_REF: m154
+  REGISTRY: ghcr.io/kithinjibrian/
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: services/ui-web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.1
+          cache: npm
+          cache-dependency-path: services/ui-web/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npm run check
+
+  images:
+    needs: check
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: sandbox
+        uses: docker/build-push-action@v6
+        with:
+          context: services/api
+          target: sandbox
+          build-args: LUGHAC_REF=${{ env.LUGHAC_REF }}
+          tags: ${{ env.REGISTRY }}lugha-sandbox:${{ env.LUGHAC_REF }}
+          push: true
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}lugha-cache:sandbox
+          cache-to: type=registry,ref=${{ env.REGISTRY }}lugha-cache:sandbox,mode=max
+
+      # Shares the lughac stage with the sandbox, so lughac is built once.
+      - name: api
+        uses: docker/build-push-action@v6
+        with:
+          context: services/api
+          target: api
+          build-args: LUGHAC_REF=${{ env.LUGHAC_REF }}
+          tags: |
+            ${{ env.REGISTRY }}lugha-api:${{ github.sha }}
+            ${{ env.REGISTRY }}lugha-api:main
+          push: true
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}lugha-cache:sandbox
+            type=registry,ref=${{ env.REGISTRY }}lugha-cache:api
+          cache-to: type=registry,ref=${{ env.REGISTRY }}lugha-cache:api,mode=max
+
+      # The site's build reads lughac's explanations from the sandbox image
+      # (services/ui-web/Dockerfile), and checks every lesson and example.
+      - name: site
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/ui-web/Dockerfile
+          build-contexts: sandbox=docker-image://${{ env.REGISTRY }}lugha-sandbox:${{ env.LUGHAC_REF }}
+          tags: |
+            ${{ env.REGISTRY }}lugha-web:${{ github.sha }}
+            ${{ env.REGISTRY }}lugha-web:main
+          push: true
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}lugha-cache:web
+          cache-to: type=registry,ref=${{ env.REGISTRY }}lugha-cache:web,mode=max
+
+  deploy:
+    needs: images
+    runs-on: ubuntu-24.04
+    steps:
+      - name: deploy/update.sh on the droplet
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "root@$HOST" "deploy $GITHUB_SHA"
