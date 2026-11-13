@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The course outline: every lesson with its step dots, and Start over.
+  // The course outline: Start over, then every lesson with its step dots.
   import { copy } from "../../lib/copy";
   import type { Progress } from "../../lib/progress";
   import { stepUrl, type CourseChapter } from "./course";
@@ -26,6 +26,9 @@
 
 <dialog bind:this={dialog} aria-label={copy.outline} onclick={(e) => e.target === dialog && dialog.close()}>
   <div class="inner">
+    <div class="top">
+      <button type="button" class="quiet" onclick={startOver}>{copy.startOver}</button>
+    </div>
     {#each course as chapter, ci (ci)}
       <section>
         <h2>{chapter.title}</h2>
@@ -43,9 +46,6 @@
         {/each}
       </section>
     {/each}
-    <div class="end">
-      <button type="button" class="quiet" onclick={startOver}>{copy.startOver}</button>
-    </div>
   </div>
 </dialog>
 
@@ -56,7 +56,7 @@
     border: 1px solid var(--line-strong);
     border-radius: 16px;
     padding: 0;
-    width: min(480px, calc(100vw - 32px));
+    width: min(640px, calc(100vw - 32px));
   }
   dialog::backdrop {
     background: rgb(0 0 0 / 0.55);
@@ -119,10 +119,17 @@
     height: 14px;
     border-color: var(--sun);
   }
-  .end {
+  /* Start over stays at the top while the lessons scroll under it; the
+     negative margins stretch it across the dialog's padding. */
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     display: flex;
-    justify-content: space-between;
-    border-top: 1px solid var(--line);
-    padding-top: 16px;
+    justify-content: flex-end;
+    margin: -24px -24px 0;
+    padding: 12px 24px;
+    background: var(--bar);
+    border-bottom: 1px solid var(--line);
   }
 </style>
