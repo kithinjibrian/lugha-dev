@@ -25,6 +25,9 @@ The full path through the language is decided, so later chapters can be written 
 6. **Lessons:** the list below.
 7. **Inside a lesson:** 3–5 steps, at least one of them a fix step; a quiz only where a likely misunderstanding needs checking; one idea per step, about 60–120 words of text.
 8. **Writing:** Claude drafts one lesson at a time; the owner reviews it on the local site and approves it before the next is started. Nothing merges until every lesson in this PRP is approved.
+9. **Voice:** the seven rules below, taken from the approved Values lesson. No added warmth or humour: plain, direct teaching.
+10. **Keeping the voice:** a voice guide, an automatic check, a second reader, and the owner's edits turned into rules (all four). The guide, `docs/VOICE.md`, stays on the owner's machine and is never committed.
+11. **Layout:** one sentence per line in every `step.md`.
 
 ## REQUIREMENTS
 
@@ -54,12 +57,32 @@ The full path through the language is decided, so later chapters can be written 
 - *Everything is a value:* the approved five steps, unchanged.
 - *Sharing on purpose:* `Ref<T>`: when two names should see one thing, `Ref.new`, `get`, `set`, and that a copy of a `Ref` shares its box.
 
+**The voice.** Every step follows these, and each is illustrated in `docs/VOICE.md` with a quote from the approved lesson:
+
+1. It talks to one person, as "you", in the present tense.
+2. It points at real things on the screen: "On the right", "line 6", "Press Run", code in backticks.
+3. It asks the learner to look or predict first, and gives the rule after they've seen it happen.
+4. It gives the reason in one plain sentence.
+5. It's short and plain: short paragraphs, everyday words, no exclamation marks, no headings or bullets inside a step, no announcing what's coming.
+6. It answers the doubt a learner would actually have, once and honestly.
+7. It never sells: no "powerful", "simply", "just", "easy", "elegant", no praise of Lugha. It shows Lugha doing something.
+
+No warmth or humour is added: no jokes, puns, praise of the learner, or enthusiasm.
+
+**Keeping the voice, for every lesson:**
+
+1. Claude rereads `docs/VOICE.md` before drafting. It holds the rules, the quotes, what the owner has rejected (slogans, balanced "X. Y." lines, comparisons with other languages, humour), and every edit the owner has made, as before and after.
+2. `services/ui-web/test/voice.test.ts` fails on what a rule can catch in any `step.md`: selling words, exclamation marks, emoji, headings or bullets, names of other languages, a sentence over 30 words, a step over 120 words of text.
+3. A separate reviewer agent, given only `docs/VOICE.md` and the draft, flags every line that sounds machine-made or breaks a rule. Claude fixes those before the owner sees the lesson, and lists any it disagreed with.
+4. When the owner changes a line, the before and after go into `docs/VOICE.md`.
+
 **Rules for every step:**
 
 - Every program is a real `.la` file run through `lughac` in the pinned sandbox image, with `expected.txt` holding what it printed. Never written from memory.
 - A step uses only what earlier steps taught, or something a programmer can read without a lesson. A two-field struct is fine; a generic interface isn't.
 - The text never compares Lugha with another language. It uses plain sentences and no slogans, and says no more than `lughac spec` does.
 - A fix step's start is wrong in one way, and its solution is the smallest change that fixes it.
+- `step.md` has one sentence per line; a blank line starts a paragraph. The approved lesson gets the same line breaks, with no word changed.
 
 **Files.**
 
@@ -73,6 +96,8 @@ The full path through the language is decided, so later chapters can be written 
 - Use a feature without checking `lughac spec`, or show output `lughac` didn't print.
 - Write chapters 3–8.
 - Teach the standard library beyond `println` and what the core needs. That belongs to O9.
+- Commit `docs/VOICE.md`. It's ignored by git and stays on the owner's machine.
+- Add warmth or humour.
 
 ## DESIGN
 
@@ -89,6 +114,7 @@ Every sentence a visitor reads is approved by the owner, one lesson at a time (d
 - [ ] `services/api/scripts/content`: every new step's `start` (and `solution`) runs in the sandbox and prints its `expected.txt`, or gives its declared `start_error`.
 - [ ] `npm run build`: the content loads with no problems (titles, front matter, quizzes, marked lines).
 - [ ] `npm test`: the bundle and loader tests still pass with two chapters.
+- [ ] `npm test`: `voice.test.ts` passes on every step, the approved lesson included, and fails on a sample step with each thing it checks for.
 - [ ] `npm run e2e`: the Learn tests (which name Values' steps) pass unchanged; a new test opens Learn from Home and lands on Basics' first step.
 
 ## ACCEPTANCE
@@ -96,6 +122,7 @@ Every sentence a visitor reads is approved by the owner, one lesson at a time (d
 - [ ] All 33 lesson titles are recorded in the outline; chapters 1 and 2 are written.
 - [ ] Each of the eight lessons in chapters 1 and 2 has been approved by the owner, by eye, on the local site.
 - [ ] At least one step in Basics lets the learner make a mistake that `lughac` stops.
+- [ ] Every lesson went through the second reader before the owner saw it, and `docs/VOICE.md` holds every edit the owner made.
 - [ ] O6 is moved to RESOLVED in DECISIONS.md with this outline.
 - [ ] The full suite passes, including every lesson step run through `lughac`.
 - [ ] For the owner, by eye: Learn from Home, all of Basics, then Values through Sharing on purpose, on a computer and on a phone.
