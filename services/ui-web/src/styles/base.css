@@ -24,6 +24,15 @@ body.fill {
   min-height: 640px;
   overflow: hidden;
 }
+/* On a phone, panels that scroll inside a fixed window fight the page's own scrolling, so the page
+   scrolls as a whole instead. */
+@media (max-width: 720px) {
+  body.fill {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+}
 a {
   color: var(--link);
 }
@@ -44,7 +53,8 @@ button:disabled {
 code {
   font-family: var(--font-code);
 }
-.prose code {
+/* Inline code in text only: a code block sets its own look. */
+.prose :not(pre) > code {
   font-size: 0.82em;
   background: var(--line);
   color: var(--sand);

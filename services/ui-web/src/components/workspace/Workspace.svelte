@@ -276,8 +276,29 @@
     resize: vertical;
   }
   @media (max-width: 720px) {
+    .code {
+      flex-direction: column;
+    }
     .learn .code {
       min-height: 320px;
+    }
+    .bar .command {
+      display: none;
+    }
+    .workspace.playground {
+      flex-direction: column;
+      flex-wrap: nowrap;
+    }
+    .playground .code {
+      flex: none;
+      height: 62vh;
+    }
+    .playground .out {
+      flex: none;
+      height: auto;
+      min-height: 40vh;
+      border-left: 0;
+      border-top: 1px solid var(--line);
     }
   }
 </style>

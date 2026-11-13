@@ -47,3 +47,16 @@ export function site(): Promise<Site> {
   loaded ??= load();
   return loaded;
 }
+
+/**
+ * Gives where Learn and Examples begin: the first step and the first example, or Home when there
+ * are none. Links go straight there, so a visitor never waits on a redirect page.
+ */
+export function entries(s: Site): { learn: string; examples: string } {
+  const step = s.chapters[0]?.lessons[0]?.steps[0];
+  const example = s.examples[0];
+  return {
+    learn: step ? `/learn/${step.id}` : "/",
+    examples: example ? `/examples/${example.slug}` : "/",
+  };
+}

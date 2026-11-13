@@ -2,11 +2,12 @@
 // Home: the headline, the ways in, and a runnable code card.
 import Footer from "../components/Footer.astro";
 import RunCard from "../components/RunCard.svelte";
-import { site } from "../content/site";
+import { entries, site } from "../content/site";
 import Site from "../layouts/Site.astro";
 import { copy } from "../lib/copy";
 
 const s = await site();
+const start = entries(s);
 ---
 
 <Site title="Lugha">
@@ -14,8 +15,8 @@ const s = await site();
     <div class="words">
       <h1 id="headline">{copy.headline}</h1>
       <div class="actions">
-        <a class="pill sun" href="/learn">{copy.home.start}</a>
-        <a class="pill" href="/examples">{copy.home.examples}</a>
+        <a class="pill sun" href={start.learn}>{copy.home.start}</a>
+        <a class="pill" href={start.examples}>{copy.home.examples}</a>
         <a class="pill" href="/playground">{copy.home.playground}</a>
       </div>
     </div>
