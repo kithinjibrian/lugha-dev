@@ -85,7 +85,7 @@ describe("loadContent", () => {
     const r = await loadContent(join(import.meta.dirname, "../../../content"), code);
     if (!r.ok) throw new Error(r.error.join("\n"));
     expect(r.value.chapters.map((c) => c.slug)).toEqual(["basics", "control-flow-and-functions", "arrays-strings-and-tuples", "structs-and-enums", "values"]);
-    expect(r.value.chapters.find((c) => c.slug === "values")?.lessons[0].steps).toHaveLength(5);
+    expect(r.value.chapters.find((c) => c.slug === "values")?.lessons[0].steps).toHaveLength(6);
     expect(r.value.home.expected).toBe("832040\n");
     expect(r.value.playground.source).toContain("enum Shape");
     expect(r.value.examples.map((e) => e.slug)).toEqual(["hello-world", "fibonacci", "word-frequency", "green-threads", "actor-counter"]);
@@ -101,6 +101,8 @@ describe("loadContent", () => {
     ["a fix step saying nothing about its start", { "learn/01-values/01-copies-lesson/02-fix/step.md": "---\ntitle: Fix\n---\n" }, "learn/01-values/01-copies-lesson/02-fix/step.md: a step with a solution needs start_error or start_output"],
     ["start_error without a solution", { [`${step}/step.md`]: "---\ntitle: C\nstart_error: E0501\n---\n" }, `${step}/step.md: start_error, start_output and error_note need a solution`],
     ["see_also naming no example", { "learn/01-values/01-copies-lesson/03-quiz/step.md": "---\ntitle: Q\nsee_also: nope\n---\n" }, "learn/01-values/01-copies-lesson/03-quiz/step.md: see_also names no example: nope"],
+    ["a diagram whose file is missing", { [`${step}/step.md`]: '---\ntitle: C\n---\n\n```diagram\nfile = "box.svg"\nalt = "One box."\n```\n' }, `${step}/step.md: the diagram file box.svg is missing`],
+    ["a diagram that breaks the allow-list", { [`${step}/step.md`]: '---\ntitle: C\n---\n\n```diagram\nfile = "box.svg"\nalt = "One box."\n```\n', [`${step}/box.svg`]: '<svg xmlns="http://www.w3.org/2000/svg"><script/></svg>' }, `${step}/step.md: the diagram uses the element \`script\``],
     ["markdown outside the subset", { [`${step}/step.md`]: "---\ntitle: C\n---\n\n# Big\n" }, `${step}/step.md: line 2 is markdown step text can't hold: # Big`],
     ["an example missing a field", { "examples/hello/example.toml": 'title = "Hello"\n' }, "examples/hello/example.toml: needs group, order, intro, tags"],
     ["an example with an unknown field", { "examples/hello/example.toml": good["examples/hello/example.toml"] + "x = 1\n" }, "examples/hello/example.toml: unknown keys: x"],

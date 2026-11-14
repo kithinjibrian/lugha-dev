@@ -107,21 +107,47 @@ export interface Allow {
   lists: boolean;
 }
 
+/** Reads a diagram file from the step's folder and gives back its checked SVG, or why it can't. */
+export type ReadDiagram = (file: string) => Result<string, string>;
+
+/** Turns a ```diagram block into a figure holding the checked SVG, labelled with its alt text. */
+function asDiagram(toml: string, read: ReadDiagram): Result<string, string> {
+  let v: Record<string, unknown>;
+  try {
+    v = parseToml(toml) as Record<string, unknown>;
+  } catch {
+    return err("the diagram block isn't TOML");
+  }
+  const { file, alt, ...extra } = v;
+  if (Object.keys(extra).length > 0) return err(`the diagram block has unknown keys: ${Object.keys(extra).join(", ")}`);
+  if (typeof alt !== "string" || alt.trim() === "") return err("the diagram needs alt text");
+  if (typeof file !== "string" || !/^[a-z0-9-]+\.svg$/.test(file)) {
+    return err("the diagram's file is a name ending in .svg, in the step's folder");
+  }
+  const svg = read(file);
+  if (!svg.ok) return svg;
+  const labelled = svg.value.replace(/^<svg/, `<svg role="img" aria-label="${escapeHtml(alt.trim())}"`);
+  return ok(`<figure class="diagram">${labelled}</figure>\n`);
+}
+
 /**
- * Renders a markdown body as HTML, highlighting its Lugha blocks and taking out its quiz.
+ * Renders a markdown body as HTML, highlighting its Lugha blocks, taking out its quiz, and drawing
+ * its diagram when `readDiagram` is given (lesson steps only).
  *
  * Errors: a sentence naming the first thing the subset can't hold: an unclosed or unknown code
- * block, a mark on a line its block doesn't have, a second or malformed quiz, other markdown, HTML,
- * or a link that isn't allowed.
+ * block, a mark on a line its block doesn't have, a second or malformed quiz or diagram, other
+ * markdown, HTML, or a link that isn't allowed.
  */
 export function renderMarkdown(
   body: string,
   highlight: Highlight,
   allow: Allow = { lists: false },
+  readDiagram?: ReadDiagram,
 ): Result<Rendered, string> {
   const lines = body.split("\n");
   const parts: string[] = [""];
   let quiz: Quiz | null = null;
+  let diagrams = 0;
   let paragraph: string[] = [];
 
   const flush = (): string | null => {
@@ -154,6 +180,14 @@ export function renderMarkdown(
         if (!q.ok) return q;
         quiz = q.value;
         parts.push("");
+        continue;
+      }
+      if (info === "diagram") {
+        if (!readDiagram) return err("a code block is `diagram`: diagrams go only in lesson steps");
+        if (++diagrams > 1) return err("has more than one diagram");
+        const figure = asDiagram(inside.join("\n"), readDiagram);
+        if (!figure.ok) return figure;
+        parts[parts.length - 1] += figure.value;
         continue;
       }
       const m = /^lugha(?:\s+\{([0-9,\s]*)\})?$/.exec(info);

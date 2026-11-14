@@ -242,6 +242,52 @@
     border: 1px solid var(--line);
     border-radius: 10px;
   }
+  /* A step's diagram: its SVG names only these d- classes, so its colours and fonts are
+     the tokens'. Sizes are in the drawing's own units, scaled with it. */
+  article :global(figure.diagram) {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 420px;
+  }
+  article :global(figure.diagram svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  article :global(.d-name),
+  article :global(.d-value) {
+    font-family: var(--font-code);
+    fill: var(--sand);
+  }
+  article :global(.d-name) {
+    font-size: 26px;
+  }
+  article :global(.d-value) {
+    font-size: 30px;
+    fill: var(--code-literal);
+  }
+  article :global(.d-note) {
+    font: 15px var(--font-ui);
+    fill: var(--dust);
+  }
+  article :global(.d-box) {
+    fill: var(--raised);
+    stroke: var(--sun);
+    stroke-width: 2;
+  }
+  article :global(.d-line) {
+    fill: none;
+    stroke: var(--line-strong);
+    stroke-width: 2;
+  }
+  article :global(.d-arrow) {
+    fill: none;
+    stroke: var(--dust);
+    stroke-width: 2;
+  }
+  article :global(.d-head) {
+    fill: var(--dust);
+  }
   .count {
     font: 14px var(--font-ui);
     color: var(--dust);

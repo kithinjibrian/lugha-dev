@@ -46,6 +46,7 @@ function parts(body: string): { paragraphs: string[]; quiz: string[] } {
     if (fence !== null) {
       if (line.startsWith("```")) fence = null;
       else if (fence === "quiz" && !/^\s*(options|answer)\s*=/.test(line)) quiz.push(line);
+      else if (fence === "diagram" && /^\s*alt\s*=/.test(line)) quiz.push(line.replace(/^\s*alt\s*=\s*/, ""));
       continue;
     }
     if (opens) {

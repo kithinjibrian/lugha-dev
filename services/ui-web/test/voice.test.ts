@@ -27,6 +27,11 @@ describe("voiceProblems", () => {
     expect(voiceProblems(md)).toEqual([]);
   });
 
+  it("checks a diagram's alt text, and nothing else in its block", () => {
+    const md = step('Look.\n\n```diagram\nfile = "just.svg"\nalt = "It\'s simply one box."\n```');
+    expect(voiceProblems(md)).toEqual(['uses "simply"']);
+  });
+
   it("ignores what's inside inline code", () => {
     expect(voiceProblems(step("Line 4 uses `!=` and `just_one`."))).toEqual([]);
   });
