@@ -1,0 +1,13 @@
+struct Vec2 { x: f64, y: f64 }
+
+impl Vec2 {
+    fun add(self, other: Vec2): Vec2 = Vec2 { x: self.x + other.x, y: self.y + other.y };
+}
+
+fun main() {
+    let a = Vec2 { x: 1.0, y: 2.0 };
+    let mut b = Vec2 { x: 3.0, y: 4.0 };
+    println(a + b);
+    b += a;
+    println(b);
+}

@@ -1,0 +1,21 @@
+interface Shape {
+    fun area(self): f64;
+}
+
+struct Circle { r: f64 }
+struct Square { side: f64 }
+
+impl Circle {
+    fun area(self): f64 = 3.0 * self.r * self.r;
+}
+
+impl Square {
+    fun area(self): f64 = self.side * self.side;
+}
+
+fun total(shapes: Shape[]): f64 = shapes.fold(0.0, fun(sum, s) = sum + s.area());
+
+fun main() {
+    let circles: Shape[] = [Circle { r: 1.0 }, Circle { r: 2.0 }];
+    println(total(circles));
+}

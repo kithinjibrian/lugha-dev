@@ -1,0 +1,14 @@
+fun count_of<T>(xs: T[], wanted: T): i64 {
+    let mut n = 0;
+    for x of xs {
+        if x == wanted {
+            n += 1;
+        }
+    }
+    n
+}
+
+fun main() {
+    println(count_of([1, 2, 1], 1));
+    println(count_of(["a", "b"], "c"));
+}

@@ -1,0 +1,2 @@
+Cons("tea", Cons("milk", Nil))
+2

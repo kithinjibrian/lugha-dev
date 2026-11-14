@@ -1,0 +1,17 @@
+enum List<T> {
+    Nil,
+    Cons(T, List<T>),
+}
+
+fun size<T>(list: List<T>): i64 {
+    match list {
+        Nil => 0,
+        Cons(_, rest) => 1 + size(rest),
+    }
+}
+
+fun main() {
+    let words = List.Cons("tea", List.Cons("milk", List.Nil));
+    println(words);
+    println(size(words));
+}

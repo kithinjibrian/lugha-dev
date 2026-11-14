@@ -1,0 +1,2 @@
+Pair { left: 2, right: 1 }
+Pair { left: "milk", right: "tea" }

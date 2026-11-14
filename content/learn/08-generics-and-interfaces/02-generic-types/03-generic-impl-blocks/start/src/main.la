@@ -1,0 +1,31 @@
+struct Stack<T> { items: T[] }
+
+impl Stack<T> {
+    fun new(): Self = Self { items: [] };
+
+    fun push(mut self, item: T) {
+        self.items.push(item);
+    }
+
+    fun top(self): Option<T> {
+        if self.items.len == 0 {
+            return None;
+        }
+        Some(self.items[self.items.len - 1])
+    }
+}
+
+impl Stack<T: Num> {
+    fun total(self): T = self.items.fold(0, fun(sum, x) = sum + x);
+}
+
+fun main() {
+    let mut numbers: Stack<i64> = Stack.new();
+    numbers.push(3);
+    numbers.push(4);
+    println(numbers.top());
+    println(numbers.total());
+    let mut words: Stack<string> = Stack.new();
+    words.push("tea");
+    println(words.top());
+}

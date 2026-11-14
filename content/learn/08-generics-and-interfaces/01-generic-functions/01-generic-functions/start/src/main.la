@@ -1,0 +1,15 @@
+fun first<T>(xs: T[]): Option<T> {
+    if xs.len == 0 {
+        return None;
+    }
+    Some(xs[0])
+}
+
+fun empty<T>(): T[] = [];
+
+fun main() {
+    println(first([3, 4]));
+    println(first(["tea", "milk"]));
+    let names: string[] = empty();
+    println(names);
+}
