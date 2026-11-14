@@ -1,0 +1,18 @@
+struct Vec2 { x: f64, y: f64 }
+
+impl Vec2 {
+    fun mul(self, k: f64): Vec2 = Vec2 { x: self.x * k, y: self.y * k };
+    fun mul(self, other: Vec2): f64 = self.x * other.x + self.y * other.y;
+}
+
+impl f64 {
+    fun mul(self, v: Vec2): Vec2 = v * self;
+}
+
+fun main() {
+    let v = Vec2 { x: 1.0, y: 2.0 };
+    println(v * 2.0);
+    println(2.0 * v);
+    println(v * v);
+    println(v.mul(2.0));
+}

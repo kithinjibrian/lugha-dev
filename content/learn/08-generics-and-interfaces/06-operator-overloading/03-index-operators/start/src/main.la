@@ -1,0 +1,23 @@
+struct Grid { width: i64, cells: i64[] }
+
+impl Grid {
+    fun index(self, at: (i64, i64)): i64 {
+        let (x, y) = at;
+        self.cells[y * self.width + x]
+    }
+
+    fun set_index(mut self, at: (i64, i64), value: i64) {
+        let (x, y) = at;
+        self.cells[y * self.width + x] = value;
+    }
+}
+
+fun main() {
+    let mut grid = Grid { width: 3, cells: [0; 6] };
+    grid[1, 0] = 5;
+    grid[2, 1] = 7;
+    println(grid[1, 0]);
+    grid.set_index((0, 1), 9);
+    println(grid.index((0, 1)));
+    println(grid.cells);
+}
