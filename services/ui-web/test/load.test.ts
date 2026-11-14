@@ -168,6 +168,18 @@ describe("loadContent, steps with several files", () => {
     expect(step).toMatchObject({ tests: true, startFailing: ["area_works", "other"], kind: "fix" });
   });
 
+  it("reads a step's own lugha.toml, listed last", async () => {
+    const files = {
+      ...withTests,
+      [`${tested}/start/lugha.toml`]: '[package]\nname = "shapes"\n',
+      [`${tested}/solution/lugha.toml`]: '[package]\nname = "shapes"\n',
+    };
+    const r = await loadContent(tree(files), code);
+    if (!r.ok) throw new Error(r.error.join("\n"));
+    const step = r.value.chapters[0].lessons[0].steps[3];
+    expect(step.files.map((f) => f.path)).toEqual(["src/main.la", "test/area.la", "lugha.toml"]);
+  });
+
   it("gives a one-file step its one file", async () => {
     const r = await loadContent(tree(good), code);
     if (!r.ok) throw new Error(r.error.join("\n"));
@@ -176,8 +188,8 @@ describe("loadContent, steps with several files", () => {
   });
 
   const broken: [string, Record<string, string | null>, Record<string, string>, string][] = [
-    ["a file outside src/ and test/", { [`${multi}/start/lib/x.la`]: "x" }, withFiles, `${multi}/start: lib/x.la isn't a .la file under src/ or test/`],
-    ["a file that isn't .la", { [`${multi}/start/src/notes.txt`]: "x" }, withFiles, `${multi}/start: src/notes.txt isn't a .la file under src/ or test/`],
+    ["a file outside src/ and test/", { [`${multi}/start/lib/x.la`]: "x" }, withFiles, `${multi}/start: lib/x.la isn't a .la file under src/ or test/, or lugha.toml`],
+    ["a file that isn't .la", { [`${multi}/start/src/notes.txt`]: "x" }, withFiles, `${multi}/start: src/notes.txt isn't a .la file under src/ or test/, or lugha.toml`],
     ["solution files differing from start's", { [`${multi}/solution/src/a.la`]: null }, withFiles, `${multi}/solution: its files aren't the same as start's`],
     ["start_failing without tests", { [`${multi}/step.md`]: "---\ntitle: M\nstart_failing: x\n---\n" }, withFiles, `${multi}/step.md: start_failing needs test/ files`],
   ];
