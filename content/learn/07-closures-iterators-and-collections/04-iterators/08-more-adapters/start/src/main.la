@@ -1,0 +1,8 @@
+fun main() {
+    let temps = [3, 5, 9, 4, 8];
+    println(temps.iter().take_while(fun(t) = t < 9).collect());
+    println(temps.iter().skip_while(fun(t) = t < 9).collect());
+    let words = ["ab", "cd"];
+    println(words.iter().flat_map(fun(w) = w.chars()).collect());
+    println("hi".bytes().collect());
+}

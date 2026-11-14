@@ -1,0 +1,9 @@
+fun main() {
+    let doubled = [1, 2, 3].iter().map(fun(n: i64): i64 {
+        println("doubling {n}");
+        n * 2
+    });
+    println("made the iterator");
+    println(doubled.take(2).collect());
+    println(range(10, 1000000000).filter(fun(n) = n % 7 == 0).skip(1).take(3).collect());
+}

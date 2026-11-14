@@ -1,0 +1,7 @@
+fun main() {
+    let mut prices = #{"tea": 3, "milk": 2};
+    for (item, price) of mut prices {
+        price *= 2;
+    }
+    println(prices);
+}

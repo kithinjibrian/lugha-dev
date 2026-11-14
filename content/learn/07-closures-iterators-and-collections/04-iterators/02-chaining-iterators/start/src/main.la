@@ -1,0 +1,6 @@
+fun main() {
+    let squares = range(1, 10).filter(fun(n) = n % 3 == 0).map(fun(n) = n * n).collect();
+    println(squares);
+    let all = [1, 2].iter().chain([3, 4].iter()).collect();
+    println(all);
+}

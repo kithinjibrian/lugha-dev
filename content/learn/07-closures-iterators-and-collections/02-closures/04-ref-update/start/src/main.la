@@ -1,0 +1,5 @@
+fun main() {
+    let total = Ref.new(10);
+    total.update(fun(n) = n * 3);
+    println(total.get());
+}

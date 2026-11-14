@@ -1,0 +1,5 @@
+made the iterator
+doubling 1
+doubling 2
+[2, 4]
+[21, 28, 35]

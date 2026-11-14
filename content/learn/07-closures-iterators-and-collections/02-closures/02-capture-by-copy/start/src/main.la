@@ -1,0 +1,7 @@
+fun main() {
+    let mut rate = 2;
+    let scale = fun(x: i64): i64 = x * rate;
+    rate = 7;
+    println(scale(5));
+    println(rate);
+}

@@ -1,0 +1,6 @@
+fun main() {
+    let ages = [34, 17, 52];
+    println(ages.any(fun(a) = a < 18));
+    println(ages.all(fun(a) = a < 18));
+    println(ages.all(fun(a) = a > 0));
+}

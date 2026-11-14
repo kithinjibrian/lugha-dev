@@ -1,0 +1,7 @@
+fun main() {
+    let count = Ref.new(0);
+    let tick = fun() { count.set(count.get() + 1); };
+    tick();
+    tick();
+    println(count.get());
+}

@@ -1,0 +1,10 @@
+fun main() {
+    println(parse_i64("21").map(fun(n) = n * 2));
+    println(parse_i64("x").map(fun(n) = n * 2));
+    let good: Result<i64, string> = Ok(4);
+    let bad: Result<i64, string> = Err("no");
+    println(good.map(fun(n) = n + 1));
+    println(bad.map(fun(n) = n + 1));
+    println(parse_i64("-3").and_then(fun(n) = if n > 0 { Some(n) } else { None }));
+    println(good.and_then(fun(n: i64): Result<i64, string> = if n > 9 { Ok(n) } else { Err("too small") }));
+}

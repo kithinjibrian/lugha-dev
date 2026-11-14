@@ -1,0 +1,9 @@
+fun main() {
+    let mut ages = #{"ann": 31, "bo": 40};
+    println(ages["ann"]);
+    ages["cy"] = 25;
+    ages["bo"] += 1;
+    println(ages);
+    let none_yet: Map<string, i64> = #{};
+    println(none_yet);
+}

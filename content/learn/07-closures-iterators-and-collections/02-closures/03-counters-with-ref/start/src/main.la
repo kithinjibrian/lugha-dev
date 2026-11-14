@@ -1,0 +1,7 @@
+fun main() {
+    let mut count = 0;
+    let tick = fun() { count += 1; };
+    tick();
+    tick();
+    println(count);
+}

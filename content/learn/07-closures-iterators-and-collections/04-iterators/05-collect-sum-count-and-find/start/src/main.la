@@ -1,0 +1,10 @@
+fun main() {
+    let scores = [7, 3, 9, 4].iter();
+    println(scores.sum());
+    println(scores.count());
+    println(scores.find(fun(s) = s > 8));
+    println(scores.min());
+    println(scores.max());
+    println(scores.position(fun(s) = s == 9));
+    println(scores.filter(fun(s) = s > 5).collect());
+}
