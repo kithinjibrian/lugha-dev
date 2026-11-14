@@ -7,6 +7,7 @@ import { parse as parseToml } from "smol-toml";
 import type { StepKind } from "../lib/progress";
 import { splitNotes } from "../lib/notes";
 import { err, ok, type Result } from "../lib/result";
+import { checkDiagram } from "./diagram";
 import { inline, renderMarkdown, splitFront, type Highlight, type Quiz } from "./markdown";
 
 /** Holds one step of a lesson, ready for a page. */
@@ -163,7 +164,11 @@ function loadStep(r: Reader, dir: string, id: string, slug: string, highlight: H
   const unknown = Object.keys(front).filter((k) => !FRONT_KEYS.includes(k));
   if (unknown.length > 0) r.problems.push(`${where}: unknown front matter: ${unknown.join(", ")}`);
   if (!front.title) r.problems.push(`${where}: needs a title`);
-  const rendered = renderMarkdown(body, highlight);
+  const readDiagram = (file: string) => {
+    const svg = r.maybe(`${dir}/${file}`);
+    return svg === null ? err(`the diagram file ${file} is missing`) : checkDiagram(svg);
+  };
+  const rendered = renderMarkdown(body, highlight, { lists: false }, readDiagram);
   if (!rendered.ok) {
     r.problems.push(`${where}: ${rendered.error}`);
     return null;

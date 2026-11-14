@@ -1,0 +1,7 @@
+fun main() {
+    let big = [0; 1000000];
+    let mut copy = big;
+    copy[0] = 1;
+    println(big[0]);
+    println(copy[0]);
+}

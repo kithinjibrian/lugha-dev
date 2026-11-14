@@ -1,0 +1,7 @@
+fun main() {
+    let a = Ref.new(1);
+    let b = a;
+    let c = Ref.new(1);
+    println(a == b);
+    println(a == c);
+}

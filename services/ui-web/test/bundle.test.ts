@@ -15,10 +15,10 @@ describe("the content bundle", async () => {
   it("indexes chapters, lessons, steps and examples, with their URLs", () => {
     const i = index(chapters, examples);
     expect(i.v).toBe(1);
-    expect(i.chapters[values].lessons[0].url).toBe("/content/v1/lessons/values/everything-is-a-value.json");
+    expect(i.chapters[values].lessons[0].url).toBe("/content/v1/lessons/values/copies.json");
     expect(i.chapters[values].lessons[0].steps[1]).toEqual({
-      id: "values/everything-is-a-value/your-copy-needs-mut",
-      title: "Your copy needs mut",
+      id: "values/copies/mutable-copies",
+      title: "Mutable copies",
       kind: "fix",
     });
     expect(i.examples[0]).toMatchObject({ slug: "hello-world", url: "/content/v1/examples/hello-world.json" });

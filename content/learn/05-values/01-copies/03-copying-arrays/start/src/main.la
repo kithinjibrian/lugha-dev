@@ -1,0 +1,7 @@
+fun main() {
+    let xs = [5, 6];
+    let mut ys = xs;
+    ys.push(1);
+    println(xs);
+    println(ys);
+}

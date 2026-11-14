@@ -1,5 +1,0 @@
-fun main() {
-    let count = Ref.new(0);
-    count.set(count + 1);
-    println(count.get());
-}

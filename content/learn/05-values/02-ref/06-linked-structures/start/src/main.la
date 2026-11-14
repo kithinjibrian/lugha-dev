@@ -1,0 +1,10 @@
+struct Node { value: i64, next: Option<Ref<Node>> }
+
+fun main() {
+    let second = Ref.new(Node { value: 2, next: None });
+    let first = Node { value: 1, next: Some(second) };
+    second.set(Node { value: 20, next: None });
+    if let Some(next) = first.next {
+        println(next.get().value);
+    }
+}

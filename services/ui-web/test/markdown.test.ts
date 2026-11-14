@@ -1,6 +1,7 @@
 // Tests front matter and the small Markdown the lessons are written in, quizzes included.
 import { describe, expect, it } from "vitest";
 import { renderMarkdown, splitFront } from "../src/content/markdown";
+import { err, ok } from "../src/lib/result";
 
 const code = (source: string, marks: number[]) => `<pre data-marks="${marks.join(",")}">${source}</pre>`;
 
@@ -59,6 +60,45 @@ describe("renderMarkdown", () => {
     expect(quiz('options = ["a", "b"]\nanswer = 0\nfeedback = ["x"]').ok).toBe(false);
     expect(quiz("options = [").ok).toBe(false);
     expect(quiz('options = ["a", "b"]\nanswer = 0\nfeedback = ["x", "y"]\nextra = 1').ok).toBe(false);
+  });
+
+  describe("a diagram", () => {
+    const drawn = (file: string) => (file === "diagram.svg" ? ok('<svg xmlns="http://www.w3.org/2000/svg"><rect class="d-box"/></svg>') : err(`the diagram file ${file} is missing`));
+    const block = (toml: string) => "```diagram\n" + toml + "\n```\n";
+    const good = 'file = "diagram.svg"\nalt = "a and b share one box"';
+
+    it("becomes a figure where its block is, labelled with its alt text", () => {
+      const r = renderMarkdown("Look:\n\n" + block(good) + "\nDone.\n", code, { lists: false }, drawn);
+      expect(r.ok && r.value.html).toBe(
+        '<p>Look:</p>\n<figure class="diagram"><svg role="img" aria-label="a and b share one box" xmlns="http://www.w3.org/2000/svg"><rect class="d-box"/></svg></figure>\n<p>Done.</p>\n',
+      );
+    });
+
+    it("lands after a quiz when it comes after one", () => {
+      const md = '```quiz\noptions = ["a", "b"]\nanswer = 1\nfeedback = ["no", "yes"]\n```\n\n' + block(good);
+      const r = renderMarkdown(md, code, { lists: false }, drawn);
+      expect(r.ok && r.value.after).toContain('<figure class="diagram">');
+    });
+
+    const refused: [string, string, string][] = [
+      ["no alt", 'file = "diagram.svg"', "the diagram needs alt text"],
+      ["an empty alt", 'file = "diagram.svg"\nalt = " "', "the diagram needs alt text"],
+      ["an extra key", good + "\nsize = 2", "the diagram block has unknown keys: size"],
+      ["bad TOML", "file = ", "the diagram block isn't TOML"],
+      ["a path", 'file = "../x.svg"\nalt = "x"', "the diagram's file is a name ending in .svg, in the step's folder"],
+      ["a missing file", 'file = "other.svg"\nalt = "x"', "the diagram file other.svg is missing"],
+    ];
+    for (const [what, toml, problem] of refused) {
+      it(`refuses ${what}`, () => expect(renderMarkdown(block(toml), code, { lists: false }, drawn)).toEqual(err(problem)));
+    }
+
+    it("refuses a second diagram", () => {
+      expect(renderMarkdown(block(good) + "\n" + block(good), code, { lists: false }, drawn)).toEqual(err("has more than one diagram"));
+    });
+
+    it("is refused where diagrams can't go", () => {
+      expect(renderMarkdown(block(good), code)).toEqual(err("a code block is `diagram`: diagrams go only in lesson steps"));
+    });
   });
 
   it("refuses what the subset doesn't have", () => {

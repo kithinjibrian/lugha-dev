@@ -1,0 +1,9 @@
+struct Point { x: i64, y: i64 }
+
+fun main() {
+    let a = Point { x: 1, y: 2 };
+    let mut b = a;
+    b.x = 9;
+    println(a);
+    println(b);
+}

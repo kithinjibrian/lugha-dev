@@ -1,8 +1,0 @@
-fun main(): i32 {
-    let xs = [5, 6];
-    let mut ys = xs;
-    ys.push(1);
-    println(xs);
-    println(ys);
-    0
-}
