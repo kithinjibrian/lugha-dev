@@ -24,8 +24,12 @@
     opt?: 0 | 2;
     onopen?: () => void;
     busy?: boolean;
+    /** Learn: the step has tests, so Test sits beside Run. */
+    tests?: boolean;
+    /** After every Test that came back: whether every test passed. */
+    ontested?: (r: { passed: boolean }) => void;
   }
-  let { mode, project, onchange, onran, note = null, opt = 0, onopen, busy = $bindable(false) }: Props = $props();
+  let { mode, project, onchange, onran, note = null, opt = 0, onopen, busy = $bindable(false), tests: hasTests = false, ontested }: Props = $props();
 
   let current = $state("src/main.la");
   let panel = $state<Panel>({ kind: "idle" });
@@ -64,6 +68,10 @@
       if (o === null) tests = { kind: "message", sentence: copy.service };
       else if (o.state === "test-compile-error") tests = { kind: "text", text: o.text };
       else tests = { kind: "text", text: testText(o) };
+      if (o !== null) {
+        const s = o.state === "tested" ? o.summary : null;
+        ontested?.({ passed: s !== null && s.passed > 0 && s.failed === 0 && s.uncompiled === 0 });
+      }
     }
     busy = false;
   }
@@ -113,7 +121,8 @@
         <button type="button" class="pill sun" onclick={run} disabled={busy}>
           {#if busy}<span class="sun-dot" aria-hidden="true"></span>{copy.running}{:else}<svg width="11" height="11" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5 L12 7 L3 12.5 Z" fill="currentColor" /></svg>{copy.run}{/if}
         </button>
-        <div class="command">$ lughac run src/main.la</div>
+        {#if hasTests}<button type="button" class="quiet" onclick={test} disabled={busy}>{copy.test}</button>{/if}
+        <div class="command">{tab === "tests" ? "$ lughac test" : "$ lughac run src/main.la"}</div>
         {#if onopen}<button type="button" class="quiet" onclick={onopen}>{copy.openInPlayground}</button>{/if}
       </div>
     {:else}
@@ -129,7 +138,7 @@
         {#if mode === "playground"}<div class="command">$ lughac run{opt === 2 ? " -O 2" : ""} src/main.la</div>{/if}
         <Output {panel} {note} />
       {:else if tab === "tests"}
-        <div class="command">$ lughac test</div>
+        {#if mode === "playground"}<div class="command">$ lughac test</div>{/if}
         <Output panel={tests} />
       {:else}
         <label class="field">

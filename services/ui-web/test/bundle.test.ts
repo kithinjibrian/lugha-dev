@@ -30,6 +30,7 @@ describe("the content bundle", async () => {
     expect(l.chapter).toEqual({ slug: "values", title: "Value semantics" });
     expect(l.steps[1]).toMatchObject({ startError: "E0501", solution: expect.any(String), expected: expect.any(String) });
     expect(l.steps.every((s) => !("path" in s))).toBe(true);
+    expect(l.steps[1]).toMatchObject({ files: [{ path: "src/main.la", text: expect.any(String) }], solutionFiles: [{ path: "src/main.la" }], tests: false });
   });
 
   it("gives an example whole", () => {

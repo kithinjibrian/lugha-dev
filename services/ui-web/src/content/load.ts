@@ -10,6 +10,12 @@ import { err, ok, type Result } from "../lib/result";
 import { checkDiagram } from "./diagram";
 import { inline, renderMarkdown, splitFront, type Highlight, type Quiz } from "./markdown";
 
+/** Holds one file of a step's project, by its path in the project (`src/main.la`, `test/area.la`). */
+export interface SourceFile {
+  path: string;
+  text: string;
+}
+
 /** Holds one step of a lesson, ready for a page. */
 export interface Step {
   /** "chapter/lesson/step", without the numbers: the URL under /learn/ and the progress key. */
@@ -23,11 +29,19 @@ export interface Step {
   quiz: Quiz | null;
   /** The text after the quiz. */
   after: string;
+  /** src/main.la of the start and of the solution. */
   start: string;
   solution: string | null;
+  /** Every file of the start, src/main.la first, then src/ and test/ by name. */
+  files: SourceFile[];
+  solutionFiles: SourceFile[] | null;
+  /** Whether the step has test/ files, so Test runs them and passing marks it done. */
+  tests: boolean;
   expected: string;
   startError: string | null;
   startOutput: string | null;
+  /** The tests a fix test step's start fails. */
+  startFailing: string[] | null;
   /** The step's own words for its start error, as HTML. */
   errorNote: string | null;
   seeAlso: string | null;
@@ -89,7 +103,10 @@ export interface Content {
   playground: Program;
 }
 
-const FRONT_KEYS = ["title", "start_error", "start_output", "error_note", "see_also"];
+const FRONT_KEYS = ["title", "start_error", "start_output", "start_failing", "error_note", "see_also"];
+
+/** The most files a step may have, as the API takes at most 20. */
+const MAX_FILES = 20;
 
 /** Reads files under `root`, noting what's missing. */
 class Reader {
@@ -119,6 +136,29 @@ class Reader {
       this.problems.push(`${path}: isn't TOML`);
       return null;
     }
+  }
+
+  /**
+   * Reads every file under `path` (a step's start/ or solution/) as a project: only .la files under
+   * src/ and test/, at most MAX_FILES, src/main.la first, then src/ and test/ by name.
+   */
+  project(path: string): SourceFile[] {
+    const files: SourceFile[] = [];
+    const walk = (rel: string) => {
+      const full = join(this.root, path, rel);
+      for (const name of readdirSync(full).sort()) {
+        const child = rel === "" ? name : `${rel}/${name}`;
+        if (statSync(join(full, name)).isDirectory()) walk(child);
+        else files.push({ path: child, text: readFileSync(join(full, name), "utf8") });
+      }
+    };
+    if (existsSync(join(this.root, path))) walk("");
+    for (const f of files) {
+      if (!/^(src|test)\/[^/]+\.la$/.test(f.path)) this.problems.push(`${path}: ${f.path} isn't a .la file under src/ or test/`);
+    }
+    if (files.length > MAX_FILES) this.problems.push(`${path}: ${files.length} files (at most ${MAX_FILES})`);
+    const rank = (p: string) => (p === "src/main.la" ? 0 : p.startsWith("src/") ? 1 : 2);
+    return files.sort((a, b) => rank(a.path) - rank(b.path) || a.path.localeCompare(b.path));
   }
 
   /** Lists the numbered folders in `path` ("01-values"), sorted, with their slugs ("values"). */
@@ -173,12 +213,20 @@ function loadStep(r: Reader, dir: string, id: string, slug: string, highlight: H
     r.problems.push(`${where}: ${rendered.error}`);
     return null;
   }
-  const aboutStart = front.start_error ?? front.start_output ?? front.error_note;
-  if (solution !== null && front.start_error === undefined && front.start_output === undefined) {
-    r.problems.push(`${where}: a step with a solution needs start_error or start_output`);
+  const files = r.project(`${dir}/start`);
+  const solutionFiles = solution === null ? null : r.project(`${dir}/solution`);
+  if (solutionFiles && solutionFiles.map((f) => f.path).join() !== files.map((f) => f.path).join()) {
+    r.problems.push(`${dir}/solution: its files aren't the same as start's`);
+  }
+  const tests = files.some((f) => f.path.startsWith("test/"));
+  const startFailing = front.start_failing === undefined ? null : front.start_failing.split(",").map((t) => t.trim()).filter((t) => t !== "");
+  if (startFailing !== null && !tests) r.problems.push(`${where}: start_failing needs test/ files`);
+  const aboutStart = front.start_error ?? front.start_output ?? front.start_failing ?? front.error_note;
+  if (solution !== null && front.start_error === undefined && front.start_output === undefined && startFailing === null) {
+    r.problems.push(`${where}: a step with a solution needs start_error, start_output or start_failing`);
   }
   if (solution === null && aboutStart !== undefined) {
-    r.problems.push(`${where}: start_error, start_output and error_note need a solution`);
+    r.problems.push(`${where}: start_error, start_output, start_failing and error_note need a solution`);
   }
   let errorNote: string | null = null;
   if (front.error_note !== undefined) {
@@ -198,9 +246,13 @@ function loadStep(r: Reader, dir: string, id: string, slug: string, highlight: H
     after,
     start,
     solution,
+    files,
+    solutionFiles,
+    tests,
     expected,
     startError: front.start_error ?? null,
     startOutput: front.start_output ?? null,
+    startFailing,
     errorNote,
     seeAlso: front.see_also ?? null,
   };

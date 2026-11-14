@@ -98,8 +98,8 @@ describe("loadContent", () => {
     ["missing start code", { [`${step}/start/src/main.la`]: null }, `${step}/start/src/main.la: missing`],
     ["a missing expected.txt", { [`${step}/expected.txt`]: null }, `${step}/expected.txt: missing`],
     ["an unknown front matter key", { [`${step}/step.md`]: "---\ntitle: C\ncolour: red\n---\n" }, `${step}/step.md: unknown front matter: colour`],
-    ["a fix step saying nothing about its start", { "learn/01-values/01-copies-lesson/02-fix/step.md": "---\ntitle: Fix\n---\n" }, "learn/01-values/01-copies-lesson/02-fix/step.md: a step with a solution needs start_error or start_output"],
-    ["start_error without a solution", { [`${step}/step.md`]: "---\ntitle: C\nstart_error: E0501\n---\n" }, `${step}/step.md: start_error, start_output and error_note need a solution`],
+    ["a fix step saying nothing about its start", { "learn/01-values/01-copies-lesson/02-fix/step.md": "---\ntitle: Fix\n---\n" }, "learn/01-values/01-copies-lesson/02-fix/step.md: a step with a solution needs start_error, start_output or start_failing"],
+    ["start_error without a solution", { [`${step}/step.md`]: "---\ntitle: C\nstart_error: E0501\n---\n" }, `${step}/step.md: start_error, start_output, start_failing and error_note need a solution`],
     ["see_also naming no example", { "learn/01-values/01-copies-lesson/03-quiz/step.md": "---\ntitle: Q\nsee_also: nope\n---\n" }, "learn/01-values/01-copies-lesson/03-quiz/step.md: see_also names no example: nope"],
     ["a diagram whose file is missing", { [`${step}/step.md`]: '---\ntitle: C\n---\n\n```diagram\nfile = "box.svg"\nalt = "One box."\n```\n' }, `${step}/step.md: the diagram file box.svg is missing`],
     ["a diagram that breaks the allow-list", { [`${step}/step.md`]: '---\ntitle: C\n---\n\n```diagram\nfile = "box.svg"\nalt = "One box."\n```\n', [`${step}/box.svg`]: '<svg xmlns="http://www.w3.org/2000/svg"><script/></svg>' }, `${step}/step.md: the diagram uses the element \`script\``],
@@ -125,3 +125,81 @@ describe("loadContent", () => {
     });
   }
 });
+
+describe("loadContent, steps with several files", () => {
+  const lesson = "learn/01-values/01-copies-lesson";
+  const multi = `${lesson}/04-modules`;
+  const withFiles: Record<string, string> = {
+    ...good,
+    [`${multi}/step.md`]: "---\ntitle: Modules\nstart_error: E0301\n---\n\nImport it.\n",
+    [`${multi}/expected.txt`]: "4\n",
+    [`${multi}/start/src/main.la`]: MAIN,
+    [`${multi}/start/src/shapes.la`]: "pub fun area(): i64 = 4;\n",
+    [`${multi}/start/src/a.la`]: "fun a() {}\n",
+    [`${multi}/solution/src/main.la`]: "fun main() { }\n",
+    [`${multi}/solution/src/shapes.la`]: "pub fun area(): i64 = 4;\n",
+    [`${multi}/solution/src/a.la`]: "fun a() {}\n",
+  };
+  const tested = `${lesson}/05-tests`;
+  const withTests: Record<string, string> = {
+    ...good,
+    [`${tested}/step.md`]: "---\ntitle: Tests\nstart_failing: area_works, other\n---\n\nPress Test.\n",
+    [`${tested}/expected.txt`]: "",
+    [`${tested}/start/src/main.la`]: MAIN,
+    [`${tested}/start/test/area.la`]: "@test fun area_works() {}\n",
+    [`${tested}/solution/src/main.la`]: MAIN,
+    [`${tested}/solution/test/area.la`]: "@test fun area_works() {}\n",
+  };
+
+  it("reads every file, src/main.la first, then src/ and test/ by name", async () => {
+    const r = await loadContent(tree(withFiles), code);
+    if (!r.ok) throw new Error(r.error.join("\n"));
+    const step = r.value.chapters[0].lessons[0].steps[3];
+    expect(step.files.map((f) => f.path)).toEqual(["src/main.la", "src/a.la", "src/shapes.la"]);
+    expect(step.solutionFiles?.map((f) => f.path)).toEqual(["src/main.la", "src/a.la", "src/shapes.la"]);
+    expect(step).toMatchObject({ start: MAIN, solution: "fun main() { }\n", tests: false, startFailing: null });
+  });
+
+  it("makes a step with test/ files a test step, with the tests its start fails", async () => {
+    const r = await loadContent(tree(withTests), code);
+    if (!r.ok) throw new Error(r.error.join("\n"));
+    const step = r.value.chapters[0].lessons[0].steps[3];
+    expect(step.files.map((f) => f.path)).toEqual(["src/main.la", "test/area.la"]);
+    expect(step).toMatchObject({ tests: true, startFailing: ["area_works", "other"], kind: "fix" });
+  });
+
+  it("gives a one-file step its one file", async () => {
+    const r = await loadContent(tree(good), code);
+    if (!r.ok) throw new Error(r.error.join("\n"));
+    const step = r.value.chapters[0].lessons[0].steps[0];
+    expect(step).toMatchObject({ files: [{ path: "src/main.la", text: MAIN }], solutionFiles: null, tests: false });
+  });
+
+  const broken: [string, Record<string, string | null>, Record<string, string>, string][] = [
+    ["a file outside src/ and test/", { [`${multi}/start/lib/x.la`]: "x" }, withFiles, `${multi}/start: lib/x.la isn't a .la file under src/ or test/`],
+    ["a file that isn't .la", { [`${multi}/start/src/notes.txt`]: "x" }, withFiles, `${multi}/start: src/notes.txt isn't a .la file under src/ or test/`],
+    ["solution files differing from start's", { [`${multi}/solution/src/a.la`]: null }, withFiles, `${multi}/solution: its files aren't the same as start's`],
+    ["start_failing without tests", { [`${multi}/step.md`]: "---\ntitle: M\nstart_failing: x\n---\n" }, withFiles, `${multi}/step.md: start_failing needs test/ files`],
+  ];
+  for (const [what, change, base, problem] of broken) {
+    it(`fails on ${what}`, async () => {
+      const files = { ...base };
+      for (const [k, v] of Object.entries(change)) {
+        if (v === null) delete files[k];
+        else files[k] = v;
+      }
+      const r = await loadContent(tree(files), code);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error).toContain(problem);
+    });
+  }
+
+  it("fails on more than 20 files", async () => {
+    const files = { ...withFiles };
+    for (let i = 0; i < 20; i++) files[`${multi}/start/src/f${String(i).padStart(2, "0")}.la`] = "x";
+    const r = await loadContent(tree(files), code);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain(`${multi}/start: 23 files (at most 20)`);
+  });
+});
+
