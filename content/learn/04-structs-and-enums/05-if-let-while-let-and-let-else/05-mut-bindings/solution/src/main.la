@@ -1,0 +1,11 @@
+fun main() {
+    let count: Option<i64> = Some(4);
+    match count {
+        Some(mut n) => {
+            n += 1;
+            println(n);
+        }
+        None => println("no count"),
+    }
+    println(count);
+}

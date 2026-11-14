@@ -5,7 +5,7 @@ start_error: E0417
 
 An arm can have a condition, written after the pattern with `if`, as on lines 5 and 6.
 The arm matches only when the pattern matches and the condition is true.
-Between them, `0`, below zero and above zero cover every number, so will `lughac` accept this `match` when every `_` has a condition?
+Between them, `0`, below zero and above zero cover every number, so does this `match` cover every case?
 
 It gives E0417 again.
 When `lughac` checks that every value is covered, it counts only the arms without a condition.

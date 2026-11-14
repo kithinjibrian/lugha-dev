@@ -1,0 +1,16 @@
+fun find(names: string[], wanted: string): Option<i64> {
+    for i in 0..names.len {
+        if names[i] == wanted {
+            return Some(i);
+        }
+    }
+    None
+}
+
+fun main() {
+    let names = ["Ann", "Ben", "Cy"];
+    println(find(names, "Dee").is_none());
+    println(find(names, "Ben").is_some());
+    println(find(names, "Ben").unwrap_or(-1));
+    println(find(names, "Dee").unwrap_or(-1));
+}

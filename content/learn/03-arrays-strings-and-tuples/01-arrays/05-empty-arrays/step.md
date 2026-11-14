@@ -4,7 +4,7 @@ start_error: E0412
 ---
 
 Now the list starts empty, and line 3 pushes a string into it.
-Will `lughac` work out from line 3 that `list` holds strings?
+Is pushing a string on line 3 enough to give `list` its type?
 
 E0412, "cannot infer the element type of `[]`", means it can't.
 `[]` has no elements to take a type from, and `lughac` doesn't look ahead to line 3 for one.

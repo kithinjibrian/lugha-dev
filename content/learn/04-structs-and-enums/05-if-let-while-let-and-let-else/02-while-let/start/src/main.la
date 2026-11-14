@@ -1,0 +1,7 @@
+fun main() {
+    let mut stack = [1, 2, 3];
+    while let Some(top) = stack.pop() {
+        println(top);
+    }
+    println(stack);
+}

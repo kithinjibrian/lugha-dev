@@ -1,0 +1,10 @@
+fun main() {
+    let mut first_big: Option<i64> = None;
+    for n of [3, 8, 5, 12] {
+        if n > 6 {
+            first_big = Some(n);
+            break;
+        }
+    }
+    println(first_big);
+}

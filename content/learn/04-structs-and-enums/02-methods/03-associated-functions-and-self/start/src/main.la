@@ -1,0 +1,12 @@
+struct Point { x: i64, y: i64 }
+
+impl Point {
+    fun new(x: i64, y: i64): Self = Self { x: x, y: y };
+
+    fun origin(): Self = Self.new(0, 0);
+}
+
+fun main() {
+    println(Point.new(3, 4));
+    println(Point.origin());
+}

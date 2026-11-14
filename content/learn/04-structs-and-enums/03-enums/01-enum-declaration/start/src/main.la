@@ -1,0 +1,13 @@
+enum Shape {
+    Circle(f64),
+    Rect(f64, f64),
+    Empty,
+}
+
+fun main() {
+    let wheel = Shape::Circle(2.0);
+    let door = Shape.Rect(1.0, 2.0);
+    println(wheel);
+    println(door);
+    println(Shape.Empty);
+}

@@ -1,0 +1,11 @@
+fun report(typed: string) {
+    let Some(n) = parse_i64(typed) else {
+        println("{typed} isn't a number");
+    };
+    println("{n} doubled is {n * 2}");
+}
+
+fun main() {
+    report("12");
+    report("twelve");
+}
