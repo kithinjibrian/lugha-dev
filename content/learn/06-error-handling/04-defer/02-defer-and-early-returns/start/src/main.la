@@ -1,0 +1,12 @@
+fun first_line(path: string): Result<string, string> {
+    println("opening {path}");
+    defer println("closing {path}");
+    let text = read_file(path)?;
+    Ok(text.split("\n")[0])
+}
+
+fun main() {
+    println(write_file("notes.txt", "milk\neggs\n"));
+    println(first_line("notes.txt"));
+    println(first_line("other.txt"));
+}

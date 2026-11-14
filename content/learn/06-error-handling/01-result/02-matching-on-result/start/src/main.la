@@ -1,0 +1,15 @@
+fun divide(a: i64, b: i64): Result<i64, string> {
+    if b == 0 {
+        return Err("division by zero");
+    }
+    Ok(a / b)
+}
+
+fun main() {
+    for b of [2, 0] {
+        match divide(10, b) {
+            Ok(q) => println("10 / {b} is {q}"),
+            Err(e) => println("10 / {b} failed: {e}"),
+        }
+    }
+}

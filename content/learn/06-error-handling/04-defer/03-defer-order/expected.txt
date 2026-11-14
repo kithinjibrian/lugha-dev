@@ -1,0 +1,7 @@
+pass 1
+end of pass 1
+pass 2
+end of pass 2
+end of main
+second defer
+first defer

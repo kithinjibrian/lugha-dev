@@ -1,0 +1,10 @@
+fun total(path: string): Result<i64, string> {
+    let text = read_file(path)?;
+    let n = parse_i64(text.trim())?;
+    Ok(n * 2)
+}
+
+fun main() {
+    println(write_file("n.txt", "21\n"));
+    println(total("n.txt"));
+}

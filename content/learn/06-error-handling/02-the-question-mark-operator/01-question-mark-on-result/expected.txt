@@ -1,0 +1,4 @@
+Ok(10)
+read notes.txt
+Ok(10)
+Err("No such file or directory")

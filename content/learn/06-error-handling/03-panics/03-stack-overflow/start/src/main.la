@@ -1,0 +1,19 @@
+enum List {
+    Nil,
+    Cons(i64, List),
+}
+
+fun sum(list: List): i64 {
+    match list {
+        Nil => 0,
+        Cons(head, rest) => head + sum(rest),
+    }
+}
+
+fun main() {
+    let mut list = List.Nil;
+    for _ in 0..1000000 {
+        list = List.Cons(1, list);
+    }
+    println(sum(list));
+}

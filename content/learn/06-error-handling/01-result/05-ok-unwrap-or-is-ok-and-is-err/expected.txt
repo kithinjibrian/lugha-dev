@@ -1,0 +1,7 @@
+Ok(4)
+Some("milk")
+None
+milk
+(no notes)
+true
+true

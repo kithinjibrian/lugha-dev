@@ -1,0 +1,11 @@
+fun divide(a: i64, b: i64): Result<i64, string> {
+    if b == 0 {
+        return Err("division by zero");
+    }
+    Ok(a / b)
+}
+
+fun main() {
+    println(divide(10, 2));
+    println(divide(1, 0));
+}

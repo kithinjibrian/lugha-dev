@@ -1,0 +1,10 @@
+fun sum_two(a: string, b: string): Option<i64> {
+    let x = parse_i64(a)?;
+    let y = parse_i64(b)?;
+    Some(x + y)
+}
+
+fun main() {
+    println(sum_two("2", "3"));
+    println(sum_two("2", "three"));
+}

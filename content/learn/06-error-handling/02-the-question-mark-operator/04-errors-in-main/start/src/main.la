@@ -1,0 +1,4 @@
+fun main() {
+    let text = read_file("notes.txt")?;
+    println(text);
+}
