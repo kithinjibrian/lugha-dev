@@ -140,7 +140,8 @@ class Reader {
 
   /**
    * Reads every file under `path` (a step's start/ or solution/) as a project: only .la files under
-   * src/ and test/, at most MAX_FILES, src/main.la first, then src/ and test/ by name.
+   * src/ and test/, and its own lugha.toml, at most MAX_FILES; src/main.la first, then src/ and test/
+   * by name, then lugha.toml.
    */
   project(path: string): SourceFile[] {
     const files: SourceFile[] = [];
@@ -154,10 +155,12 @@ class Reader {
     };
     if (existsSync(join(this.root, path))) walk("");
     for (const f of files) {
-      if (!/^(src|test)\/[^/]+\.la$/.test(f.path)) this.problems.push(`${path}: ${f.path} isn't a .la file under src/ or test/`);
+      if (!/^(src|test)\/[^/]+\.la$/.test(f.path) && f.path !== "lugha.toml") {
+        this.problems.push(`${path}: ${f.path} isn't a .la file under src/ or test/, or lugha.toml`);
+      }
     }
     if (files.length > MAX_FILES) this.problems.push(`${path}: ${files.length} files (at most ${MAX_FILES})`);
-    const rank = (p: string) => (p === "src/main.la" ? 0 : p.startsWith("src/") ? 1 : 2);
+    const rank = (p: string) => (p === "src/main.la" ? 0 : p.startsWith("src/") ? 1 : p.startsWith("test/") ? 2 : 3);
     return files.sort((a, b) => rank(a.path) - rank(b.path) || a.path.localeCompare(b.path));
   }
 

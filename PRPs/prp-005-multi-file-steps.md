@@ -18,6 +18,10 @@ A learner on a chapter 9 step sees every file of a small project in the file lis
 2. **Test steps:** a step whose files include `test/` shows Test beside Run and the Tests tab. It is done when every test passes. The content check runs the tests in the sandbox: the solution's all pass, and a fix step's start fails the way the step says.
 3. **Rules and kept edits:** the build fails unless `start/` has `src/main.la`; files are only `src/*.la` and `test/*.la`; at most 20 files; a fix step's `solution/` has the same file names as its `start/`. A step is a test step exactly when it has `test/` files. The browser keeps the learner's edits for every file; Reset puts all of them back; Solve replaces all of them.
 
+### Addendum (owner, 2026-11-14)
+
+A step carries its own package name: its `start/` and `solution/` may hold a `lugha.toml` (only `[package]`, as API-3 allows), listed after the `.la` files, so test files import `geometry.shapes` rather than `playground.shapes`. Without one, the default is used as before. A package can't be named like one of its own modules (E0320), so `geometry` with a `shapes.la`, not `shapes`.
+
 ## REQUIREMENTS
 
 ### Must Do

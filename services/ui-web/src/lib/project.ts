@@ -19,9 +19,13 @@ export interface Project {
  */
 export const DEFAULT_TOML = '[package]\nname = "playground"\nversion = "0.1.0"\nsource = "src"\n';
 
-/** Makes a project of `files` (a step's, src/main.la first) and the default lugha.toml, with no arguments. */
+/**
+ * Makes a project of `files` (a step's, src/main.la first) with no arguments, adding the default
+ * lugha.toml unless the step has its own.
+ */
 export function projectOfFiles(files: File[]): Project {
-  return { files: [...files, { path: "lugha.toml", text: DEFAULT_TOML }], args: [], stdin: "" };
+  const own = files.some((f) => f.path === "lugha.toml");
+  return { files: own ? files : [...files, { path: "lugha.toml", text: DEFAULT_TOML }], args: [], stdin: "" };
 }
 
 /** Makes a project of one program in `src/main.la`, with the default lugha.toml and no arguments. */

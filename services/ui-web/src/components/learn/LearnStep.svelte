@@ -49,7 +49,9 @@
   const showsSolution = $derived(same(files, step.solutionFiles));
 
   function change(p: Project) {
-    const next = p.files.filter((f) => f.path !== "lugha.toml");
+    // A step's own lugha.toml is one of its files; the default one projectOfFiles adds isn't.
+    const own = step.files.some((f) => f.path === "lugha.toml");
+    const next = p.files.filter((f) => own || f.path !== "lugha.toml");
     if (same(next, files)) return;
     files = next;
     kept?.setStepFiles(step.id, files, step.files);

@@ -3,7 +3,7 @@
 // would, and must print what its expected.txt says. A step with a solution
 // is checked both ways: the start code gives its start_error (or prints its
 // start_output), and the solution prints expected.txt. A step runs with every
-// file under its start/ (or solution/). A step with test/ files is a test
+// file under its start/ (or solution/), its own lugha.toml included. A step with test/ files is a test
 // step: its solution's tests must all pass, and a start with start_failing
 // must fail exactly those tests.
 //
@@ -55,10 +55,12 @@ fun run(source: string, stdin: string): Result<Ran, string> = run_files(
     stdin,
 );
 
-/** Runs a project's `files`, with src/main.la as the entry and the default lugha.toml. */
+/** Runs a project's files, with src/main.la as the entry, and the default lugha.toml unless it has its own. */
 fun run_files(project: File[], stdin: string): Result<Ran, string> {
     let mut all = project;
-    all.push(File { path: "lugha.toml", text: DEFAULT });
+    if !all.any(fun(f) = f.path == "lugha.toml") {
+        all.push(File { path: "lugha.toml", text: DEFAULT });
+    }
     let r = RunRequest {
         files: all,
         entry: "src/main.la",
