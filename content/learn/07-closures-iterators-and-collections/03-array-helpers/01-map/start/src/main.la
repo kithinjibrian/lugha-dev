@@ -1,0 +1,8 @@
+fun main() {
+    let prices = [3, 5, 8];
+    let doubled = prices.map(fun(p) = p * 2);
+    let labels = prices.map(fun(p) = "{p} coins");
+    println(doubled);
+    println(labels);
+    println(prices);
+}

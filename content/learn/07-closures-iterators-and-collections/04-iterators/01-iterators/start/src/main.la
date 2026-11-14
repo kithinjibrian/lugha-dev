@@ -1,0 +1,12 @@
+fun main() {
+    for n of range(1, 4) {
+        println(n);
+    }
+    for c of "hé".chars() {
+        println(c);
+    }
+    let it = [10, 20].iter();
+    for x of it {
+        println(x);
+    }
+}

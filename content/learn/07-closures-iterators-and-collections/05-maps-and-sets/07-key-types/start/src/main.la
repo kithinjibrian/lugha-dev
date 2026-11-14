@@ -1,0 +1,4 @@
+fun main() {
+    let cups = #{0.25: "small", 0.5: "large"};
+    println(cups[0.5]);
+}

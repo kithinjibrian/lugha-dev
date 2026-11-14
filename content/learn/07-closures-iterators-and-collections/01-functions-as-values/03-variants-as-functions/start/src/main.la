@@ -1,0 +1,19 @@
+enum Shape {
+    Circle(f64),
+    Square(f64),
+}
+
+fun apply_all(make: fun(f64): Shape, sizes: f64[]): Shape[] {
+    let mut out: Shape[] = [];
+    for s of sizes {
+        out.push(make(s));
+    }
+    out
+}
+
+fun main() {
+    println(apply_all(Shape.Circle, [1.0, 2.0]));
+    println(apply_all(Shape.Square, [3.0]));
+    let wrap: fun(f64): Option<f64> = Some;
+    println(wrap(2.0));
+}

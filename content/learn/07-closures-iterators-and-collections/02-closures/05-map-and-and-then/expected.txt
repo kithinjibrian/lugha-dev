@@ -1,0 +1,6 @@
+Some(42)
+None
+Ok(5)
+Err("no")
+None
+Err("too small")

@@ -1,0 +1,7 @@
+fun apply(f: fun(i64): i64, x: i64): i64 = f(x);
+
+fun main() {
+    println(apply(fun(x) = x * 2, 21));
+    let add_ten = fun(x: i64): i64 = x + 10;
+    println(add_ten(5));
+}

@@ -1,0 +1,7 @@
+fun main() {
+    let ages = #{"ann": 31, "bo": 40};
+    println(ages.get("ann"));
+    println(ages.get("dee"));
+    println(ages.has("dee"));
+    println(ages["dee"]);
+}

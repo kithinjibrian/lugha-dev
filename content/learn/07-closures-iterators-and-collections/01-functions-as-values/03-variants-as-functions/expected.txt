@@ -1,0 +1,3 @@
+[Circle(1.0), Circle(2.0)]
+[Square(3.0)]
+Some(2.0)

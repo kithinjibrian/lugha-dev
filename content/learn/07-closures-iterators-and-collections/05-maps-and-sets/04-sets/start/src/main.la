@@ -1,0 +1,12 @@
+fun main() {
+    let mut seen = #{"red", "blue"};
+    println(seen.has("red"));
+    println(seen.insert("green"));
+    println(seen.insert("red"));
+    println(seen.remove("blue"));
+    println(seen);
+    let mut ages = #{"ann": 31, "bo": 40};
+    println(ages.remove("bo"));
+    ages.clear();
+    println(ages);
+}

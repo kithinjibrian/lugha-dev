@@ -1,0 +1,12 @@
+fun double(n: i64): i64 = n * 2;
+fun square(n: i64): i64 = n * n;
+fun negate(n: i64): i64 = -n;
+
+fun main() {
+    let steps: (fun(i64): i64)[] = [double, square, negate];
+    let mut n = 3;
+    for step of steps {
+        n = step(n);
+    }
+    println(n);
+}

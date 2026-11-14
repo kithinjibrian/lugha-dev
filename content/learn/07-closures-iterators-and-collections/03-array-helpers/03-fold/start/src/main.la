@@ -1,0 +1,7 @@
+fun main() {
+    let numbers = [4, 9, 2, 7];
+    let total = numbers.fold(0, fun(sum, n) = sum + n);
+    let largest = numbers.fold(numbers[0], fun(best, n) = if n > best { n } else { best });
+    println(total);
+    println(largest);
+}

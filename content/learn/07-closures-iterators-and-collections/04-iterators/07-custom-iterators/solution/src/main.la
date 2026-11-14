@@ -1,0 +1,17 @@
+struct Countdown { n: i64 }
+
+impl Countdown {
+    fun next(mut self): Option<i64> {
+        if self.n == 0 {
+            return None;
+        }
+        self.n -= 1;
+        Some(self.n + 1)
+    }
+}
+
+fun main() {
+    for n of (Countdown { n: 3 }) {
+        println(n);
+    }
+}
