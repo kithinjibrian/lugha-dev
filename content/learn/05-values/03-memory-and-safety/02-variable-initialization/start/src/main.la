@@ -1,0 +1,7 @@
+fun main() {
+    let mut total: i64;
+    for n of [3, 4, 5] {
+        total += n;
+    }
+    println(total);
+}
