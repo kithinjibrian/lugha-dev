@@ -1,0 +1,7 @@
+fun main() {
+    println(write_file("notes.txt", "milk\neggs\n"));
+    match read_file("notes.txt") {
+        Ok(text) => print(text),
+        Err(e) => println("can't read notes.txt: {e}"),
+    }
+}

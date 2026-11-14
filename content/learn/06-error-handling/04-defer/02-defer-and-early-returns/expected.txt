@@ -1,0 +1,7 @@
+Ok(10)
+opening notes.txt
+closing notes.txt
+Ok("milk")
+opening other.txt
+closing other.txt
+Err("No such file or directory")

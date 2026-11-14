@@ -1,0 +1,11 @@
+fun main() {
+    println(write_file("notes.txt", "milk"));
+    let notes = read_file("notes.txt");
+    let other = read_file("other.txt");
+    println(notes.ok());
+    println(other.ok());
+    println(notes.unwrap_or("(no notes)"));
+    println(other.unwrap_or("(no notes)"));
+    println(notes.is_ok());
+    println(other.is_err());
+}

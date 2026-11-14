@@ -1,0 +1,4 @@
+fun main() {
+    defer write_file("log.txt", "done");
+    println("working");
+}

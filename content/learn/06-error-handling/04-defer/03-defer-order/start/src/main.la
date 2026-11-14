@@ -1,0 +1,9 @@
+fun main() {
+    defer println("first defer");
+    defer println("second defer");
+    for i in 1..3 {
+        defer println("end of pass {i}");
+        println("pass {i}");
+    }
+    println("end of main");
+}

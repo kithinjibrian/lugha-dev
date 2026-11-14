@@ -1,0 +1,6 @@
+fun main() {
+    let n = parse_i64("42").unwrap();
+    println(n);
+    let m = parse_i64("forty").expect("the count must be a number");
+    println(m);
+}

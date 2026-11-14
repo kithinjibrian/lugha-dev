@@ -1,0 +1,12 @@
+fun check_age(age: i64): i64 {
+    if age < 0 {
+        panic("age can't be negative");
+    }
+    age
+}
+
+fun main() {
+    println(check_age(30));
+    println(check_age(-1));
+    println("done");
+}

@@ -1,0 +1,11 @@
+fun note_length(path: string): Result<i64, string> {
+    let text = read_file(path)?;
+    println("read {path}");
+    Ok(text.len)
+}
+
+fun main() {
+    println(write_file("notes.txt", "milk\neggs\n"));
+    println(note_length("notes.txt"));
+    println(note_length("other.txt"));
+}
