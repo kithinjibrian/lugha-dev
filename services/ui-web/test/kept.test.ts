@@ -10,24 +10,51 @@ function memory() {
 }
 
 describe("what the browser keeps", () => {
-  it("keeps a step's edits, and forgets them on Reset", () => {
-    const k = kept(memory());
-    expect(k.stepCode("a/b/c")).toBeNull();
-    k.setStepCode("a/b/c", "fun main() {}\n");
-    expect(k.stepCode("a/b/c")).toBe("fun main() {}\n");
-    k.setStepCode("a/b/c", null);
-    expect(k.stepCode("a/b/c")).toBeNull();
+  const one = [{ path: "src/main.la", text: "fun main() {}\n" }];
+  const two = [
+    { path: "src/main.la", text: "fun main() {}\n" },
+    { path: "src/shapes.la", text: "pub fun a() {}\n" },
+  ];
+
+  it("keeps a one-file step's edits as its main.la, and forgets them on Reset", () => {
+    const store = memory();
+    const k = kept(store);
+    expect(k.stepFiles("a/b/c", one)).toEqual(one);
+    k.setStepFiles("a/b/c", [{ path: "src/main.la", text: "x" }], one);
+    expect(store.get("step.a/b/c")).toBe("x");
+    expect(k.stepFiles("a/b/c", one)).toEqual([{ path: "src/main.la", text: "x" }]);
+    k.setStepFiles("a/b/c", null, one);
+    expect(k.stepFiles("a/b/c", one)).toEqual(one);
+  });
+
+  it("keeps every file of a multi-file step, and nothing when they're as they started", () => {
+    const store = memory();
+    const k = kept(store);
+    const edited = [two[0], { path: "src/shapes.la", text: "pub fun b() {}\n" }];
+    k.setStepFiles("a/b/d", edited, two);
+    expect(k.stepFiles("a/b/d", two)).toEqual(edited);
+    k.setStepFiles("a/b/d", two, two);
+    expect(store.get("step.a/b/d")).toBeNull();
+  });
+
+  it("reads an older one-string entry as main.la, and ignores files that no longer fit the step", () => {
+    const store = memory();
+    const k = kept(store);
+    store.set("step.a/b/d", "old main");
+    expect(k.stepFiles("a/b/d", two)).toEqual([{ path: "src/main.la", text: "old main" }, two[1]]);
+    store.set("step.a/b/d", [{ path: "src/other.la", text: "?" }]);
+    expect(k.stepFiles("a/b/d", two)).toEqual(two);
   });
 
   it("keeps progress, and clears it on Start over with every step's edits", () => {
     const k = kept(memory());
     expect(k.progress()).toEqual({ done: [] });
     k.setProgress({ done: ["a/b/c"] });
-    k.setStepCode("a/b/c", "x");
+    k.setStepFiles("a/b/c", [{ path: "src/main.la", text: "x" }], one);
     expect(k.progress()).toEqual({ done: ["a/b/c"] });
     k.startOver(["a/b/c"]);
     expect(k.progress()).toEqual({ done: [] });
-    expect(k.stepCode("a/b/c")).toBeNull();
+    expect(k.stepFiles("a/b/c", one)).toEqual(one);
   });
 
   it("gives the Playground's project, or the opening one", () => {

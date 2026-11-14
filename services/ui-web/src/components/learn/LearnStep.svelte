@@ -6,7 +6,7 @@
   import { copy } from "../../lib/copy";
   import { kept as makeKept } from "../../lib/kept";
   import { doneBy, markDone, sunPosition, type Event, type Progress } from "../../lib/progress";
-  import { projectOf, type Project } from "../../lib/project";
+  import { projectOf, projectOfFiles, type File, type Project } from "../../lib/project";
   import { browserStore } from "../../lib/storage";
   import Workspace from "../workspace/Workspace.svelte";
   import Horizon from "./Horizon.svelte";
@@ -32,44 +32,45 @@
 
   // Until the page is in a browser, show the start and nothing done.
   let kept: ReturnType<typeof makeKept> | null = null;
-  let code = $state(untrack(() => step.start));
+  let files = $state<File[]>(untrack(() => step.files));
   let progress = $state<Progress>({ done: [] });
   let workspace: Workspace;
   let outline: Outline;
 
   onMount(() => {
     kept = makeKept(browserStore());
-    code = kept.stepCode(step.id) ?? step.start;
+    files = kept.stepFiles(step.id, step.files);
     progress = kept.progress();
   });
 
-  const project = $derived<Project>(projectOf(code));
-  const edited = $derived(code !== step.start);
-  const showsSolution = $derived(step.solution !== null && code === step.solution);
+  const same = (a: File[], b: File[] | null) => b !== null && JSON.stringify(a) === JSON.stringify(b);
+  const project = $derived<Project>(projectOfFiles(files));
+  const edited = $derived(!same(files, step.files));
+  const showsSolution = $derived(same(files, step.solutionFiles));
 
   function change(p: Project) {
-    const main = p.files.find((f) => f.path === "src/main.la")?.text ?? code;
-    if (main === code) return;
-    code = main;
-    kept?.setStepCode(step.id, code === step.start ? null : code);
+    const next = p.files.filter((f) => f.path !== "lugha.toml");
+    if (same(next, files)) return;
+    files = next;
+    kept?.setStepFiles(step.id, files, step.files);
   }
 
   function happened(e: Event) {
-    if (!doneBy(step.kind, e, step.expected)) return;
+    if (!doneBy(step.kind, e, step.expected, step.tests)) return;
     progress = markDone(progress, step.id);
     kept?.setProgress(progress);
   }
 
   function solveOrReset() {
-    code = edited ? step.start : (step.solution ?? step.start);
-    kept?.setStepCode(step.id, code === step.start ? null : code);
+    files = edited ? step.files : (step.solutionFiles ?? step.files);
+    kept?.setStepFiles(step.id, files, step.files);
     workspace.clear();
   }
 
   function startOver() {
     kept?.startOver(all.map((s) => s.id));
     progress = { done: [] };
-    code = step.start;
+    files = step.files;
     workspace.clear();
   }
 
@@ -130,6 +131,8 @@
       {project}
       onchange={change}
       onran={(r) => happened({ kind: "run", ...r })}
+      tests={step.tests}
+      ontested={(r) => happened({ kind: "test", ...r })}
       note={step.startError && step.errorNote && !showsSolution ? { code: step.startError, html: step.errorNote } : null}
       onopen={openInPlayground}
     />

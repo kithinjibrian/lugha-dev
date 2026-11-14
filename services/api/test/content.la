@@ -2,7 +2,10 @@
 // in content/ runs through the real sandbox, exactly as a visitor's code
 // would, and must print what its expected.txt says. A step with a solution
 // is checked both ways: the start code gives its start_error (or prints its
-// start_output), and the solution prints expected.txt.
+// start_output), and the solution prints expected.txt. A step runs with every
+// file under its start/ (or solution/). A step with test/ files is a test
+// step: its solution's tests must all pass, and a start with start_failing
+// must fail exactly those tests.
 //
 // Home's card (content/home) and the Playground's opening program
 // (content/playground) are checked the same way.
@@ -17,8 +20,8 @@ import std.process;
 import std.toml;
 import api.checks.files { File };
 import api.checks.manifest { DEFAULT };
-import api.checks.requests { RunRequest };
-import api.checks.job { run_job };
+import api.checks.requests { RunRequest, files_request, reason };
+import api.checks.job { run_job, files_job, files_value };
 import api.server.sandbox { run_in_sandbox };
 
 fun image(): string = env.get("SANDBOX_IMAGE").unwrap_or("lugha-sandbox:m159");
@@ -47,12 +50,17 @@ struct Ran {
 }
 
 /** Runs `source` as src/main.la with `stdin`, as the API would. */
-fun run(source: string, stdin: string): Result<Ran, string> {
+fun run(source: string, stdin: string): Result<Ran, string> = run_files(
+    [File { path: "src/main.la", text: source }],
+    stdin,
+);
+
+/** Runs a project's `files`, with src/main.la as the entry and the default lugha.toml. */
+fun run_files(project: File[], stdin: string): Result<Ran, string> {
+    let mut all = project;
+    all.push(File { path: "lugha.toml", text: DEFAULT });
     let r = RunRequest {
-        files: [
-            File { path: "src/main.la", text: source },
-            File { path: "lugha.toml", text: DEFAULT },
-        ],
+        files: all,
         entry: "src/main.la",
         args: [],
         stdin: stdin,
@@ -77,6 +85,82 @@ fun run(source: string, stdin: string): Result<Ran, string> {
         json.as_text,
     ).unwrap_or("");
     Ok(Ran { error: error, stdout: stdout })
+}
+
+/** What one Test gave: the tests that failed (by function name, sorted), how many passed, and whether they compiled. */
+struct Tested {
+    failed: string[],
+    passed: i64,
+    compiled: bool,
+}
+
+/** Runs a project's tests, as the API's Test would. */
+fun test_files(project: File[]): Result<Tested, string> {
+    let body = json.stringify(json.Value.Object(#{ "files": files_value(project) })).unwrap();
+    let c = files_request(body).map_err(reason)?;
+    let v = run_in_sandbox(image(), ["/usr/local/bin/runner", "/work"], files_job("test", c)).map_err(
+        fun(e) = "{e}",
+    )?;
+    let mut failed: string[] = [];
+    let mut passed = 0;
+    for t of json.get(v, "tests").and_then(json.as_array).unwrap_or([]) {
+        let status = json.get(t, "status").and_then(json.as_text).unwrap_or("");
+        if status == "passed" {
+            passed += 1;
+        } else if status == "failed" {
+            // The API names a test by its module too ("test.area.area_of_three");
+            // a step names it by its function alone.
+            let full = json.get(t, "test").and_then(json.as_text).unwrap_or("");
+            let parts = full.split(".");
+            failed.push(parts[parts.len - 1]);
+        }
+    }
+    let compiled = json.get(v, "compile_error").and_then(json.as_text).is_none();
+    Ok(Tested { failed: failed.sort(), passed: passed, compiled: compiled })
+}
+
+/** The test names in a start_failing value, sorted. */
+fun names(list: string): string[] = list.split(",").map(fun(n) = n.trim()).filter(
+    fun(n) = n != "",
+).sort();
+
+/**
+ * Compares a Test with what was expected: every test passing when `failing`
+ * is empty, otherwise exactly those tests failing.
+ */
+fun check_tests(problems: string[], what: string, got: Result<Tested, string>, failing: string[]): string[] {
+    let mut out = problems;
+    match got {
+        Err(e) => out.push("{what}: no result ({e})"),
+        Ok(t) => {
+            if !t.compiled {
+                out.push("{what}: the tests didn't compile");
+            } else if failing.len == 0 && (t.failed.len > 0 || t.passed == 0) {
+                out.push("{what}: expected every test to pass; failed {t.failed}, passed {t.passed}");
+            } else if failing.len > 0 && t.failed != failing {
+                out.push("{what}: expected {failing} to fail, failed {t.failed}");
+            }
+        }
+    }
+    out
+}
+
+/** Every file under `dir`, by its path from `dir` ("src/main.la"). */
+fun project(dir: string): File[] {
+    let mut out: File[] = [];
+    let mut todo = [""];
+    while let Some(rel) = todo.pop() {
+        let here = if rel == "" { dir } else { "{dir}/{rel}" };
+        for name of fs.list_dir(here).unwrap_or([]) {
+            let child = if rel == "" { name } else { "{rel}/{name}" };
+            if fs.is_dir("{dir}/{child}") {
+                todo.push(child);
+            } else {
+                out.push(File { path: child, text: read_file("{dir}/{child}").unwrap_or("") });
+            }
+        }
+    }
+    out
 }
 
 /** The folders in `path`, sorted (list_dir sorts). */
@@ -154,29 +238,47 @@ fun every_lesson_step_prints_what_it_says() {
                 let expected = read_file("{dir}/expected.txt").expect(
                     "every step has expected.txt",
                 );
-                let start = read_file("{dir}/start/src/main.la").expect(
-                    "every step has start code",
-                );
+                let start = project("{dir}/start");
+                let tests = start.any(fun(f) = f.path.starts_with("test/"));
                 steps += 1;
-                match read_file("{dir}/solution/src/main.la") {
-                    Ok(solution) => {
-                        problems = check(
+                if fs.is_dir("{dir}/solution") {
+                    let solution = project("{dir}/solution");
+                    problems = check(
+                        problems,
+                        "{step} (solution)",
+                        run_files(solution, ""),
+                        "",
+                        expected,
+                    );
+                    if tests {
+                        problems = check_tests(
                             problems,
-                            "{step} (solution)",
-                            run(solution, ""),
-                            "",
-                            expected,
+                            "{step} (solution's tests)",
+                            test_files(solution),
+                            [],
                         );
+                    }
+                    let failing = front(md, "start_failing");
+                    if failing != "" {
+                        problems = check_tests(
+                            problems,
+                            "{step} (start's tests)",
+                            test_files(start),
+                            names(failing),
+                        );
+                    } else {
                         problems = check(
                             problems,
                             "{step} (start)",
-                            run(start, ""),
+                            run_files(start, ""),
                             front(md, "start_error"),
                             front(md, "start_output"),
                         );
                     }
-                    Err(_) => {
-                        problems = check(problems, step, run(start, ""), "", expected);
+                } else {
+                    problems = check(problems, step, run_files(start, ""), "", expected);
+                    if tests {
+                        problems = check_tests(problems, "{step} (tests)", test_files(start), []);
                     }
                 }
             }

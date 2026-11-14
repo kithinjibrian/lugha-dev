@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The project's files: src/ and its .la files, then lugha.toml.
+  // The project's files: src/ and its .la files, test/ and its files when there are any, then lugha.toml.
   import { copy } from "../../lib/copy";
   import type { File } from "../../lib/project";
 
@@ -11,22 +11,28 @@
   }
   let { files, current, heading, onpick }: Props = $props();
 
-  const sources = $derived(files.filter((f) => f.path.startsWith("src/")));
-  const others = $derived(files.filter((f) => !f.path.startsWith("src/")));
+  const folders = $derived(
+    ["src", "test"]
+      .map((name) => ({ name, files: files.filter((f) => f.path.startsWith(`${name}/`)) }))
+      .filter((d) => d.name === "src" || d.files.length > 0),
+  );
+  const others = $derived(files.filter((f) => !f.path.startsWith("src/") && !f.path.startsWith("test/")));
 </script>
 
 <nav class="files" aria-label={copy.files}>
   {#if heading}<div class="heading">{copy.files}</div>{/if}
-  <div class="folder">
-    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="var(--faint)" d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-    </svg>
-    src
-  </div>
-  {#each sources as f (f.path)}
-    <button type="button" class="file nested" aria-current={f.path === current ? "true" : undefined} onclick={() => onpick(f.path)}>
-      {f.path.slice(4)}
-    </button>
+  {#each folders as d (d.name)}
+    <div class="folder">
+      <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="var(--faint)" d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+      </svg>
+      {d.name}
+    </div>
+    {#each d.files as f (f.path)}
+      <button type="button" class="file nested" aria-current={f.path === current ? "true" : undefined} onclick={() => onpick(f.path)}>
+        {f.path.slice(d.name.length + 1)}
+      </button>
+    {/each}
   {/each}
   {#each others as f (f.path)}
     <button type="button" class="file" aria-current={f.path === current ? "true" : undefined} onclick={() => onpick(f.path)}>

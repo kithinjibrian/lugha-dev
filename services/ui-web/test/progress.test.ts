@@ -27,6 +27,18 @@ describe("a step's done rule", () => {
     expect(doneBy("quiz", ran(""), "")).toBe(false);
   });
 
+  it("a test step: a Test where every test passed, and never a Run", () => {
+    expect(doneBy("fix", { kind: "test", passed: true }, "", true)).toBe(true);
+    expect(doneBy("read", { kind: "test", passed: true }, "", true)).toBe(true);
+    expect(doneBy("fix", { kind: "test", passed: false }, "", true)).toBe(false);
+    expect(doneBy("fix", ran(""), "", true)).toBe(false);
+    expect(doneBy("read", ran("hot\n"), "", true)).toBe(false);
+  });
+
+  it("a Test never finishes a step without tests", () => {
+    expect(doneBy("read", { kind: "test", passed: true }, "")).toBe(false);
+  });
+
   it("an answer never finishes a fix or reading step", () => {
     expect(doneBy("fix", { kind: "answer", correct: true }, "")).toBe(false);
     expect(doneBy("read", { kind: "answer", correct: true }, "")).toBe(false);

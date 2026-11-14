@@ -1,3 +1,4 @@
+import type { File } from "../../lib/project";
 // What a Learn page's island gets about the course and its step.
 import type { Quiz } from "../../content/markdown";
 import type { StepKind } from "../../lib/progress";
@@ -16,6 +17,11 @@ export interface StepData {
   after: string;
   start: string;
   solution: string | null;
+  /** Every file of the start and of the solution, src/main.la first. */
+  files: File[];
+  solutionFiles: File[] | null;
+  /** Whether Test runs the step's tests, and passing them marks it done. */
+  tests: boolean;
   /** What the step's solution (or, without one, its start) prints. */
   expected: string;
   startError: string | null;
