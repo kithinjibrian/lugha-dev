@@ -4,7 +4,7 @@ start_error: E0503
 ---
 
 Now the `if`s on lines 2 and 5 each hold a `return`.
-Every pair of numbers takes one of the two, so does `lughac` see that `distance` always gives back an `i64`?
+Every pair of numbers takes one of the two, so is that enough for a function that promises an `i64`?
 
 It gives E0503, "`distance` may end without returning a value of type i64", with the help "end the body with a value, or `return` on every path".
 An `if` without an `else` never counts as returning, whatever its condition, so `lughac` sees a way to reach the last `}` with nothing to give back.

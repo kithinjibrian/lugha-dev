@@ -1,0 +1,20 @@
+enum Shape {
+    Circle(f64),
+    Rect(f64, f64),
+    Empty,
+}
+
+fun describe(s: Option<Shape>): string {
+    match s {
+        Some(Circle(r)) => "a circle of radius {r}",
+        Some(Rect(w, h)) => "a {w} by {h} rectangle",
+        Some(Empty) => "an empty shape",
+        None => "nothing",
+    }
+}
+
+fun main() {
+    let mut shapes = [Shape.Circle(1.5)];
+    println(describe(shapes.pop()));
+    println(describe(shapes.pop()));
+}

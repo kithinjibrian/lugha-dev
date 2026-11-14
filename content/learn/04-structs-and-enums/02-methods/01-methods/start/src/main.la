@@ -1,0 +1,10 @@
+struct Point { x: i64, y: i64 }
+
+impl Point {
+    fun length_squared(self): i64 = self.x * self.x + self.y * self.y;
+}
+
+fun main() {
+    let p = Point { x: 3, y: 4 };
+    println(p.length_squared());
+}

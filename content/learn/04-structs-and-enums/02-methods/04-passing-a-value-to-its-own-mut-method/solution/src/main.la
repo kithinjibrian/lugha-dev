@@ -1,0 +1,15 @@
+struct Point { x: i64, y: i64 }
+
+impl Point {
+    fun add(mut self, other: Point) {
+        self.x += other.x;
+        self.y += other.y;
+    }
+}
+
+fun main() {
+    let mut p = Point { x: 3, y: 4 };
+    let copy = p;
+    p.add(copy);
+    println(p);
+}

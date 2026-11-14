@@ -1,0 +1,14 @@
+fun find(names: string[], wanted: string): Option<i64> {
+    for i in 0..names.len {
+        if names[i] == wanted {
+            return Some(i);
+        }
+    }
+    None
+}
+
+fun main() {
+    let names = ["Ann", "Ben", "Cy"];
+    println(find(names, "Ben"));
+    println(find(names, "Dee"));
+}

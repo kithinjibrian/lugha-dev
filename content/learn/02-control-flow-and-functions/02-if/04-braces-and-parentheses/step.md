@@ -4,7 +4,7 @@ start_error: E0201
 ---
 
 Line 3 puts the condition in parentheses and leaves out the braces.
-Which of the two will `lughac` object to?
+Which of the two is the problem?
 
 The braces: it gives E0201, "expected `{`, found identifier `println`".
 Parentheses around a condition are optional, so `if (unread > 0)` means the same as `if unread > 0`.

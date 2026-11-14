@@ -1,0 +1,18 @@
+fun find(names: string[], wanted: string): Option<i64> {
+    for i in 0..names.len {
+        if names[i] == wanted {
+            return Some(i);
+        }
+    }
+    None
+}
+
+fun main() {
+    let names = ["Ann", "Ben", "Cy"];
+    for wanted of ["Ben", "Dee"] {
+        match find(names, wanted) {
+            Some(i) => println("{wanted} is at {i}"),
+            None => println("{wanted} isn't there"),
+        }
+    }
+}

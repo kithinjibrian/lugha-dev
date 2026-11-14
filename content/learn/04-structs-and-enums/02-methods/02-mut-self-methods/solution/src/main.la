@@ -1,0 +1,13 @@
+struct Point { x: i64, y: i64 }
+
+impl Point {
+    fun shift(mut self, dx: i64) {
+        self.x += dx;
+    }
+}
+
+fun main() {
+    let mut p = Point { x: 3, y: 4 };
+    p.shift(10);
+    println(p);
+}

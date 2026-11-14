@@ -1,0 +1,5 @@
+fun main() {
+    let typed = "41";
+    let n = parse_i64(typed);
+    println(n + 1);
+}

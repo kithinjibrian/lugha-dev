@@ -1,0 +1,17 @@
+enum Shape {
+    Circle(f64),
+    Rect(f64, f64),
+    Empty,
+}
+
+fun area(s: Shape): f64 {
+    match s {
+        Circle(r) => 3.14 * r * r,
+        Rect(w, h) => w * h,
+    }
+}
+
+fun main() {
+    println(area(Shape.Circle(2.0)));
+    println(area(Shape.Rect(1.0, 2.0)));
+}

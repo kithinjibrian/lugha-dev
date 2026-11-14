@@ -1,0 +1,9 @@
+fun main() {
+    for typed of ["12", "twelve"] {
+        if let Some(n) = parse_i64(typed) {
+            println("{n} doubled is {n * 2}");
+        } else {
+            println("{typed} isn't a number");
+        }
+    }
+}
