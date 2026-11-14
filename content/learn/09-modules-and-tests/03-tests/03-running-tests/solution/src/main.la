@@ -1,0 +1,6 @@
+import shapes;
+
+fun main() {
+    let s = shapes.Square { side: 3.0 };
+    println(shapes.area(s));
+}

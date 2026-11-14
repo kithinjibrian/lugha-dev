@@ -1,0 +1,7 @@
+import shapes { Square, area as square_area };
+
+fun main() {
+    let s = Square { side: 3.0 };
+    println(square_area(s));
+    println(shapes.describe(s));
+}

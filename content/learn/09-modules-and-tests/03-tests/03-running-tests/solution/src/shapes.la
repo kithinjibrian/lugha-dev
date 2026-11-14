@@ -1,0 +1,16 @@
+struct Square { side: f64 }
+
+fun area(s: Square): f64 = s.side * s.side;
+
+fun largest(squares: Square[]): Option<Square> {
+    if squares.len == 0 {
+        return None;
+    }
+    let mut best = squares[0];
+    for s of squares {
+        if s.side > best.side {
+            best = s;
+        }
+    }
+    return Some(best);
+}

@@ -1,0 +1,6 @@
+import range;
+
+fun main() {
+    let r = range.Range { lo: 5, hi: 1 };
+    println(r.size());
+}

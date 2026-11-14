@@ -1,0 +1,7 @@
+import geometry.shapes;
+
+@test
+fun area_of_three() {
+    let s = shapes.Square { side: 3.0 };
+    assert(shapes.area(s) == 9.0);
+}
