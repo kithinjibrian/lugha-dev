@@ -1,0 +1,14 @@
+import geometry.shapes;
+
+@test
+fun area_of_three() {
+    let s = shapes.Square { side: 3.0 };
+    assert_eq(shapes.area(s), 9.0);
+}
+
+@test
+fun bigger_side_bigger_area() {
+    let a = shapes.Square { side: 3.0 };
+    let b = shapes.Square { side: 4.0 };
+    assert_ne(shapes.area(a), shapes.area(b));
+}

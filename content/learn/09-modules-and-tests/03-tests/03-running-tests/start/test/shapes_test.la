@@ -1,0 +1,14 @@
+import geometry.shapes;
+
+@test
+fun largest_of_none() {
+    let none: shapes.Square[] = [];
+    assert(shapes.largest(none).is_none());
+}
+
+@test
+fun largest_of_two() {
+    let a = shapes.Square { side: 2.0 };
+    let b = shapes.Square { side: 3.0 };
+    assert_eq(shapes.largest([a, b]).unwrap().side, 3.0);
+}

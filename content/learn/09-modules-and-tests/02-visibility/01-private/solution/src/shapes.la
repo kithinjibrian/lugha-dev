@@ -1,0 +1,7 @@
+struct Square { side: f64 }
+
+fun area(s: Square): f64 = square(s.side);
+
+fun describe(s: Square): string = "a square of side {s.side}";
+
+private fun square(x: f64): f64 = x * x;

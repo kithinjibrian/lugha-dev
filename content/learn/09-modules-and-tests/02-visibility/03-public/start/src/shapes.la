@@ -1,0 +1,3 @@
+struct Square { side: f64 }
+
+public fun unit(): Square = Square { side: 1.0 };
