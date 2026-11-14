@@ -13,7 +13,7 @@ ARG UBUNTU=ubuntu:26.04
 
 # ---- lughac, from source at a pinned tag -------------------------------
 FROM ${UBUNTU} AS lughac
-ARG LUGHAC_REPO=https://github.com/kithinjibrian/lugha.git
+ARG LUGHAC_REPO=https://github.com/lugha-lang/lugha.git
 ARG LUGHAC_REF=m159
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
