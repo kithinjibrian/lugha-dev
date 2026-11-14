@@ -56,6 +56,6 @@ export const copy = {
 } as const;
 
 /** Links to Lugha's repository on GitHub. */
-export const GITHUB = "https://github.com/kithinjibrian/lugha";
+export const GITHUB = "https://github.com/lugha-lang/lugha";
 /** Links to content/ on GitHub, for "Edit this lesson on GitHub". */
-export const CONTENT_ON_GITHUB = "https://github.com/kithinjibrian/lugha-dev/tree/main/content";
+export const CONTENT_ON_GITHUB = "https://github.com/lugha-lang/lugha-dev/tree/main/content";

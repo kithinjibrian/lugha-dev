@@ -27,7 +27,7 @@ concurrency:
 
 env:
   LUGHAC_REF: m159
-  REGISTRY: ghcr.io/kithinjibrian/
+  REGISTRY: ghcr.io/lugha-lang/
 
 jobs:
   check:
